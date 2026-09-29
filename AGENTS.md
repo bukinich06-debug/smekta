@@ -324,7 +324,7 @@ Before creating files, ask:
 2. HTTP API route? → `app/api/...` only
 3. Orchestrates an action? → `services/` (one `'use server'` file per action, **no** `index.ts`, deep import)
 4. Business rule / entity / repo **interface**? → `domain/` (pure TS, no `'use server'`)
-5. DB read/write / repo **impl**? → `data/` (Prisma: `db push` — see `.cursor/rules/prisma.mdc`); service imports repo from `data`, no Prisma in service
+5. DB read/write / repo **impl**? → `data/` (Prisma: `npm run db:push` and `npm run db:generate`, no migrations — see `.cursor/rules/prisma.mdc`); service imports repo from `data`, no Prisma in service
 6. Reusable utility? → `shared/` inside the correct layer, not at project root
 7. Feature folder grouped by concern (no flat pile in `domain`/`data`/`services`)?
 8. Is this a component? → create `ui/` + root `index.ts`; **no** `model/` — logic in `hooks/`

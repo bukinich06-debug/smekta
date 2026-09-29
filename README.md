@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Смета
 
-## Getting Started
+Приложение для работы со сметой в строительстве: составление, ведение и расчёт сметных документов.
 
-First, run the development server:
+Технические требования заказчика — в [постановке](./docs/requirements/README.md).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Архитектура
+
+Проект разделён на слои. `app/` — тонкие точки входа Next.js, бизнес-код живёт в `components`, `services`, `domain` и `data`.
+
+```
+app/              # маршруты Next.js — тонкие страницы; Route Handlers в app/api/
+components/       # UI (React) — без исполнения бизнес-логики
+services/         # сценарии — 'use server', связывает domain и data
+domain/           # правила, сущности, интерфейсы репозиториев (чистый TS)
+data/             # хранилище (Prisma)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Зависимости идут в одну сторону:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+components  →  services  →  domain  ←  data
+   (UI)      (сценарии)   (правила)  (хранилище)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Как с этим работать:
 
-## Learn More
+- Экран вызывает только Server Actions из `services/`.
+- Из `domain` во фронт тянем **только типы**: `import type { … } from '@/domain/…'`. Функции, константы и правила домена UI не вызывает — их вызывают `services`.
+- `components` не импортирует `data`. Prisma и SQL живут в `data/`, сервис берёт оттуда готовый репозиторий.
+- `domain` ни от кого не зависит: ни от React, ни от Next, ни от Prisma.
 
-To learn more about Next.js, take a look at the following resources:
+Подробные правила слоёв, импортов и структуры папок — в [AGENTS.md](./AGENTS.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## База данных
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Хранилище — Prisma. Схема на старте ещё меняется, поэтому **миграций нет**: не запускай `prisma migrate` и не создавай файлы в `prisma/migrations/`.
 
-## Deploy on Vercel
+1. Правишь `prisma/schema.prisma`.
+2. Применяешь схему: `npm run db:push`.
+3. Обновляешь клиент: `npm run db:generate`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Имена таблиц в базе — в нижнем регистре (`@@map`). Поля `createdAt` / `updatedAt` в модели не добавляем.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Запуск
+
+```bash
+npm install
+npm run dev
+```
+
+Приложение откроется на [http://localhost:3000](http://localhost:3000).

@@ -24,8 +24,10 @@ Do not rely on Prisma’s default table name (PascalCase model name).
 ## Apply schema changes
 
 1. Edit `prisma/schema.prisma`
-2. Apply with `prisma db push`
-3. Run `prisma generate` after schema changes
+2. Apply with `npm run db:push`
+3. Regenerate the client with `npm run db:generate`
+
+Do not call `prisma db push` / `prisma generate` directly — use these npm scripts.
 
 ## Do not
 
