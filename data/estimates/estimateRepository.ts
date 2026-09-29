@@ -27,14 +27,26 @@ export const estimateRepository: IEstimateRepository = {
     });
 
     let projectTotal = 0;
+    let projectVisibleTotal = 0;
+    let projectHiddenTotal = 0;
 
     const sectionsWithTotals = sections.map((section) => {
       let sectionTotal = 0;
+      let sectionVisibleTotal = 0;
+      let sectionHiddenTotal = 0;
 
       const items: IEstimateItem[] = section.items.map((item) => {
         const itemTotal = calculateItemTotal(item.quantity.toString(), item.unitPrice.toString());
         sectionTotal += itemTotal;
         projectTotal += itemTotal;
+
+        if (item.isVisibleToClient) {
+          sectionVisibleTotal += itemTotal;
+          projectVisibleTotal += itemTotal;
+        } else {
+          sectionHiddenTotal += itemTotal;
+          projectHiddenTotal += itemTotal;
+        }
 
         return {
           id: item.id,
@@ -57,6 +69,8 @@ export const estimateRepository: IEstimateRepository = {
         sortOrder: section.sortOrder,
         items,
         total: sectionTotal,
+        visibleTotal: sectionVisibleTotal,
+        hiddenTotal: sectionHiddenTotal,
       };
     });
 
@@ -64,6 +78,8 @@ export const estimateRepository: IEstimateRepository = {
       projectId,
       sections: sectionsWithTotals,
       total: projectTotal,
+      visibleTotal: projectVisibleTotal,
+      hiddenTotal: projectHiddenTotal,
     };
   },
 

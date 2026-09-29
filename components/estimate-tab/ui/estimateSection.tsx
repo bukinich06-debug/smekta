@@ -27,6 +27,8 @@ interface IEstimateSectionProps {
     isVisibleToClient?: boolean;
   }) => Promise<void>;
   onDeleteItem: (id: number) => Promise<void>;
+  onToggleVisibility: (id: number) => Promise<void>;
+  onToggleStatus: (id: number) => Promise<void>;
 }
 
 export const EstimateSection = ({
@@ -36,6 +38,8 @@ export const EstimateSection = ({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onToggleVisibility,
+  onToggleStatus,
 }: IEstimateSectionProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(section.name);
@@ -86,7 +90,15 @@ export const EstimateSection = ({
           <>
             <div className="flex items-center gap-4">
               <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
-              <span className="text-sm text-gray-600">Итого: {formatMoney(section.total)}</span>
+              <div className="flex gap-3 text-sm">
+                <span className="text-gray-900 font-medium">Итого: {formatMoney(section.total)}</span>
+                {section.hiddenTotal > 0 && (
+                  <>
+                    <span className="text-blue-600">Для клиента: {formatMoney(section.visibleTotal)}</span>
+                    <span className="text-amber-600">Скрыто: {formatMoney(section.hiddenTotal)}</span>
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -141,9 +153,9 @@ export const EstimateSection = ({
                 <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Цена</th>
                 <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Сумма</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Комментарий</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-28">Статус</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-28">Видим для клиента</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-24">Действия</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-32">Статус</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-32">Видимость</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -154,6 +166,8 @@ export const EstimateSection = ({
                   index={index + 1}
                   onEdit={onEditItem}
                   onDelete={onDeleteItem}
+                  onToggleVisibility={onToggleVisibility}
+                  onToggleStatus={onToggleStatus}
                 />
               ))}
             </tbody>

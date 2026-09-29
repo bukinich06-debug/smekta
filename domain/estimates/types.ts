@@ -23,12 +23,16 @@ export interface IEstimateItem {
 export interface IEstimateSectionWithItems extends IEstimateSection {
   items: IEstimateItem[];
   total: number;
+  visibleTotal: number;
+  hiddenTotal: number;
 }
 
 export interface IProjectEstimate {
   projectId: number;
   sections: IEstimateSectionWithItems[];
   total: number;
+  visibleTotal: number;
+  hiddenTotal: number;
 }
 
 export interface ICreateSectionInput {
