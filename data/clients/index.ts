@@ -1,0 +1,1 @@
+export { clientRepository } from './clientRepository';
