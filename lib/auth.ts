@@ -22,13 +22,29 @@ export const auth = betterAuth({
         type: 'string',
         required: true,
         defaultValue: 'CLIENT',
+        input: false,
       },
     },
   },
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    generateId: () => undefined,
+  },
   rateLimit: {
     enabled: true,
+    storage: 'database',
     window: 60,
-    max: 5,
+    max: 10,
+    customRules: {
+      '/api/auth/sign-in/email': {
+        window: 60,
+        max: 5,
+      },
+      '/api/auth/sign-up/email': {
+        window: 60,
+        max: 3,
+      },
+    },
   },
   trustedOrigins: [process.env.BETTER_AUTH_URL || 'http://localhost:3000'],
   secret: process.env.BETTER_AUTH_SECRET!,

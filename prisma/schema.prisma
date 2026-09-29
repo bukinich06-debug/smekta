@@ -99,7 +99,7 @@ model User {
 }
 
 model Session {
-  id        String   @id
+  id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
@@ -115,7 +115,7 @@ model Session {
 }
 
 model Account {
-  id                     String    @id
+  id                     Int       @id @default(autoincrement())
   userId                 Int
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accountId              String
@@ -137,7 +137,7 @@ model Account {
 }
 
 model Verification {
-  id         String   @id
+  id         Int      @id @default(autoincrement())
   identifier String
   value      String
   expiresAt  DateTime
@@ -146,6 +146,18 @@ model Verification {
 
   @@unique([identifier, value])
   @@map("verification")
+}
+
+model RateLimit {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  count       Int
+  lastRequest DateTime
+  expiresAt   DateTime
+
+  @@index([key])
+  @@index([expiresAt])
+  @@map("rate_limit")
 }
 
 model Client {

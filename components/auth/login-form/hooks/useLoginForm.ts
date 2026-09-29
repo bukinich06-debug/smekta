@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/services/auth/login';
+import { authClient } from '@/lib/authClient';
 
 export const useLoginForm = () => {
   const router = useRouter();
@@ -16,15 +16,19 @@ export const useLoginForm = () => {
     setError('');
     setIsLoading(true);
 
-    const result = await login({ email, password });
+    try {
+      await authClient.signIn.email({
+        email,
+        password,
+      });
 
-    if (result.ok) {
       router.push('/');
-    } else {
-      setError(result.error || 'Неверный email или пароль');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Неверный email или пароль';
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return {
