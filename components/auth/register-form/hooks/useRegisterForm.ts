@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { register } from '@/services/auth/register';
+import { authClient } from '@/lib/authClient';
 
 export const useRegisterForm = () => {
   const router = useRouter();
@@ -17,15 +17,20 @@ export const useRegisterForm = () => {
     setError('');
     setIsLoading(true);
 
-    const result = await register({ name, email, password });
+    try {
+      await authClient.signUp.email({
+        email,
+        password,
+        name,
+      });
 
-    if (result.ok) {
       router.push('/');
-    } else {
-      setError(result.error || 'Ошибка при регистрации');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Ошибка при регистрации';
+      setError(message);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return {
