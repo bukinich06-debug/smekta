@@ -132,6 +132,7 @@ export const clientRepository: IClientRepository = {
       phone: client.phone,
       email: client.email,
       userId: client.userId,
+      inviteToken: client.inviteToken,
       project: client.projects[0]
         ? {
             id: client.projects[0].id,
@@ -183,6 +184,7 @@ export const clientRepository: IClientRepository = {
       phone: client.phone,
       email: client.email,
       userId: client.userId,
+      inviteToken: client.inviteToken,
       project: {
         id: project.id,
         clientId: project.clientId,
@@ -201,6 +203,7 @@ export const clientRepository: IClientRepository = {
     const client = await dbClient.client.findUnique({
       where: { id },
       include: {
+        user: true,
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
@@ -250,6 +253,8 @@ export const clientRepository: IClientRepository = {
       phone: client.phone,
       email: client.email,
       userId: client.userId,
+      inviteToken: client.inviteToken,
+      userEmail: client.user?.email || null,
       project: project
         ? {
             id: project.id,
@@ -294,5 +299,51 @@ export const clientRepository: IClientRepository = {
         },
       }),
     ]);
+  },
+
+  async generateInviteToken(clientId: number, token: string): Promise<void> {
+    await dbClient.client.update({
+      where: { id: clientId },
+      data: { inviteToken: token },
+    });
+  },
+
+  async getByInviteToken(token: string): Promise<IClientInviteInfo | null> {
+    const client = await dbClient.client.findUnique({
+      where: { inviteToken: token },
+      include: {
+        projects: {
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!client) return null;
+
+    const project = client.projects[0] || null;
+
+    return {
+      id: client.id,
+      fullName: client.fullName,
+      projectNumber: project?.number || null,
+      projectName: project?.name || null,
+      projectAddress: project?.address || null,
+    };
+  },
+
+  async acceptInvite(token: string, userId: number): Promise<boolean> {
+    const result = await dbClient.client.updateMany({
+      where: {
+        inviteToken: token,
+        userId: null,
+      },
+      data: {
+        userId,
+        inviteToken: null,
+      },
+    });
+
+    return result.count > 0;
   },
 };
