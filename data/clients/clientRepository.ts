@@ -35,11 +35,11 @@ export const clientRepository: IClientRepository = {
             estimateSections: {
               include: {
                 items: true,
-                receipts: {
-                  include: {
-                    payments: true,
-                  },
-                },
+              },
+            },
+            receipts: {
+              include: {
+                payments: true,
               },
             },
           },
@@ -59,11 +59,11 @@ export const clientRepository: IClientRepository = {
             const itemTotal = Number(item.quantity) * Number(item.unitPrice);
             estimateTotal += itemTotal;
           }
+        }
 
-          for (const receipt of section.receipts) {
-            for (const payment of receipt.payments) {
-              paid += Number(payment.amount);
-            }
+        for (const receipt of project.receipts) {
+          for (const payment of receipt.payments) {
+            paid += Number(payment.amount);
           }
         }
       }
@@ -147,8 +147,6 @@ export const clientRepository: IClientRepository = {
   },
 
   async create(input: ICreateClientInput, managerId: number): Promise<IClientWithProject> {
-    const projectNumber = `PR-${Date.now()}`;
-
     const client = await dbClient.client.create({
       data: {
         fullName: input.fullName,
@@ -156,7 +154,7 @@ export const clientRepository: IClientRepository = {
         email: input.email,
         projects: {
           create: {
-            number: projectNumber,
+            number: '',
             name: input.projectName,
             address: input.address,
             status: input.projectStatus,
@@ -172,6 +170,11 @@ export const clientRepository: IClientRepository = {
 
     const project = client.projects[0];
 
+    await dbClient.project.update({
+      where: { id: project.id },
+      data: { number: project.id.toString() },
+    });
+
     return {
       id: client.id,
       fullName: client.fullName,
@@ -181,7 +184,7 @@ export const clientRepository: IClientRepository = {
       project: {
         id: project.id,
         clientId: project.clientId,
-        number: project.number,
+        number: project.id.toString(),
         name: project.name,
         address: project.address,
         status: project.status,
