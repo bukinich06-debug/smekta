@@ -18,9 +18,11 @@ interface IEstimateItemProps {
     isVisibleToClient?: boolean;
   }) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onToggleVisibility: (id: number) => Promise<void>;
+  onToggleStatus: (id: number) => Promise<void>;
 }
 
-export const EstimateItem = ({ item, index, onEdit, onDelete }: IEstimateItemProps) => {
+export const EstimateItem = ({ item, index, onEdit, onDelete, onToggleVisibility, onToggleStatus }: IEstimateItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: item.name,
@@ -60,9 +62,17 @@ export const EstimateItem = ({ item, index, onEdit, onDelete }: IEstimateItemPro
     }
   };
 
+  const rowClassName = !item.isVisibleToClient
+    ? 'border-b border-gray-200 bg-amber-50 hover:bg-amber-100'
+    : 'border-b border-gray-200 hover:bg-gray-50';
+
+  const editRowClassName = !item.isVisibleToClient
+    ? 'border-b border-gray-200 bg-amber-100'
+    : 'border-b border-gray-200 bg-blue-50';
+
   if (isEditing) {
     return (
-      <tr className="border-b border-gray-200 bg-blue-50">
+      <tr className={editRowClassName}>
         <td className="px-3 py-2 text-gray-700">{index}</td>
         <td className="px-3 py-2">
           <input
@@ -109,9 +119,19 @@ export const EstimateItem = ({ item, index, onEdit, onDelete }: IEstimateItemPro
             className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
           />
         </td>
-        <td className="px-3 py-2 text-gray-700">{getStatusLabel(item.status)}</td>
-        <td className="px-3 py-2 text-center text-gray-700">
-          {item.isVisibleToClient ? 'Да' : 'Нет'}
+        <td className="px-3 py-2">
+          <span className={`inline-block px-2 py-1 rounded text-xs ${
+            item.status === 'AGREED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }`}>
+            {getStatusLabel(item.status)}
+          </span>
+        </td>
+        <td className="px-3 py-2 text-center">
+          {!item.isVisibleToClient && (
+            <span className="inline-block px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 font-medium">
+              Скрыто
+            </span>
+          )}
         </td>
         <td className="px-3 py-2">
           <div className="flex gap-1">
@@ -134,7 +154,7 @@ export const EstimateItem = ({ item, index, onEdit, onDelete }: IEstimateItemPro
   }
 
   return (
-    <tr className="border-b border-gray-200 hover:bg-gray-50">
+    <tr className={rowClassName}>
       <td className="px-3 py-2 text-gray-700">{index}</td>
       <td className="px-3 py-2 text-gray-900">{item.name}</td>
       <td className="px-3 py-2 text-gray-700">{item.unit}</td>
@@ -142,27 +162,45 @@ export const EstimateItem = ({ item, index, onEdit, onDelete }: IEstimateItemPro
       <td className="px-3 py-2 text-right text-gray-700">{formatMoney(parseFloat(item.unitPrice))}</td>
       <td className="px-3 py-2 text-right font-medium text-gray-900">{formatMoney(total)}</td>
       <td className="px-3 py-2 text-gray-600 text-xs">{item.comment || '—'}</td>
-      <td className="px-3 py-2 text-gray-700">
-        <span className={`inline-block px-2 py-1 rounded text-xs ${
-          item.status === 'AGREED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-        }`}>
+      <td className="px-3 py-2">
+        <button
+          onClick={() => onToggleStatus(item.id)}
+          className={`inline-block px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+            item.status === 'AGREED' 
+              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+          }`}
+          title="Нажмите для изменения статуса"
+        >
           {getStatusLabel(item.status)}
-        </span>
+        </button>
       </td>
-      <td className="px-3 py-2 text-center text-gray-700">
-        {item.isVisibleToClient ? 'Да' : 'Нет'}
+      <td className="px-3 py-2 text-center">
+        <button
+          onClick={() => onToggleVisibility(item.id)}
+          className={`inline-block px-2 py-1 rounded text-xs cursor-pointer transition-colors ${
+            !item.isVisibleToClient 
+              ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 font-medium' 
+              : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+          }`}
+          title="Нажмите для изменения видимости"
+        >
+          {item.isVisibleToClient ? 'Для клиента' : 'Скрыто'}
+        </button>
       </td>
       <td className="px-3 py-2">
         <div className="flex gap-1">
           <button
             onClick={() => setIsEditing(true)}
             className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+            title="Редактировать"
           >
             ✎
           </button>
           <button
             onClick={handleDelete}
             className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
+            title="Удалить"
           >
             ✕
           </button>

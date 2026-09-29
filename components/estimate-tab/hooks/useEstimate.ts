@@ -9,6 +9,8 @@ import { deleteSection } from '@/services/estimates/deleteSection';
 import { createItem } from '@/services/estimates/createItem';
 import { updateItem } from '@/services/estimates/updateItem';
 import { deleteItem } from '@/services/estimates/deleteItem';
+import { toggleItemVisibility } from '@/services/estimates/toggleItemVisibility';
+import { toggleItemStatus } from '@/services/estimates/toggleItemStatus';
 import type { IProjectEstimate } from '@/domain/estimates';
 
 export const useEstimate = (projectId: number) => {
@@ -150,6 +152,30 @@ export const useEstimate = (projectId: number) => {
     }
   };
 
+  const toggleVisibility = async (id: number) => {
+    setError(null);
+    setSuccess(null);
+    const result = await toggleItemVisibility(id);
+    if (result.ok) {
+      await load();
+      router.refresh();
+    } else {
+      setError(result.error || 'Ошибка при изменении видимости');
+    }
+  };
+
+  const toggleStatus = async (id: number) => {
+    setError(null);
+    setSuccess(null);
+    const result = await toggleItemStatus(id);
+    if (result.ok) {
+      await load();
+      router.refresh();
+    } else {
+      setError(result.error || 'Ошибка при изменении статуса');
+    }
+  };
+
   const clearMessages = () => {
     setError(null);
     setSuccess(null);
@@ -166,6 +192,8 @@ export const useEstimate = (projectId: number) => {
     addItem,
     editItem,
     removeItem,
+    toggleVisibility,
+    toggleStatus,
     clearMessages,
   };
 };

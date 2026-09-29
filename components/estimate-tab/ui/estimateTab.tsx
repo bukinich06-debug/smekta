@@ -11,7 +11,21 @@ interface IEstimateTabProps {
 }
 
 export const EstimateTab = ({ projectId }: IEstimateTabProps) => {
-  const { data, loading, error, success, addSection, editSection, removeSection, addItem, editItem, removeItem, clearMessages } = useEstimate(projectId);
+  const { 
+    data, 
+    loading, 
+    error, 
+    success, 
+    addSection, 
+    editSection, 
+    removeSection, 
+    addItem, 
+    editItem, 
+    removeItem, 
+    toggleVisibility, 
+    toggleStatus, 
+    clearMessages 
+  } = useEstimate(projectId);
   const [showAddSection, setShowAddSection] = useState(false);
 
   if (loading) {
@@ -73,15 +87,37 @@ export const EstimateTab = ({ projectId }: IEstimateTabProps) => {
           onAddItem={addItem}
           onEditItem={editItem}
           onDeleteItem={removeItem}
+          onToggleVisibility={toggleVisibility}
+          onToggleStatus={toggleStatus}
         />
       ))}
 
       {data && data.sections.length > 0 && (
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-gray-900">Итого по смете:</span>
-            <span className="text-2xl font-bold text-blue-600">{formatMoney(data.total)}</span>
+        <div className="mt-6 space-y-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold text-gray-900">Итого по смете:</span>
+              <span className="text-2xl font-bold text-blue-600">{formatMoney(data.total)}</span>
+            </div>
           </div>
+          
+          {data.hiddenTotal > 0 && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-900">Для заказчика:</span>
+                  <span className="text-xl font-bold text-blue-600">{formatMoney(data.visibleTotal)}</span>
+                </div>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-900">Только для администратора:</span>
+                  <span className="text-xl font-bold text-amber-600">{formatMoney(data.hiddenTotal)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
