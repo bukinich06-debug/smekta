@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import type { IUpdateClientCardInput } from '@/domain/clients';
-import type { ProjectStatus } from '@prisma/client';
 import { updateClientCard } from '@/services/clients/updateClientCard';
 import { useRouter } from 'next/navigation';
 
