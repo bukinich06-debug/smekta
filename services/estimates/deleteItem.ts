@@ -1,6 +1,9 @@
 'use server';
 
 import { estimateRepository } from '@/data/estimates';
+import { getSession } from '@/services/auth/getSession';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 interface IResult {
   ok: boolean;
@@ -8,8 +11,14 @@ interface IResult {
 }
 
 export const deleteItem = async (id: number): Promise<IResult> => {
+  const session = await getSession();
+
+  if (!session) redirect('/login');
+  if (session.user.role !== 'ADMIN') redirect('/client');
+
   try {
     await estimateRepository.deleteItem(id);
+    revalidatePath('/admin/clients/[id]', 'page');
     return { ok: true };
   } catch (error) {
     console.error('Ошибка при удалении позиции:', error);

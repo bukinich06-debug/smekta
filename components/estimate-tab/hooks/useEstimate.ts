@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { getProjectEstimate } from '@/services/estimates/getProjectEstimate';
 import { createSection } from '@/services/estimates/createSection';
 import { updateSection } from '@/services/estimates/updateSection';
@@ -11,6 +12,7 @@ import { deleteItem } from '@/services/estimates/deleteItem';
 import type { IProjectEstimate } from '@/domain/estimates';
 
 export const useEstimate = (projectId: number) => {
+  const router = useRouter();
   const [data, setData] = useState<IProjectEstimate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Раздел добавлен');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при создании раздела');
     }
@@ -75,6 +78,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Раздел обновлён');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при обновлении раздела');
     }
@@ -87,6 +91,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Раздел удалён');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при удалении раздела');
     }
@@ -105,6 +110,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Позиция добавлена');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при создании позиции');
     }
@@ -125,6 +131,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Позиция обновлена');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при обновлении позиции');
     }
@@ -137,6 +144,7 @@ export const useEstimate = (projectId: number) => {
     if (result.ok) {
       setSuccess('Позиция удалена');
       await load();
+      router.refresh();
     } else {
       setError(result.error || 'Ошибка при удалении позиции');
     }
