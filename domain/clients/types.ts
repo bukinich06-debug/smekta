@@ -52,3 +52,21 @@ export interface IClientListFilters {
   sortBy?: 'fullName' | 'address' | 'estimateTotal' | 'paid' | 'debt' | 'startDate' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
 }
+
+export interface IClientCardDetails extends IClient {
+  project: IProject | null;
+  estimateTotal: number;
+  paid: number;
+  debt: number;
+}
+
+export interface IUpdateClientCardInput {
+  fullName: string;
+  phone: string;
+  email: string;
+  projectName: string;
+  address: string;
+  projectStatus: ProjectStatus;
+  startDate: Date | null;
+  managerId: number;
+}
