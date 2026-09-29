@@ -1,0 +1,24 @@
+'use server';
+
+import { estimateRepository } from '@/data/estimates';
+import { validateUpdateSection } from '@/domain/estimates';
+import type { IUpdateSectionInput, IEstimateSection } from '@/domain/estimates';
+
+interface IResult {
+  ok: boolean;
+  data?: IEstimateSection;
+  error?: string;
+}
+
+export const updateSection = async (id: number, input: IUpdateSectionInput): Promise<IResult> => {
+  const validationError = validateUpdateSection(input);
+  if (validationError) return { ok: false, error: validationError };
+
+  try {
+    const section = await estimateRepository.updateSection(id, input);
+    return { ok: true, data: section };
+  } catch (error) {
+    console.error('Ошибка при обновлении раздела:', error);
+    return { ok: false, error: 'Не удалось обновить раздел' };
+  }
+};

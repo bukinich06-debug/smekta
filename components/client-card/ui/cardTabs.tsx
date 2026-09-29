@@ -1,8 +1,13 @@
 'use client';
 
 import { useCardTabs } from '../hooks/useCardTabs';
+import { EstimateTab } from '@/components/estimate-tab';
 
-export const CardTabs = () => {
+interface ICardTabsProps {
+  projectId: number;
+}
+
+export const CardTabs = ({ projectId }: ICardTabsProps) => {
   const { activeTab, tabs, setActiveTab } = useCardTabs();
 
   return (
@@ -26,9 +31,13 @@ export const CardTabs = () => {
       </div>
 
       <div className="p-6">
-        <div className="text-center text-gray-500 py-8">
-          <p className="text-lg">Содержимое вкладки будет реализовано позднее</p>
-        </div>
+        {activeTab === 'estimate' ? (
+          <EstimateTab projectId={projectId} />
+        ) : (
+          <div className="text-center text-gray-500 py-8">
+            <p className="text-lg">Содержимое вкладки будет реализовано позднее</p>
+          </div>
+        )}
       </div>
     </div>
   );
