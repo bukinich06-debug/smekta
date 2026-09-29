@@ -7,6 +7,7 @@ import type {
   IClientListFilters,
   IClientCardDetails,
   IUpdateClientCardInput,
+  IClientInviteInfo,
 } from '@/domain/clients';
 import { Prisma } from '@prisma/client';
 
