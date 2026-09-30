@@ -1,0 +1,1 @@
+export { receiptRepository } from './receiptRepository';
