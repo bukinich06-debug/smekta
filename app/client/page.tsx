@@ -5,6 +5,7 @@ import { getClientCabinet } from '@/services/clients/getClientCabinet';
 import { getClientProjectEstimate } from '@/services/estimates/getClientProjectEstimate';
 import { getClientProjectReceipts } from '@/services/receipts/getClientProjectReceipts';
 import { getClientProjectTz } from '@/services/project-tz/getClientProjectTz';
+import { getClientProjectExtraWorks } from '@/services/extra-works/getClientProjectExtraWorks';
 import { ClientCabinet } from '@/components/client-cabinet';
 
 const ClientPage = async () => {
@@ -14,10 +15,11 @@ const ClientPage = async () => {
   if (session.user.role === 'ADMIN') redirect('/admin/clients');
 
   const data = await getClientCabinet();
-  const [estimate, tz, receipts] = await Promise.all([
+  const [estimate, tz, receipts, extraWorks] = await Promise.all([
     data?.project ? getClientProjectEstimate() : Promise.resolve(null),
     data?.project ? getClientProjectTz() : Promise.resolve(null),
     data?.project ? getClientProjectReceipts() : Promise.resolve(null),
+    data?.project ? getClientProjectExtraWorks() : Promise.resolve(null),
   ]);
 
   return (
@@ -28,6 +30,7 @@ const ClientPage = async () => {
         estimate={estimate}
         tz={tz}
         receipts={receipts}
+        extraWorks={extraWorks}
       />
     </Suspense>
   );
