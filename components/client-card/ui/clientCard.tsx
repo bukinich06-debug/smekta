@@ -6,6 +6,7 @@ import { useCardEdit } from '../hooks/useCardEdit';
 import { CardHeader } from './cardHeader';
 import { CardEditForm } from './cardEditForm';
 import { CardTabs } from './cardTabs';
+import { ClientInvite } from '../client-invite';
 import Link from 'next/link';
 
 interface IClientCardProps {
@@ -88,6 +89,13 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
       ) : (
         <CardHeader data={data} managerName={managerName} />
       )}
+
+      <ClientInvite
+        clientId={data.id}
+        hasInviteToken={!!data.inviteToken}
+        userId={data.userId}
+        userEmail={data.userEmail}
+      />
 
       <CardTabs projectId={data.project.id} />
     </div>

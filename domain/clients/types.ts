@@ -6,6 +6,7 @@ export interface IClient {
   phone: string | null;
   email: string | null;
   userId: number | null;
+  inviteToken: string | null;
 }
 
 export interface IProject {
@@ -58,6 +59,15 @@ export interface IClientCardDetails extends IClient {
   estimateTotal: number;
   paid: number;
   debt: number;
+  userEmail: string | null;
+}
+
+export interface IClientInviteInfo {
+  id: number;
+  fullName: string;
+  projectNumber: string | null;
+  projectName: string | null;
+  projectAddress: string | null;
 }
 
 export interface IUpdateClientCardInput {

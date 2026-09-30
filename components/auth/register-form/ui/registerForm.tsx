@@ -1,9 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useRegisterForm } from '../hooks/useRegisterForm';
 
 export const RegisterForm = () => {
+  const searchParams = useSearchParams();
+  const callback = searchParams.get('callback');
+  const loginHref = callback ? `/login?callback=${encodeURIComponent(callback)}` : '/login';
+
   const {
     name,
     setName,
@@ -25,7 +30,7 @@ export const RegisterForm = () => {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Уже есть аккаунт?{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href={loginHref} className="font-medium text-blue-600 hover:text-blue-500">
               Войти
             </Link>
           </p>
