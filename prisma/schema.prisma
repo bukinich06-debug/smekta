@@ -91,6 +91,7 @@ model User {
   activityLogs    ActivityLog[]
   sessions        Session[]
   accounts        Account[]
+  addedPayments   Payment[]     @relation("PaymentAddedBy")
 
   @@index([email])
   @@index([role])
@@ -268,11 +269,14 @@ model Payment {
   date      DateTime
   amount    Decimal  @db.Decimal(12, 2)
   comment   String?
+  addedById Int
+  addedBy   User     @relation("PaymentAddedBy", fields: [addedById], references: [id], onDelete: Restrict)
 
   files File[]
 
   @@index([receiptId])
   @@index([date])
+  @@index([addedById])
   @@map("payment")
 }
 

@@ -1,14 +1,17 @@
 'use client';
 
 import type { IClientProjectEstimate } from '@/domain/estimates';
+import type { IProjectReceipts } from '@/domain/receipts';
 import { useClientCabinetTabs } from '../hooks/useClientCabinetTabs';
 import { ClientEstimateTab } from '../client-estimate';
+import { ClientReceiptsTab } from '../client-receipts';
 
 interface ICabinetTabsProps {
   estimate: IClientProjectEstimate;
+  receipts: IProjectReceipts;
 }
 
-export const CabinetTabs = ({ estimate }: ICabinetTabsProps) => {
+export const CabinetTabs = ({ estimate, receipts }: ICabinetTabsProps) => {
   const { activeTab, tabs, setActiveTab } = useClientCabinetTabs();
 
   return (
@@ -33,9 +36,9 @@ export const CabinetTabs = ({ estimate }: ICabinetTabsProps) => {
       </div>
 
       <div className="p-6">
-        {activeTab === 'estimate' ? (
-          <ClientEstimateTab data={estimate} />
-        ) : (
+        {activeTab === 'estimate' && <ClientEstimateTab data={estimate} />}
+        {activeTab === 'receipts' && <ClientReceiptsTab data={receipts} />}
+        {activeTab !== 'estimate' && activeTab !== 'receipts' && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Скоро</p>
           </div>
