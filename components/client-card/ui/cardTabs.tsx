@@ -2,6 +2,7 @@
 
 import { useCardTabs } from '../hooks/useCardTabs';
 import { EstimateTab } from '@/components/estimate-tab';
+import { AdminTzTab } from '@/components/tz-tab';
 
 interface ICardTabsProps {
   projectId: number;
@@ -31,9 +32,9 @@ export const CardTabs = ({ projectId }: ICardTabsProps) => {
       </div>
 
       <div className="p-6">
-        {activeTab === 'estimate' ? (
-          <EstimateTab projectId={projectId} />
-        ) : (
+        {activeTab === 'estimate' && <EstimateTab projectId={projectId} />}
+        {activeTab === 'tz' && <AdminTzTab projectId={projectId} />}
+        {activeTab !== 'estimate' && activeTab !== 'tz' && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Содержимое вкладки будет реализовано позднее</p>
           </div>
