@@ -159,12 +159,13 @@ model RateLimit {
 }
 
 model Client {
-  id       Int     @id @default(autoincrement())
-  fullName String
-  phone    String?
-  email    String?
-  userId   Int?    @unique
-  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id          Int     @id @default(autoincrement())
+  fullName    String
+  phone       String?
+  email       String?
+  userId      Int?    @unique
+  user        User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  inviteToken String? @unique @map("invite_token")
 
   projects Project[]
 

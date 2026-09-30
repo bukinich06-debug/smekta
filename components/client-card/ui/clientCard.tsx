@@ -6,6 +6,7 @@ import { useCardEdit } from '../hooks/useCardEdit';
 import { CardHeader } from './cardHeader';
 import { CardEditForm } from './cardEditForm';
 import { CardTabs } from './cardTabs';
+import { ClientInvite } from '../client-invite';
 import Link from 'next/link';
 
 interface IClientCardProps {
@@ -14,16 +15,6 @@ interface IClientCardProps {
 }
 
 export const ClientCard = ({ data, admins }: IClientCardProps) => {
-  if (!data.project) {
-    return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <p className="text-gray-600">У заказчика нет проектов</p>
-      </div>
-    );
-  }
-
-  const managerName = admins.find((a) => a.id === data.project!.managerId)?.name || 'Не указан';
-
   const {
     isEditing,
     formData,
@@ -36,18 +27,28 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
     save,
   } = useCardEdit({
     clientId: data.id,
-    projectId: data.project.id,
+    projectId: data.project?.id || 0,
     initialData: {
       fullName: data.fullName,
       phone: data.phone || '',
       email: data.email || '',
-      projectName: data.project.name,
-      address: data.project.address,
-      projectStatus: data.project.status,
-      startDate: data.project.startDate,
-      managerId: data.project.managerId,
+      projectName: data.project?.name || '',
+      address: data.project?.address || '',
+      projectStatus: data.project?.status || 'PLANNING',
+      startDate: data.project?.startDate || null,
+      managerId: data.project?.managerId || 0,
     },
   });
+
+  if (!data.project) {
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <p className="text-gray-600">У заказчика нет проектов</p>
+      </div>
+    );
+  }
+
+  const managerName = admins.find((a) => a.id === data.project!.managerId)?.name || 'Не указан';
 
   return (
     <div>
@@ -89,7 +90,14 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
         <CardHeader data={data} managerName={managerName} />
       )}
 
-      <CardTabs />
+      <ClientInvite
+        clientId={data.id}
+        hasInviteToken={!!data.inviteToken}
+        userId={data.userId}
+        userEmail={data.userEmail}
+      />
+
+      <CardTabs projectId={data.project.id} />
     </div>
   );
 };
