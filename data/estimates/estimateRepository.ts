@@ -4,6 +4,8 @@ import type {
   IEstimateSection,
   IEstimateItem,
   IProjectEstimate,
+  IClientProjectEstimate,
+  IClientEstimateItem,
   ICreateSectionInput,
   IUpdateSectionInput,
   ICreateItemInput,
@@ -80,6 +82,60 @@ export const estimateRepository: IEstimateRepository = {
       total: projectTotal,
       visibleTotal: projectVisibleTotal,
       hiddenTotal: projectHiddenTotal,
+    };
+  },
+
+  async getClientVisibleByProjectId(projectId: number): Promise<IClientProjectEstimate> {
+    const sections = await dbClient.estimateSection.findMany({
+      where: { projectId },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        items: {
+          where: { isVisibleToClient: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+
+    let projectTotal = 0;
+
+    const sectionsWithTotals = sections
+      .filter((section) => section.items.length > 0)
+      .map((section) => {
+        let sectionTotal = 0;
+
+        const items: IClientEstimateItem[] = section.items.map((item) => {
+          const itemTotal = calculateItemTotal(item.quantity.toString(), item.unitPrice.toString());
+          sectionTotal += itemTotal;
+          projectTotal += itemTotal;
+
+          return {
+            id: item.id,
+            sectionId: item.sectionId,
+            sortOrder: item.sortOrder,
+            name: item.name,
+            unit: item.unit,
+            quantity: item.quantity.toString(),
+            unitPrice: item.unitPrice.toString(),
+            comment: item.comment,
+            status: item.status,
+          };
+        });
+
+        return {
+          id: section.id,
+          projectId: section.projectId,
+          name: section.name,
+          sortOrder: section.sortOrder,
+          items,
+          total: sectionTotal,
+        };
+      });
+
+    return {
+      projectId,
+      sections: sectionsWithTotals,
+      total: projectTotal,
     };
   },
 

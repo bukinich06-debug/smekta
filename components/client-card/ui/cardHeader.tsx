@@ -7,10 +7,11 @@ import { getStatusLabel } from '../helpers/getStatusLabel';
 
 interface ICardHeaderProps {
   data: IClientCardDetails;
-  managerName: string;
+  managerName?: string;
+  showProjectName?: boolean;
 }
 
-export const CardHeader = ({ data, managerName }: ICardHeaderProps) => {
+export const CardHeader = ({ data, managerName, showProjectName }: ICardHeaderProps) => {
   if (!data.project) return null;
 
   return (
@@ -32,16 +33,24 @@ export const CardHeader = ({ data, managerName }: ICardHeaderProps) => {
           <p className="text-sm text-gray-500">E-mail</p>
           <p className="text-lg font-semibold text-gray-900">{data.email || '—'}</p>
         </div>
+        {showProjectName && (
+          <div>
+            <p className="text-sm text-gray-500">Название проекта</p>
+            <p className="text-lg font-semibold text-gray-900">{data.project.name}</p>
+          </div>
+        )}
         <div>
           <p className="text-sm text-gray-500">Статус проекта</p>
           <p className="text-lg font-semibold text-gray-900">
             {getStatusLabel(data.project.status)}
           </p>
         </div>
-        <div>
-          <p className="text-sm text-gray-500">Ответственный администратор</p>
-          <p className="text-lg font-semibold text-gray-900">{managerName}</p>
-        </div>
+        {managerName !== undefined && (
+          <div>
+            <p className="text-sm text-gray-500">Ответственный администратор</p>
+            <p className="text-lg font-semibold text-gray-900">{managerName}</p>
+          </div>
+        )}
         <div>
           <p className="text-sm text-gray-500">Дата старта</p>
           <p className="text-lg font-semibold text-gray-900">{formatDate(data.project.startDate)}</p>

@@ -35,6 +35,29 @@ export interface IProjectEstimate {
   hiddenTotal: number;
 }
 
+export interface IClientEstimateItem {
+  id: number;
+  sectionId: number;
+  sortOrder: number;
+  name: string;
+  unit: string;
+  quantity: string;
+  unitPrice: string;
+  comment: string | null;
+  status: EstimateItemStatus;
+}
+
+export interface IClientEstimateSectionWithItems extends IEstimateSection {
+  items: IClientEstimateItem[];
+  total: number;
+}
+
+export interface IClientProjectEstimate {
+  projectId: number;
+  sections: IClientEstimateSectionWithItems[];
+  total: number;
+}
+
 export interface ICreateSectionInput {
   projectId: number;
   name: string;
@@ -67,6 +90,7 @@ export interface IUpdateItemInput {
 
 export interface IEstimateRepository {
   getByProjectId(projectId: number): Promise<IProjectEstimate>;
+  getClientVisibleByProjectId(projectId: number): Promise<IClientProjectEstimate>;
   createSection(input: ICreateSectionInput): Promise<IEstimateSection>;
   updateSection(id: number, input: IUpdateSectionInput): Promise<IEstimateSection>;
   deleteSection(id: number): Promise<void>;
