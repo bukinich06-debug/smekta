@@ -10,6 +10,11 @@ export const generateInviteToken = async (clientId: number): Promise<{ token: st
   if (!session) return { error: 'Требуется авторизация' };
   if (session.user.role !== 'ADMIN') return { error: 'Недостаточно прав' };
 
+  const client = await clientRepository.getById(clientId);
+
+  if (!client) return { error: 'Заказчик не найден' };
+  if (client.userId) return { error: 'Заказчик уже подключён к аккаунту' };
+
   const token = randomBytes(32).toString('base64url');
 
   try {
