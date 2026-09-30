@@ -2,6 +2,7 @@
 
 import type { IClientCardDetails } from '@/domain/clients';
 import type { IClientProjectEstimate } from '@/domain/estimates';
+import type { IProjectTz } from '@/domain/project-tz';
 import { CardHeader } from '@/components/client-card';
 import { CabinetTabs } from './cabinetTabs';
 import { UnlinkedAccount } from './unlinkedAccount';
@@ -11,9 +12,10 @@ interface IClientCabinetProps {
   userName: string;
   data: IClientCardDetails | null;
   estimate: IClientProjectEstimate | null;
+  tz: IProjectTz | null;
 }
 
-export const ClientCabinet = ({ userName, data, estimate }: IClientCabinetProps) => {
+export const ClientCabinet = ({ userName, data, estimate, tz }: IClientCabinetProps) => {
   if (!data || !data.project) return (
     <ClientCabinetShell userName={userName}>
       <UnlinkedAccount />
@@ -29,7 +31,7 @@ export const ClientCabinet = ({ userName, data, estimate }: IClientCabinetProps)
   return (
     <ClientCabinetShell userName={userName}>
       <CardHeader data={data} showProjectName />
-      <CabinetTabs estimate={estimateData} />
+      <CabinetTabs estimate={estimateData} tz={tz} />
     </ClientCabinetShell>
   );
 };

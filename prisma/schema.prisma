@@ -86,9 +86,10 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   client          Client?
-  managedProjects Project[]     @relation("ProjectManager")
-  uploadedFiles   File[]
-  activityLogs    ActivityLog[]
+  managedProjects   Project[]     @relation("ProjectManager")
+  tzUpdatedProjects Project[]     @relation("ProjectTzUpdatedBy")
+  uploadedFiles     File[]
+  activityLogs      ActivityLog[]
   sessions        Session[]
   accounts        Account[]
 
@@ -183,10 +184,13 @@ model Project {
   address   String
   status    ProjectStatus @default(PLANNING)
   startDate DateTime?
-  managerId Int
-  manager   User          @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
-  tzText    String?
-  updatedAt DateTime      @updatedAt
+  managerId       Int
+  manager         User          @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
+  tzText          String?
+  tzUpdatedAt     DateTime?     @map("tz_updated_at")
+  tzUpdatedById   Int?          @map("tz_updated_by_id")
+  tzUpdatedBy     User?         @relation("ProjectTzUpdatedBy", fields: [tzUpdatedById], references: [id], onDelete: SetNull)
+  updatedAt       DateTime      @updatedAt
 
   estimateSections EstimateSection[]
   receipts         Receipt[]
@@ -199,6 +203,7 @@ model Project {
   @@index([number])
   @@index([status])
   @@index([managerId])
+  @@index([tzUpdatedById])
   @@index([updatedAt])
   @@map("project")
 }
