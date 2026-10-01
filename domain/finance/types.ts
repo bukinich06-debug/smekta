@@ -192,6 +192,7 @@ export interface IFinanceRepository {
   deleteInflow(id: number, userId: number): Promise<void>;
   createTransfer(input: ICreateTransferInput, userId: number): Promise<IWalletTransfer>;
   updateTransfer(id: number, input: IUpdateTransferInput, userId: number): Promise<IWalletTransfer>;
+  getTransferById(id: number): Promise<IWalletTransfer | null>;
   deleteTransfer(id: number, userId: number): Promise<void>;
   listMoneyHistory(projectId: number): Promise<IFinanceHistoryItem[]>;
   getProjectIdByInflowId(inflowId: number): Promise<number | null>;

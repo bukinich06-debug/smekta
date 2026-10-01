@@ -22,7 +22,13 @@ export const updateWalletTransfer = async (
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
 
-  const validationError = validateUpdateTransfer(input);
+  const current = await financeRepository.getTransferById(id);
+  if (!current) return { ok: false, error: 'Перевод не найден' };
+
+  const validationError = validateUpdateTransfer(input, {
+    fromWallet: current.fromWallet,
+    toWallet: current.toWallet,
+  });
   if (validationError) return { ok: false, error: validationError };
 
   try {

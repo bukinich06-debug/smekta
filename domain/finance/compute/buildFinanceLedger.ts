@@ -44,15 +44,27 @@ export const buildFinanceLedger = (
 
   for (const transfer of input.transfers) {
     events.push({
-      sortKey: `transfer-out-${transfer.id}`,
+      sortKey: `transfer-${transfer.id}-out`,
       date: transfer.date,
       row: {
         id: `transfer-out-${transfer.id}`,
         date: transfer.date,
-        label: `Перевод из «${getWalletLabel(transfer.fromWallet)}» в «${getWalletLabel(transfer.toWallet)}»`,
+        label: `Перевод из «${getWalletLabel(transfer.fromWallet)}»`,
         amount: -transfer.amount,
         balanceAfter: 0,
         kind: 'transfer_out',
+      },
+    });
+    events.push({
+      sortKey: `transfer-${transfer.id}-in`,
+      date: transfer.date,
+      row: {
+        id: `transfer-in-${transfer.id}`,
+        date: transfer.date,
+        label: `Перевод в «${getWalletLabel(transfer.toWallet)}»`,
+        amount: transfer.amount,
+        balanceAfter: 0,
+        kind: 'transfer_in',
       },
     });
   }

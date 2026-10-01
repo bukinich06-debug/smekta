@@ -435,4 +435,15 @@ export const financeRepository: IFinanceRepository = {
 
     return row?.projectId ?? null;
   },
+
+  async getTransferById(id: number): Promise<IWalletTransfer | null> {
+    const row = await dbClient.walletTransfer.findUnique({
+      where: { id },
+      include: { addedBy: { select: { name: true } } },
+    });
+
+    if (!row) return null;
+
+    return mapTransfer(row);
+  },
 };
