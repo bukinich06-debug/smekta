@@ -47,6 +47,7 @@ type IProjectFinanceRow = {
       id: number;
       date: Date;
       amount: { toString(): string };
+      source: 'DEPOSIT' | 'DIRECT';
     }[];
   }[];
   acts: {
@@ -96,6 +97,7 @@ export const mapProjectToFinanceInput = (project: IProjectFinanceRow): IProjectF
         id: payment.id,
         date: payment.date,
         amount: payment.amount.toString(),
+        source: payment.source,
         receiptTitle: receipt.title,
       });
     }

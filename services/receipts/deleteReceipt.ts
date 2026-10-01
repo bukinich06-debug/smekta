@@ -20,7 +20,7 @@ export const deleteReceipt = async (id: number): Promise<IResult> => {
   if (!existing) return { ok: false, error: 'Чек не найден' };
 
   try {
-    await receiptRepository.delete(id);
+    await receiptRepository.delete(id, session.user.id);
     revalidateReceiptPaths();
     return { ok: true };
   } catch (error) {

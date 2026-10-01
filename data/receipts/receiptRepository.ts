@@ -1,3 +1,4 @@
+import { ActivityAction } from '@prisma/client';
 import { dbClient } from '@/data/shared/dbClient';
 import type {
   IReceiptRepository,
@@ -8,13 +9,18 @@ import type {
   IAddPaymentInput,
   IReceiptPayment,
 } from '@/domain/receipts';
-import { getReceiptStatus, getRemainder, sumPayments } from '@/domain/receipts';
+import { getReceiptStatus, getRemainder, sumPayments, sumPaymentsBySource } from '@/domain/receipts';
+import type { Prisma } from '@prisma/client';
+import { allocateDepositToUnpaidReceipts } from './deposit/allocateDepositToUnpaidReceipts';
+import { reconcileReceiptDeposit } from './deposit/reconcileReceiptDeposit';
+import { logDepositOffset } from './deposit/logDepositOffset';
 
 const mapPayment = (payment: {
   id: number;
   receiptId: number;
   date: Date;
   amount: { toString(): string };
+  source: 'DEPOSIT' | 'DIRECT';
   comment: string | null;
   addedById: number;
   addedBy: { name: string };
@@ -23,6 +29,7 @@ const mapPayment = (payment: {
   receiptId: payment.receiptId,
   date: payment.date,
   amount: payment.amount.toString(),
+  source: payment.source,
   comment: payment.comment,
   addedById: payment.addedById,
   addedByName: payment.addedBy.name,
@@ -42,6 +49,7 @@ const mapReceipt = (receipt: {
     receiptId: number;
     date: Date;
     amount: { toString(): string };
+    source: 'DEPOSIT' | 'DIRECT';
     comment: string | null;
     addedById: number;
     addedBy: { name: string };
@@ -49,6 +57,8 @@ const mapReceipt = (receipt: {
 }): IReceipt => {
   const payments = receipt.payments.map(mapPayment);
   const paid = sumPayments(payments);
+  const paidFromDeposit = sumPaymentsBySource(payments, 'DEPOSIT');
+  const paidDirect = sumPaymentsBySource(payments, 'DIRECT');
   const amountDue = receipt.amountDue.toString();
 
   return {
@@ -62,6 +72,8 @@ const mapReceipt = (receipt: {
     comment: receipt.comment,
     payments,
     paid,
+    paidFromDeposit,
+    paidDirect,
     remainder: getRemainder(amountDue, paid),
     status: getReceiptStatus(amountDue, paid),
   };
@@ -108,6 +120,37 @@ const buildProjectReceipts = async (projectId: number): Promise<IProjectReceipts
   };
 };
 
+const logDepositPaymentsRemoved = async (
+  tx: Prisma.TransactionClient,
+  params: {
+    userId: number;
+    projectId: number;
+    receiptId: number;
+    receiptTitle: string;
+    payments: { amount: { toString(): string } }[];
+  }
+): Promise<void> => {
+  let depositOnReceipt = 0;
+
+  for (const payment of params.payments) {
+    depositOnReceipt += parseFloat(payment.amount.toString());
+  }
+
+  if (depositOnReceipt <= 0) return;
+
+  await logDepositOffset({
+    tx,
+    userId: params.userId,
+    projectId: params.projectId,
+    receiptId: params.receiptId,
+    action: ActivityAction.DELETE,
+    depositBefore: depositOnReceipt,
+    depositAfter: 0,
+    amountDelta: -depositOnReceipt,
+    receiptTitle: params.receiptTitle,
+  });
+};
+
 export const receiptRepository: IReceiptRepository = {
   async getByProjectId(projectId: number): Promise<IProjectReceipts> {
     return await buildProjectReceipts(projectId);
@@ -124,40 +167,119 @@ export const receiptRepository: IReceiptRepository = {
     return mapReceipt(receipt);
   },
 
-  async create(input: ICreateReceiptInput): Promise<IReceipt> {
-    const receipt = await dbClient.receipt.create({
-      data: {
+  async create(input: ICreateReceiptInput, userId: number): Promise<IReceipt> {
+    const receipt = await dbClient.$transaction(async (tx) => {
+      const created = await tx.receipt.create({
+        data: {
+          projectId: input.projectId,
+          date: input.date,
+          title: input.title.trim(),
+          amountDue: input.amountDue,
+          comment: input.comment?.trim() || null,
+          estimateSectionId: input.estimateSectionId ?? null,
+        },
+        include: receiptInclude,
+      });
+
+      const amountDue = parseFloat(created.amountDue.toString());
+
+      await reconcileReceiptDeposit({
+        tx,
+        receiptId: created.id,
         projectId: input.projectId,
-        date: input.date,
-        title: input.title.trim(),
-        amountDue: input.amountDue,
-        comment: input.comment?.trim() || null,
-        estimateSectionId: input.estimateSectionId ?? null,
-      },
-      include: receiptInclude,
+        userId,
+        receiptTitle: created.title,
+        amountDue,
+        receiptDate: created.date,
+      });
+
+      const withPayments = await tx.receipt.findUnique({
+        where: { id: created.id },
+        include: receiptInclude,
+      });
+
+      if (!withPayments) throw new Error('RECEIPT_NOT_FOUND');
+
+      return withPayments;
     });
 
     return mapReceipt(receipt);
   },
 
-  async update(id: number, input: IUpdateReceiptInput): Promise<IReceipt> {
-    const receipt = await dbClient.receipt.update({
-      where: { id },
-      data: {
-        date: input.date,
-        title: input.title?.trim(),
-        amountDue: input.amountDue,
-        comment: input.comment === undefined ? undefined : input.comment?.trim() || null,
-        estimateSectionId: input.estimateSectionId === undefined ? undefined : input.estimateSectionId,
-      },
-      include: receiptInclude,
+  async update(id: number, input: IUpdateReceiptInput, userId: number): Promise<IReceipt> {
+    const receipt = await dbClient.$transaction(async (tx) => {
+      const current = await tx.receipt.findUnique({
+        where: { id },
+        include: { payments: true },
+      });
+
+      if (!current) throw new Error('RECEIPT_NOT_FOUND');
+
+      const updated = await tx.receipt.update({
+        where: { id },
+        data: {
+          date: input.date,
+          title: input.title?.trim(),
+          amountDue: input.amountDue,
+          comment: input.comment === undefined ? undefined : input.comment?.trim() || null,
+          estimateSectionId: input.estimateSectionId === undefined ? undefined : input.estimateSectionId,
+        },
+        include: receiptInclude,
+      });
+
+      const amountDue = parseFloat(updated.amountDue.toString());
+
+      let directPaid = 0;
+
+      for (const payment of updated.payments) {
+        if (payment.source !== 'DIRECT') continue;
+        directPaid += parseFloat(payment.amount.toString());
+      }
+
+      if (directPaid > amountDue) throw new Error('AMOUNT_LESS_THAN_DIRECT_PAID');
+
+      await reconcileReceiptDeposit({
+        tx,
+        receiptId: id,
+        projectId: current.projectId,
+        userId,
+        receiptTitle: updated.title,
+        amountDue,
+        receiptDate: updated.date,
+      });
+
+      const withPayments = await tx.receipt.findUnique({
+        where: { id },
+        include: receiptInclude,
+      });
+
+      if (!withPayments) throw new Error('RECEIPT_NOT_FOUND');
+
+      return withPayments;
     });
 
     return mapReceipt(receipt);
   },
 
-  async delete(id: number): Promise<void> {
-    await dbClient.receipt.delete({ where: { id } });
+  async delete(id: number, userId: number): Promise<void> {
+    await dbClient.$transaction(async (tx) => {
+      const current = await tx.receipt.findUnique({
+        where: { id },
+        include: { payments: { where: { source: 'DEPOSIT' } } },
+      });
+
+      if (!current) throw new Error('RECEIPT_NOT_FOUND');
+
+      await logDepositPaymentsRemoved(tx, {
+        userId,
+        projectId: current.projectId,
+        receiptId: id,
+        receiptTitle: current.title,
+        payments: current.payments,
+      });
+
+      await tx.receipt.delete({ where: { id } });
+    });
   },
 
   async addPayment(input: IAddPaymentInput, addedById: number): Promise<IReceiptPayment> {
@@ -166,6 +288,7 @@ export const receiptRepository: IReceiptRepository = {
         receiptId: input.receiptId,
         date: input.date,
         amount: input.amount,
+        source: 'DIRECT',
         comment: input.comment?.trim() || null,
         addedById,
       },
@@ -176,7 +299,21 @@ export const receiptRepository: IReceiptRepository = {
   },
 
   async deletePayment(paymentId: number): Promise<void> {
+    const payment = await dbClient.payment.findUnique({
+      where: { id: paymentId },
+      select: { source: true },
+    });
+
+    if (!payment) throw new Error('PAYMENT_NOT_FOUND');
+    if (payment.source === 'DEPOSIT') throw new Error('DEPOSIT_PAYMENT_READONLY');
+
     await dbClient.payment.delete({ where: { id: paymentId } });
+  },
+
+  async allocateDepositToUnpaidReceipts(projectId: number, userId: number): Promise<void> {
+    await dbClient.$transaction(async (tx) => {
+      await allocateDepositToUnpaidReceipts(tx, projectId, userId);
+    });
   },
 
   async getProjectIdByReceiptId(receiptId: number): Promise<number | null> {

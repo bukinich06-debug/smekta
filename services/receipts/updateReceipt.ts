@@ -27,15 +27,24 @@ export const updateReceipt = async (id: number, input: IUpdateReceiptInput): Pro
 
   if (input.amountDue !== undefined) {
     const newDue = parseFloat(input.amountDue);
-    if (newDue < existing.paid)
-      return { ok: false, error: 'Сумма к оплате не может быть меньше уже оплаченной' };
+    if (newDue < existing.paidDirect)
+      return {
+        ok: false,
+        error: 'Сумма к оплате не может быть меньше суммы прямых оплат по чеку',
+      };
   }
 
   try {
-    const data = await receiptRepository.update(id, input);
+    const data = await receiptRepository.update(id, input, session.user.id);
     revalidateReceiptPaths();
     return { ok: true, data };
   } catch (error) {
+    if (error instanceof Error && error.message === 'AMOUNT_LESS_THAN_DIRECT_PAID')
+      return {
+        ok: false,
+        error: 'Сумма к оплате не может быть меньше суммы прямых оплат по чеку',
+      };
+
     console.error('Ошибка при обновлении чека:', error);
     return { ok: false, error: 'Не удалось обновить чек' };
   }

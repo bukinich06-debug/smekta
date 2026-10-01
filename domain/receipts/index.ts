@@ -10,8 +10,10 @@ export type {
   IAddPaymentInput,
   IReceiptRepository,
 } from './types';
-export { sumPayments, getRemainder, getReceiptStatus } from './helpers/receiptTotals';
+export { RECEIPT_DEPOSIT_ENTITY_TYPE } from './constants';
+export { sumPayments, sumPaymentsBySource, getRemainder, getReceiptStatus } from './helpers/receiptTotals';
 export { getReceiptStatusLabel } from './helpers/getStatusLabel';
+export { getPaymentSourceLabel } from './helpers/getPaymentSourceLabel';
 export {
   validateCreateReceipt,
   validateUpdateReceipt,

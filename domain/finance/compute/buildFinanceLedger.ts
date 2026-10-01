@@ -87,16 +87,21 @@ export const buildFinanceLedger = (
   }
 
   for (const payment of input.payments) {
+    const paymentAmount = Number(payment.amount);
+    const fromDeposit = payment.source === 'DEPOSIT';
+
     events.push({
       sortKey: `payment-${payment.id}`,
       date: payment.date,
       row: {
         id: `payment-${payment.id}`,
         date: payment.date,
-        label: `Оплата чека: ${payment.receiptTitle}`,
-        amount: -Number(payment.amount),
+        label: fromDeposit
+          ? `Зачёт из депозита: ${payment.receiptTitle}`
+          : `Прямая оплата чека: ${payment.receiptTitle}`,
+        amount: fromDeposit ? -paymentAmount : 0,
         balanceAfter: 0,
-        kind: 'payment',
+        kind: fromDeposit ? 'payment_deposit' : 'payment_direct',
       },
     });
   }

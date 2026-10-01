@@ -24,6 +24,9 @@ export const deletePayment = async (paymentId: number): Promise<IResult> => {
     revalidateReceiptPaths();
     return { ok: true };
   } catch (error) {
+    if (error instanceof Error && error.message === 'DEPOSIT_PAYMENT_READONLY')
+      return { ok: false, error: 'Зачёт из депозита нельзя удалить вручную — измените сумму чека' };
+
     console.error('Ошибка при удалении оплаты:', error);
     return { ok: false, error: 'Не удалось удалить оплату' };
   }
