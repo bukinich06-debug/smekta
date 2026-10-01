@@ -8,23 +8,27 @@ import { ClientEstimateTab } from '../client-estimate';
 import { ClientReceiptsTab } from '../client-receipts';
 import { ClientTzTab } from '../client-tz';
 import type { IClientProjectExtraWorks } from '@/domain/extra-works';
+import type { IClientProjectActs } from '@/domain/acts';
 import { ClientExtraWorksTab } from '../client-extra-works';
+import { ClientActsTab } from '../client-acts';
 
 interface ICabinetTabsProps {
   estimate: IClientProjectEstimate;
   tz: IProjectTz | null;
   receipts: IProjectReceipts;
   extraWorks: IClientProjectExtraWorks;
+  acts: IClientProjectActs;
 }
 
-export const CabinetTabs = ({ estimate, tz, receipts, extraWorks }: ICabinetTabsProps) => {
+export const CabinetTabs = ({ estimate, tz, receipts, extraWorks, acts }: ICabinetTabsProps) => {
   const { activeTab, tabs, setActiveTab } = useClientCabinetTabs();
 
   const isPlaceholder =
     activeTab !== 'estimate' &&
     activeTab !== 'tz' &&
     activeTab !== 'receipts' &&
-    activeTab !== 'extra';
+    activeTab !== 'extra' &&
+    activeTab !== 'acts';
 
   return (
     <div className="bg-white shadow rounded-lg">
@@ -55,6 +59,7 @@ export const CabinetTabs = ({ estimate, tz, receipts, extraWorks }: ICabinetTabs
         )}
         {activeTab === 'receipts' && <ClientReceiptsTab data={receipts} />}
         {activeTab === 'extra' && <ClientExtraWorksTab data={extraWorks} />}
+        {activeTab === 'acts' && <ClientActsTab data={acts} />}
         {isPlaceholder && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Скоро</p>

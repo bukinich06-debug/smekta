@@ -298,6 +298,7 @@ model Act {
   items ActItem[]
   files File[]
 
+  @@unique([projectId, number])
   @@index([projectId])
   @@index([date])
   @@index([status])
@@ -312,8 +313,8 @@ model ActItem {
   estimateItem   EstimateItem @relation(fields: [estimateItemId], references: [id], onDelete: Restrict)
   amount         Decimal      @db.Decimal(12, 2)
 
+  @@unique([estimateItemId])
   @@index([actId])
-  @@index([estimateItemId])
   @@map("act_item")
 }
 
