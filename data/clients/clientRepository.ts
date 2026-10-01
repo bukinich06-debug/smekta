@@ -10,6 +10,7 @@ import type {
   IClientInviteInfo,
 } from '@/domain/clients';
 import { Prisma } from '@prisma/client';
+import { sumExtraWorksInBudget } from '@/domain/extra-works';
 
 export const clientRepository: IClientRepository = {
   async list(filters: IClientListFilters): Promise<IClientListItem[]> {
@@ -45,6 +46,7 @@ export const clientRepository: IClientRepository = {
                 payments: true,
               },
             },
+            extraWorks: true,
           },
         },
       },
@@ -69,6 +71,8 @@ export const clientRepository: IClientRepository = {
             paid += Number(payment.amount);
           }
         }
+
+        estimateTotal += sumExtraWorksInBudget(project.extraWorks);
       }
 
       const debt = estimateTotal - paid;
@@ -132,6 +136,7 @@ export const clientRepository: IClientRepository = {
                 payments: true,
               },
             },
+            extraWorks: true,
           },
         },
       },
@@ -159,6 +164,8 @@ export const clientRepository: IClientRepository = {
           paid += Number(payment.amount);
         }
       }
+
+      estimateTotal += sumExtraWorksInBudget(project.extraWorks, true);
     }
 
     const debt = estimateTotal - paid;
@@ -295,6 +302,7 @@ export const clientRepository: IClientRepository = {
                 payments: true,
               },
             },
+            extraWorks: true,
           },
         },
       },
@@ -320,6 +328,8 @@ export const clientRepository: IClientRepository = {
           paid += Number(payment.amount);
         }
       }
+
+      estimateTotal += sumExtraWorksInBudget(project.extraWorks);
     }
 
     const debt = estimateTotal - paid;
