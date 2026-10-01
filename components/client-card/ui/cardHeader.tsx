@@ -56,16 +56,30 @@ export const CardHeader = ({ data, managerName, showProjectName }: ICardHeaderPr
           <p className="text-lg font-semibold text-gray-900">{formatDate(data.project.startDate)}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-500">Общая сумма сметы</p>
+          <p className="text-sm text-gray-500">Смета работ</p>
           <p className="text-lg font-semibold text-gray-900">{formatMoney(data.estimateTotal)}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-500">Оплачено</p>
-          <p className="text-lg font-semibold text-green-600">{formatMoney(data.paid)}</p>
+          <p className="text-sm text-gray-500">Поступило</p>
+          <p className="text-lg font-semibold text-green-600">{formatMoney(data.receivedTotal)}</p>
         </div>
         <div>
-          <p className="text-sm text-gray-500">Остаток к оплате</p>
-          <p className="text-lg font-semibold text-red-600">{formatMoney(data.debt)}</p>
+          <p className="text-sm text-gray-500">Освоено</p>
+          <p className="text-lg font-semibold text-gray-900">{formatMoney(data.masteredTotal)}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Остаток на руках</p>
+          <p className="text-lg font-semibold text-blue-700">{formatMoney(data.balanceOnHand)}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">К доплате сейчас</p>
+          <p className="text-lg font-semibold text-red-600">{formatMoney(data.dueNow)}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Нужно ещё до конца сметы (работы)</p>
+          <p className="text-lg font-semibold text-amber-700">
+            {formatMoney(data.stillNeededForWorks)}
+          </p>
         </div>
       </div>
     </div>

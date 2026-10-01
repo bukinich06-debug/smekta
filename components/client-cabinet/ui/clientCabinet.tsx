@@ -6,6 +6,7 @@ import type { IProjectReceipts } from '@/domain/receipts';
 import type { IProjectTz } from '@/domain/project-tz';
 import type { IClientProjectExtraWorks } from '@/domain/extra-works';
 import type { IClientProjectActs } from '@/domain/acts';
+import type { IClientProjectFinance } from '@/domain/finance';
 import { CardHeader } from '@/components/client-card';
 import { CabinetTabs } from './cabinetTabs';
 import { UnlinkedAccount } from './unlinkedAccount';
@@ -19,9 +20,19 @@ interface IClientCabinetProps {
   receipts: IProjectReceipts | null;
   extraWorks: IClientProjectExtraWorks | null;
   acts: IClientProjectActs | null;
+  finance: IClientProjectFinance | null;
 }
 
-export const ClientCabinet = ({ userName, data, estimate, tz, receipts, extraWorks, acts }: IClientCabinetProps) => {
+export const ClientCabinet = ({
+  userName,
+  data,
+  estimate,
+  tz,
+  receipts,
+  extraWorks,
+  acts,
+  finance,
+}: IClientCabinetProps) => {
   if (!data || !data.project) return (
     <ClientCabinetShell userName={userName}>
       <UnlinkedAccount />
@@ -64,6 +75,7 @@ export const ClientCabinet = ({ userName, data, estimate, tz, receipts, extraWor
         receipts={receiptsData}
         extraWorks={extraWorksData}
         acts={actsData}
+        finance={finance}
       />
     </ClientCabinetShell>
   );

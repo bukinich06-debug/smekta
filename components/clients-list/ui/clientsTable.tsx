@@ -35,13 +35,19 @@ export const ClientsTable = ({ items }: IClientsTableProps) => {
                 Статус
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Сумма сметы
+                Смета работ
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Оплачено
+                Поступило
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Задолженность
+                Освоено
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Остаток
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                К доплате
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Дата начала
@@ -72,11 +78,17 @@ export const ClientsTable = ({ items }: IClientsTableProps) => {
                   {formatMoney(item.estimateTotal)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                  {formatMoney(item.paid)}
+                  {formatMoney(item.receivedTotal)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  {formatMoney(item.masteredTotal)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  {formatMoney(item.balanceOnHand)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                  <span className={item.debt > 0 ? 'text-red-600 font-medium' : 'text-gray-900'}>
-                    {formatMoney(item.debt)}
+                  <span className={item.dueNow > 0 ? 'text-red-600 font-medium' : 'text-gray-900'}>
+                    {formatMoney(item.dueNow)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

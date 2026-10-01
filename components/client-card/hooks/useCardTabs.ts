@@ -13,6 +13,7 @@ export const useCardTabs = () => {
     { id: 'receipts', label: 'Чеки' },
     { id: 'acts', label: 'Акты выполненных работ' },
     { id: 'extra', label: 'Дополнительные работы' },
+    { id: 'finance', label: 'Финансы' },
     { id: 'photos', label: 'Фото' },
   ];
 

@@ -74,6 +74,20 @@ enum ActivityAction {
   @@map("activity_action")
 }
 
+enum ProjectInflowPurpose {
+  WORKS
+  MATERIALS
+
+  @@map("project_inflow_purpose")
+}
+
+enum WalletType {
+  WORKS
+  MATERIALS
+
+  @@map("wallet_type")
+}
+
 model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
@@ -93,6 +107,8 @@ model User {
   sessions        Session[]
   accounts        Account[]
   addedPayments   Payment[]     @relation("PaymentAddedBy")
+  addedInflows    ProjectInflow[] @relation("InflowAddedBy")
+  addedTransfers  WalletTransfer[] @relation("TransferAddedBy")
 
   @@index([email])
   @@index([role])
@@ -197,6 +213,8 @@ model Project {
   receipts         Receipt[]
   acts             Act[]
   extraWorks       ExtraWork[]
+  inflows          ProjectInflow[]
+  walletTransfers  WalletTransfer[]
   files            File[]
   activityLogs     ActivityLog[]
 
@@ -338,6 +356,41 @@ model ExtraWork {
   @@index([status])
   @@index([isVisibleToClient])
   @@map("extra_work")
+}
+
+model ProjectInflow {
+  id        Int                  @id @default(autoincrement())
+  projectId Int
+  project   Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date      DateTime
+  amount    Decimal              @db.Decimal(12, 2)
+  purpose   ProjectInflowPurpose
+  comment   String?
+  addedById Int
+  addedBy   User                 @relation("InflowAddedBy", fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([date])
+  @@index([addedById])
+  @@map("project_inflow")
+}
+
+model WalletTransfer {
+  id         Int        @id @default(autoincrement())
+  projectId  Int
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date       DateTime
+  amount     Decimal    @db.Decimal(12, 2)
+  fromWallet WalletType
+  toWallet   WalletType
+  comment    String?
+  addedById  Int
+  addedBy    User       @relation("TransferAddedBy", fields: [addedById], references: [id], onDelete: Restrict)
+
+  @@index([projectId])
+  @@index([date])
+  @@index([addedById])
+  @@map("wallet_transfer")
 }
 
 model File {

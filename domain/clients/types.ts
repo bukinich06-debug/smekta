@@ -31,8 +31,10 @@ export interface IClientListItem {
   address: string;
   projectStatus: ProjectStatus | null;
   estimateTotal: number;
-  paid: number;
-  debt: number;
+  receivedTotal: number;
+  masteredTotal: number;
+  balanceOnHand: number;
+  dueNow: number;
   startDate: Date | null;
   updatedAt: Date | null;
 }
@@ -50,15 +52,27 @@ export interface ICreateClientInput {
 export interface IClientListFilters {
   search?: string;
   status?: ProjectStatus;
-  sortBy?: 'fullName' | 'address' | 'estimateTotal' | 'paid' | 'debt' | 'startDate' | 'updatedAt';
+  sortBy?:
+    | 'fullName'
+    | 'address'
+    | 'estimateTotal'
+    | 'receivedTotal'
+    | 'masteredTotal'
+    | 'balanceOnHand'
+    | 'dueNow'
+    | 'startDate'
+    | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
 }
 
 export interface IClientCardDetails extends IClient {
   project: IProject | null;
   estimateTotal: number;
-  paid: number;
-  debt: number;
+  receivedTotal: number;
+  masteredTotal: number;
+  balanceOnHand: number;
+  dueNow: number;
+  stillNeededForWorks: number;
   userEmail: string | null;
 }
 
