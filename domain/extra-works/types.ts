@@ -68,6 +68,8 @@ export interface IExtraWorkRepository {
   update(id: number, input: IUpdateExtraWorkInput): Promise<IExtraWork>;
   delete(id: number): Promise<void>;
   toggleStatus(id: number): Promise<IExtraWork>;
+  markDone(id: number): Promise<IExtraWork>;
+  unmarkDone(id: number): Promise<IExtraWork>;
   toggleVisibility(id: number): Promise<IExtraWork>;
   toggleIncludedInBudget(id: number): Promise<IExtraWork>;
 }

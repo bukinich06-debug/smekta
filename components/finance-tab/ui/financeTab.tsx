@@ -82,7 +82,11 @@ export const FinanceTab = ({ projectId }: IFinanceTabProps) => {
           }}
         />
 
-        <LedgerPanel ledger={finance.data.ledger} dueExtraWorks={finance.data.dueExtraWorks} />
+        <LedgerPanel
+          ledger={finance.data.ledger}
+          dueExtraWorks={finance.data.dueExtraWorks}
+          pendingExtraWorks={finance.data.pendingExtraWorks}
+        />
       </div>
 
       <div className="mt-8">
