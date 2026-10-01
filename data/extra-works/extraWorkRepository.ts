@@ -121,11 +121,39 @@ export const extraWorkRepository: IExtraWorkRepository = {
     const current = await dbClient.extraWork.findUnique({ where: { id } });
     if (!current) throw new Error('Допработа не найдена');
 
+    if (current.status === 'DONE') throw new Error('Сначала снимите отметку «выполнено»');
+
     const status = current.status === 'AGREED' ? 'PENDING' : 'AGREED';
 
     const row = await dbClient.extraWork.update({
       where: { id },
       data: { status },
+    });
+
+    return mapRow(row);
+  },
+
+  async markDone(id: number): Promise<IExtraWork> {
+    const current = await dbClient.extraWork.findUnique({ where: { id } });
+    if (!current) throw new Error('Допработа не найдена');
+    if (current.status !== 'AGREED') throw new Error('Отметить выполненной можно только согласованную допработу');
+
+    const row = await dbClient.extraWork.update({
+      where: { id },
+      data: { status: 'DONE' },
+    });
+
+    return mapRow(row);
+  },
+
+  async unmarkDone(id: number): Promise<IExtraWork> {
+    const current = await dbClient.extraWork.findUnique({ where: { id } });
+    if (!current) throw new Error('Допработа не найдена');
+    if (current.status !== 'DONE') throw new Error('Допработа не отмечена как выполненная');
+
+    const row = await dbClient.extraWork.update({
+      where: { id },
+      data: { status: 'AGREED' },
     });
 
     return mapRow(row);

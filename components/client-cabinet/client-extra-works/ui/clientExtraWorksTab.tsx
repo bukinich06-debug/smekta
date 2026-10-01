@@ -32,6 +32,8 @@ export const ClientExtraWorksTab = ({ data }: IClientExtraWorksTabProps) => (
         onEdit={() => {}}
         onDelete={() => {}}
         onToggleStatus={() => {}}
+        onMarkDone={() => {}}
+        onUnmarkDone={() => {}}
         onToggleVisibility={() => {}}
         onToggleBudget={() => {}}
       />

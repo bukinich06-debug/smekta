@@ -76,9 +76,12 @@ const loadProject = async (projectId: number) => {
   return project;
 };
 
-const buildProjectFinance = async (projectId: number, clientView: boolean): Promise<IProjectFinance> => {
+const buildProjectFinance = async (
+  projectId: number,
+  clientLedgerView: boolean
+): Promise<IProjectFinance> => {
   const project = await loadProject(projectId);
-  const view = buildFinanceViewFromProject(project, { clientView });
+  const view = buildFinanceViewFromProject(project, { clientLedgerView });
 
   const inflows = project.inflows.map((row) => mapInflow({ ...row, projectId }));
 
@@ -91,6 +94,7 @@ const buildProjectFinance = async (projectId: number, clientView: boolean): Prom
     transfers,
     ledger: view.ledger,
     dueExtraWorks: view.dueExtraWorks,
+    pendingExtraWorks: view.pendingExtraWorks,
   };
 };
 

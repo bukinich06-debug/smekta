@@ -13,19 +13,20 @@ interface IResult {
   error?: string;
 }
 
-export const toggleExtraWorkBudget = async (id: number): Promise<IResult> => {
+export const unmarkExtraWorkDone = async (id: number): Promise<IResult> => {
   const session = await getSession();
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
 
   try {
-    const data = await extraWorkRepository.toggleIncludedInBudget(id);
+    const data = await extraWorkRepository.unmarkDone(id);
     revalidateExtraWorkPaths();
     revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {
-    console.error('Ошибка при переключении учёта в бюджете:', error);
-    return { ok: false, error: 'Не удалось изменить учёт в бюджете' };
+    console.error('Ошибка при снятии отметки выполнения допработы:', error);
+    const message = error instanceof Error ? error.message : 'Не удалось снять отметку выполнения';
+    return { ok: false, error: message };
   }
 };

@@ -63,8 +63,9 @@ export interface IProjectFinanceInput {
   transfers: IFinanceTransfer[];
 }
 
-export interface IComputeProjectFinanceOptions {
-  clientView?: boolean;
+export interface IBuildFinanceLedgerOptions {
+  /** Маскирует названия скрытых допработ в ведомости для заказчика; суммы не меняются */
+  clientLedgerView?: boolean;
 }
 
 export interface IProjectFinanceSummary {
@@ -100,6 +101,14 @@ export interface IFinanceDueExtraWork {
   amount: number;
 }
 
+export interface IFinancePendingExtraWork {
+  id: number;
+  date: Date;
+  description: string;
+  amount: number;
+  includedInBudget: boolean;
+}
+
 export interface IProjectInflow {
   id: number;
   projectId: number;
@@ -130,6 +139,7 @@ export interface IProjectFinance {
   transfers: IWalletTransfer[];
   ledger: IFinanceLedgerRow[];
   dueExtraWorks: IFinanceDueExtraWork[];
+  pendingExtraWorks: IFinancePendingExtraWork[];
 }
 
 export interface IClientProjectFinance {
@@ -139,6 +149,7 @@ export interface IClientProjectFinance {
   transfers: IWalletTransfer[];
   ledger: IFinanceLedgerRow[];
   dueExtraWorks: IFinanceDueExtraWork[];
+  pendingExtraWorks: IFinancePendingExtraWork[];
 }
 
 export interface ICreateInflowInput {
