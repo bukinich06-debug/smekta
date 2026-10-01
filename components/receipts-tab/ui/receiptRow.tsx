@@ -50,9 +50,17 @@ export const ReceiptRow = ({
           </div>
         </button>
         <div className="text-right text-sm shrink-0">
-          <div>К оплате: <span className="font-medium">{formatMoney(parseFloat(receipt.amountDue))}</span></div>
-          <div className="text-green-700">Оплачено: {formatMoney(receipt.paid)}</div>
-          <div className="text-red-700">Остаток: {formatMoney(receipt.remainder)}</div>
+          <div>
+            К оплате: <span className="font-medium">{formatMoney(parseFloat(receipt.amountDue))}</span>
+          </div>
+          {receipt.paidFromDeposit > 0 && (
+            <div className="text-emerald-800">Из депозита: {formatMoney(receipt.paidFromDeposit)}</div>
+          )}
+          {receipt.paidDirect > 0 && (
+            <div className="text-green-700">Напрямую: {formatMoney(receipt.paidDirect)}</div>
+          )}
+          {receipt.paid <= 0 && <div className="text-gray-500">Оплачено: {formatMoney(0)}</div>}
+          <div className="text-red-700">Остаток к оплате: {formatMoney(receipt.remainder)}</div>
         </div>
       </div>
 
@@ -113,6 +121,7 @@ export const ReceiptRow = ({
           {receipt.payments.map((payment) => (
             <li key={payment.id} className="text-sm text-gray-700">
               {formatDate(payment.date)} — {formatMoney(parseFloat(payment.amount))}
+              <span className="text-gray-500"> ({payment.source === 'DEPOSIT' ? 'из депозита' : 'напрямую'})</span>
             </li>
           ))}
         </ul>

@@ -22,6 +22,7 @@ import {
   buildFinanceViewFromProject,
   projectFinanceQueryInclude,
 } from './projectFinanceLoader';
+import { receiptRepository } from '@/data/receipts';
 
 const mapInflow = (row: {
   id: number;
@@ -218,6 +219,9 @@ export const financeRepository: IFinanceRepository = {
       return created;
     });
 
+    if (row.purpose === 'MATERIALS')
+      await receiptRepository.allocateDepositToUnpaidReceipts(input.projectId, userId);
+
     return mapInflow(row);
   },
 
@@ -313,6 +317,9 @@ export const financeRepository: IFinanceRepository = {
 
       return created;
     });
+
+    if (row.toWallet === 'MATERIALS')
+      await receiptRepository.allocateDepositToUnpaidReceipts(input.projectId, userId);
 
     return mapTransfer(row);
   },
