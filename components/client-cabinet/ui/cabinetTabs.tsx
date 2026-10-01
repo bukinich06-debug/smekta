@@ -7,18 +7,24 @@ import { useClientCabinetTabs } from '../hooks/useClientCabinetTabs';
 import { ClientEstimateTab } from '../client-estimate';
 import { ClientReceiptsTab } from '../client-receipts';
 import { ClientTzTab } from '../client-tz';
+import type { IClientProjectExtraWorks } from '@/domain/extra-works';
+import { ClientExtraWorksTab } from '../client-extra-works';
 
 interface ICabinetTabsProps {
   estimate: IClientProjectEstimate;
   tz: IProjectTz | null;
   receipts: IProjectReceipts;
+  extraWorks: IClientProjectExtraWorks;
 }
 
-export const CabinetTabs = ({ estimate, tz, receipts }: ICabinetTabsProps) => {
+export const CabinetTabs = ({ estimate, tz, receipts, extraWorks }: ICabinetTabsProps) => {
   const { activeTab, tabs, setActiveTab } = useClientCabinetTabs();
 
   const isPlaceholder =
-    activeTab !== 'estimate' && activeTab !== 'tz' && activeTab !== 'receipts';
+    activeTab !== 'estimate' &&
+    activeTab !== 'tz' &&
+    activeTab !== 'receipts' &&
+    activeTab !== 'extra';
 
   return (
     <div className="bg-white shadow rounded-lg">
@@ -48,6 +54,7 @@ export const CabinetTabs = ({ estimate, tz, receipts }: ICabinetTabsProps) => {
           <p className="text-gray-500">Данные ТЗ недоступны.</p>
         )}
         {activeTab === 'receipts' && <ClientReceiptsTab data={receipts} />}
+        {activeTab === 'extra' && <ClientExtraWorksTab data={extraWorks} />}
         {isPlaceholder && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Скоро</p>
