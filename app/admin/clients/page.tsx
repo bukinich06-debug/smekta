@@ -29,8 +29,10 @@ const AdminClientsPage = async ({ searchParams }: IPageProps) => {
       | 'fullName'
       | 'address'
       | 'estimateTotal'
-      | 'paid'
-      | 'debt'
+      | 'receivedTotal'
+      | 'masteredTotal'
+      | 'balanceOnHand'
+      | 'dueNow'
       | 'startDate'
       | 'updatedAt'
       | undefined,

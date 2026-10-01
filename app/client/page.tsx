@@ -7,6 +7,7 @@ import { getClientProjectReceipts } from '@/services/receipts/getClientProjectRe
 import { getClientProjectTz } from '@/services/project-tz/getClientProjectTz';
 import { getClientProjectExtraWorks } from '@/services/extra-works/getClientProjectExtraWorks';
 import { getClientProjectActs } from '@/services/acts/getClientProjectActs';
+import { getClientProjectFinance } from '@/services/finance/getClientProjectFinance';
 import { ClientCabinet } from '@/components/client-cabinet';
 
 const ClientPage = async () => {
@@ -16,12 +17,13 @@ const ClientPage = async () => {
   if (session.user.role === 'ADMIN') redirect('/admin/clients');
 
   const data = await getClientCabinet();
-  const [estimate, tz, receipts, extraWorks, acts] = await Promise.all([
+  const [estimate, tz, receipts, extraWorks, acts, finance] = await Promise.all([
     data?.project ? getClientProjectEstimate() : Promise.resolve(null),
     data?.project ? getClientProjectTz() : Promise.resolve(null),
     data?.project ? getClientProjectReceipts() : Promise.resolve(null),
     data?.project ? getClientProjectExtraWorks() : Promise.resolve(null),
     data?.project ? getClientProjectActs() : Promise.resolve(null),
+    data?.project ? getClientProjectFinance() : Promise.resolve(null),
   ]);
 
   return (
@@ -34,6 +36,7 @@ const ClientPage = async () => {
         receipts={receipts}
         extraWorks={extraWorks}
         acts={acts}
+        finance={finance}
       />
     </Suspense>
   );

@@ -1,0 +1,6 @@
+export const formatMoney = (value: number): string =>
+  new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 2,
+  }).format(value);
