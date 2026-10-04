@@ -449,6 +449,11 @@ const seedProject1ActsAndExtra = async (projectId: number, adminId: number) => {
     },
   });
 
+  const usedInSignedActs = new Set(agreedItems.map((item) => item.id));
+  const act3Items = items.filter(
+    (item) => !usedInSignedActs.has(item.id) && item.status === EstimateItemStatus.DRAFT
+  );
+
   const act3 = await dbClient.act.create({
     data: {
       projectId,
@@ -457,7 +462,7 @@ const seedProject1ActsAndExtra = async (projectId: number, adminId: number) => {
       stage: 'Отделочные работы',
       status: ActStatus.SENT,
       items: {
-        create: agreedItems.slice(7, 8).map((item) => ({
+        create: act3Items.slice(0, 2).map((item) => ({
           estimateItemId: item.id,
           amount: Number(item.quantity) * Number(item.unitPrice),
         })),
@@ -937,38 +942,11 @@ const seedActivityLog = async (
     },
     {
       userId: adminId,
-      projectId: projects[0].projectId,
-      entityType: PROJECT_INFLOW_ENTITY_TYPE,
-      entityId: 1,
-      action: ActivityAction.CREATE,
-      createdAt: daysAgo(45),
-      changes: { purpose: 'WORKS' },
-    },
-    {
-      userId: adminId,
-      projectId: projects[1].projectId,
-      entityType: ACT_ENTITY_TYPE,
-      entityId: 1,
-      action: ActivityAction.STATUS_CHANGE,
-      createdAt: daysAgo(90),
-      changes: { status: 'SIGNED' },
-    },
-    {
-      userId: adminId,
       projectId: projects[2].projectId,
       entityType: PROJECT_TZ_ENTITY_TYPE,
       entityId: projects[2].projectId,
       action: ActivityAction.CREATE,
       createdAt: daysAgo(15),
-      changes: {},
-    },
-    {
-      userId: adminId,
-      projectId: projects[3].projectId,
-      entityType: WALLET_TRANSFER_ENTITY_TYPE,
-      entityId: 1,
-      action: ActivityAction.CREATE,
-      createdAt: daysAgo(50),
       changes: {},
     },
   ];

@@ -41,6 +41,8 @@ export const assertSeedEnvironment = (options: ISeedCliOptions): void => {
     process.exit(1);
   }
 
+  if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1);
+
   const normalized = host.toLowerCase();
   if (LOCAL_HOSTS.has(normalized)) return;
 
