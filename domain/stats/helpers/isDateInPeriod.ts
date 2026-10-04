@@ -1,19 +1,35 @@
+const MINSK_TIME_ZONE = 'Europe/Minsk';
+
+const minskCalendarDayFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: MINSK_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+export const toMinskCalendarDay = (date: Date): string => minskCalendarDayFormatter.format(date);
+
 interface IPeriod {
-  dateFrom?: Date;
-  dateTo?: Date;
+  dateFrom?: Date | string;
+  dateTo?: Date | string;
 }
 
+const normalizeBoundary = (value: Date | string): string => {
+  if (typeof value === 'string') return value;
+  return toMinskCalendarDay(value);
+};
+
 export const isDateInPeriod = (date: Date, period: IPeriod): boolean => {
+  const day = toMinskCalendarDay(date);
+
   if (period.dateFrom) {
-    const from = new Date(period.dateFrom);
-    from.setHours(0, 0, 0, 0);
-    if (date < from) return false;
+    const from = normalizeBoundary(period.dateFrom);
+    if (day < from) return false;
   }
 
   if (period.dateTo) {
-    const to = new Date(period.dateTo);
-    to.setHours(23, 59, 59, 999);
-    if (date > to) return false;
+    const to = normalizeBoundary(period.dateTo);
+    if (day > to) return false;
   }
 
   return true;

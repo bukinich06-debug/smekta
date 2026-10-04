@@ -13,11 +13,9 @@ interface IPageProps {
   }>;
 }
 
-const parseDate = (value?: string): Date | undefined => {
-  if (!value) return undefined;
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return undefined;
-  return date;
+const parseDateParam = (value?: string): Date | undefined => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  return value as unknown as Date;
 };
 
 const AdminStatsPage = async ({ searchParams }: IPageProps) => {
@@ -30,8 +28,8 @@ const AdminStatsPage = async ({ searchParams }: IPageProps) => {
 
   const data = await getAdminStats({
     status: params.status,
-    dateFrom: parseDate(params.dateFrom),
-    dateTo: parseDate(params.dateTo),
+    dateFrom: parseDateParam(params.dateFrom),
+    dateTo: parseDateParam(params.dateTo),
   });
 
   return (
