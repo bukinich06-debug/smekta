@@ -9,8 +9,27 @@ export interface IAdminStatsFilters {
 
 export interface IAdminStatsProjectRow {
   projectId: number;
+  clientId: number;
+  number: string;
+  name: string;
+  clientFullName: string;
   status: ProjectStatus;
   financeInput: IProjectFinanceInput;
+}
+
+export interface IAdminStatsMonthlyPoint {
+  monthKey: string;
+  monthLabel: string;
+  received: number;
+  mastered: number;
+}
+
+export interface IAdminStatsProjectFinanceBar {
+  projectId: number;
+  clientId: number;
+  label: string;
+  balanceOnHand: number;
+  dueNow: number;
 }
 
 export interface IAdminStatsReceiptRow {
@@ -43,6 +62,8 @@ export interface IAdminStatsActivityItem {
 
 export interface IAdminStats {
   kpi: IAdminStatsKpi;
+  monthlyMoney: IAdminStatsMonthlyPoint[];
+  projectFinanceBars: IAdminStatsProjectFinanceBar[];
   recentActivity: IAdminStatsActivityItem[];
 }
 

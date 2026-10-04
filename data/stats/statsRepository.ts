@@ -18,7 +18,10 @@ export const statsRepository: IStatsRepository = {
 
     const projects = await dbClient.project.findMany({
       where: projectWhere,
-      include: projectFinanceQueryInclude,
+      include: {
+        ...projectFinanceQueryInclude,
+        client: { select: { fullName: true } },
+      },
     });
 
     const projectIds = projects.map((row) => row.id);
@@ -46,6 +49,10 @@ export const statsRepository: IStatsRepository = {
 
     const projectRows = projects.map((project) => ({
       projectId: project.id,
+      clientId: project.clientId,
+      number: project.number,
+      name: project.name,
+      clientFullName: project.client.fullName,
       status: project.status,
       financeInput: mapProjectToFinanceInput(project),
     }));
