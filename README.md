@@ -39,8 +39,34 @@ components  →  services  →  domain  ←  data
 1. Правишь `prisma/schema.prisma`.
 2. Применяешь схему: `npm run db:push`.
 3. Обновляешь клиент: `npm run db:generate`.
+4. (Опционально) Заполняешь тестовыми данными: `npm run db:seed`.
 
 Имена таблиц в базе — в нижнем регистре (`@@map`). Поля `createdAt` / `updatedAt` в модели не добавляем.
+
+### Первичная настройка БД и тестовые данные
+
+Скопируй `.env.example` в `.env`, укажи `DATABASE_URL`, `BETTER_AUTH_SECRET` и URL приложения.
+
+```bash
+npm run db:push
+npm run db:generate
+npm run db:seed
+```
+
+**Внимание:** `db:seed` **полностью очищает** все таблицы приложения и создаёт демо-данные заново. Используй только на локальной или тестовой базе.
+
+Тот же сид можно запустить через Prisma CLI: `npx prisma db seed`.
+
+### Тестовые логины (после seed)
+
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Администратор | `admin@smekta.test` | `Admin123!` |
+| Заказчик | `client1@smekta.test` | `Client123!` |
+| Заказчик | `client2@smekta.test` | `Client123!` |
+| Заказчик | `client3@smekta.test` | `Client123!` |
+
+Заказчик **Новикова Ольга** создан без привязки к аккаунту; для неё в seed записан инвайт-токен `seed-invite-novikova-demo-2026` (принятие через страницу инвайта в приложении).
 
 ## Запуск
 
