@@ -12,6 +12,8 @@ interface IExtraWorkRowProps {
   onEdit: (work: IExtraWork) => void;
   onDelete: (id: number) => void;
   onToggleStatus: (id: number) => void;
+  onMarkDone: (id: number) => void;
+  onUnmarkDone: (id: number) => void;
   onToggleVisibility: (id: number) => void;
   onToggleBudget: (id: number) => void;
 }
@@ -23,6 +25,8 @@ export const ExtraWorkRow = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  onMarkDone,
+  onUnmarkDone,
   onToggleVisibility,
   onToggleBudget,
 }: IExtraWorkRowProps) => {
@@ -38,7 +42,11 @@ export const ExtraWorkRow = ({
             <span className="text-sm text-gray-500">{formatDate(work.date)}</span>
             <span
               className={`text-xs px-2 py-0.5 rounded ${
-                work.status === 'AGREED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+                work.status === 'DONE'
+                  ? 'bg-indigo-100 text-indigo-800'
+                  : work.status === 'AGREED'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-700'
               }`}
             >
               {getExtraWorkStatusLabel(work.status)}
@@ -93,12 +101,32 @@ export const ExtraWorkRow = ({
           </button>
           <button
             type="button"
-            disabled={loading}
+            disabled={loading || work.status === 'DONE'}
             onClick={() => onToggleStatus(work.id)}
             className="text-sm text-gray-700 hover:text-gray-900 disabled:opacity-50"
           >
             {work.status === 'AGREED' ? 'Снять согласование' : 'Отметить согласованной'}
           </button>
+          {work.status === 'AGREED' && (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => onMarkDone(work.id)}
+              className="text-sm text-indigo-700 hover:text-indigo-900 disabled:opacity-50"
+            >
+              Отметить выполненной
+            </button>
+          )}
+          {work.status === 'DONE' && (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => onUnmarkDone(work.id)}
+              className="text-sm text-gray-700 hover:text-gray-900 disabled:opacity-50"
+            >
+              Снять отметку выполнения
+            </button>
+          )}
           <button
             type="button"
             disabled={loading}

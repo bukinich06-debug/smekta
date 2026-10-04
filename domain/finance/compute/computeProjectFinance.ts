@@ -1,56 +1,41 @@
-import { getExtraWorkAmount } from '@/domain/extra-works';
+import { getExtraWorkAmount, isExtraWorkAgreedForBudget, isExtraWorkDone } from '@/domain/extra-works';
 import { roundMoney } from '../helpers/roundMoney';
-import type {
-  IComputeProjectFinanceOptions,
-  IProjectFinanceInput,
-  IProjectFinanceSummary,
-} from '../types';
+import type { IProjectFinanceInput, IProjectFinanceSummary } from '../types';
 
-const sumEstimate = (
-  sections: IProjectFinanceInput['estimateSections'],
-  clientView: boolean
-): number => {
+const sumEstimate = (sections: IProjectFinanceInput['estimateSections']): number => {
   let sum = 0;
 
   for (const section of sections) {
-    for (const item of section.items) {
-      if (clientView && !item.isVisibleToClient) continue;
-      sum += Number(item.quantity) * Number(item.unitPrice);
-    }
+    for (const item of section.items) sum += Number(item.quantity) * Number(item.unitPrice);
   }
 
   return roundMoney(sum);
 };
 
-const extraVisible = (
-  row: IProjectFinanceInput['extraWorks'][number],
-  clientView: boolean
-): boolean => !clientView || row.isVisibleToClient;
-
-export const computeProjectFinance = (
-  input: IProjectFinanceInput,
-  options: IComputeProjectFinanceOptions = {}
-): IProjectFinanceSummary => {
-  const clientView = options.clientView === true;
-
+export const computeProjectFinance = (input: IProjectFinanceInput): IProjectFinanceSummary => {
   let budgetExtra = 0;
   let masteredExtra = 0;
   let dueExtraWithoutBudget = 0;
 
   for (const row of input.extraWorks) {
-    if (!extraVisible(row, clientView)) continue;
-    if (row.status !== 'AGREED') continue;
+    if (!isExtraWorkDone(row.status)) continue;
 
     const amount = getExtraWorkAmount(row.quantity, row.unitPrice);
 
-    if (row.includedInBudget) budgetExtra += amount;
+    if (row.includedInBudget) masteredExtra += amount;
     else {
       masteredExtra += amount;
       dueExtraWithoutBudget += amount;
     }
   }
 
-  const estimateTotal = roundMoney(sumEstimate(input.estimateSections, clientView) + budgetExtra);
+  for (const row of input.extraWorks) {
+    if (!isExtraWorkAgreedForBudget(row.status) || !row.includedInBudget) continue;
+
+    budgetExtra += getExtraWorkAmount(row.quantity, row.unitPrice);
+  }
+
+  const estimateTotal = roundMoney(sumEstimate(input.estimateSections) + budgetExtra);
 
   let worksInflows = 0;
   let materialsInflows = 0;
@@ -87,12 +72,10 @@ export const computeProjectFinance = (
   }
 
   for (const row of input.extraWorks) {
-    if (!extraVisible(row, clientView)) continue;
-    if (row.status !== 'AGREED' || !row.includedInBudget) continue;
+    if (!isExtraWorkDone(row.status) || !row.includedInBudget) continue;
 
     const amount = getExtraWorkAmount(row.quantity, row.unitPrice);
     worksWallet -= amount;
-    masteredExtra += amount;
   }
 
   let paymentsMastered = 0;

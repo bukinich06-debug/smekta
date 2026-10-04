@@ -1,10 +1,11 @@
-import { getExtraWorkAmount } from '@/domain/extra-works';
+import { getExtraWorkAmount, isExtraWorkDone } from '@/domain/extra-works';
 import { getInflowPurposeLabel, getWalletLabel } from '../helpers/getPurposeLabel';
 import { roundMoney } from '../helpers/roundMoney';
 import type {
-  IComputeProjectFinanceOptions,
+  IBuildFinanceLedgerOptions,
   IFinanceDueExtraWork,
   IFinanceLedgerRow,
+  IFinancePendingExtraWork,
   IProjectFinanceInput,
 } from '../types';
 
@@ -14,18 +15,26 @@ interface ILedgerEvent {
   row: IFinanceLedgerRow;
 }
 
-const extraVisible = (
+const extraWorkLabel = (
   row: IProjectFinanceInput['extraWorks'][number],
-  clientView: boolean
-): boolean => !clientView || row.isVisibleToClient;
+  clientLedgerView: boolean
+): string => {
+  if (clientLedgerView && !row.isVisibleToClient) return 'Допработа';
+  return row.description;
+};
 
 export const buildFinanceLedger = (
   input: IProjectFinanceInput,
-  options: IComputeProjectFinanceOptions = {}
-): { ledger: IFinanceLedgerRow[]; dueExtraWorks: IFinanceDueExtraWork[] } => {
-  const clientView = options.clientView === true;
+  options: IBuildFinanceLedgerOptions = {}
+): {
+  ledger: IFinanceLedgerRow[];
+  dueExtraWorks: IFinanceDueExtraWork[];
+  pendingExtraWorks: IFinancePendingExtraWork[];
+} => {
+  const clientLedgerView = options.clientLedgerView === true;
   const events: ILedgerEvent[] = [];
   const dueExtraWorks: IFinanceDueExtraWork[] = [];
+  const pendingExtraWorks: IFinancePendingExtraWork[] = [];
 
   for (const inflow of input.inflows) {
     events.push({
@@ -102,16 +111,26 @@ export const buildFinanceLedger = (
   }
 
   for (const row of input.extraWorks) {
-    if (!extraVisible(row, clientView)) continue;
-    if (row.status !== 'AGREED') continue;
+    if (row.status === 'AGREED') {
+      pendingExtraWorks.push({
+        id: row.id,
+        date: row.date,
+        description: extraWorkLabel(row, clientLedgerView),
+        amount: getExtraWorkAmount(row.quantity, row.unitPrice),
+        includedInBudget: row.includedInBudget,
+      });
+    }
+
+    if (!isExtraWorkDone(row.status)) continue;
 
     const amount = getExtraWorkAmount(row.quantity, row.unitPrice);
+    const description = extraWorkLabel(row, clientLedgerView);
 
     if (!row.includedInBudget) {
       dueExtraWorks.push({
         id: row.id,
         date: row.date,
-        description: row.description,
+        description,
         amount,
       });
       continue;
@@ -123,7 +142,7 @@ export const buildFinanceLedger = (
       row: {
         id: `extra-${row.id}`,
         date: row.date,
-        label: `Допработа (в бюджете): ${row.description}`,
+        label: `Допработа (в бюджете): ${description}`,
         amount: -amount,
         balanceAfter: 0,
         kind: 'extra_work',
@@ -145,5 +164,5 @@ export const buildFinanceLedger = (
     ledger.push({ ...event.row, balanceAfter: balance });
   }
 
-  return { ledger, dueExtraWorks };
+  return { ledger, dueExtraWorks, pendingExtraWorks };
 };

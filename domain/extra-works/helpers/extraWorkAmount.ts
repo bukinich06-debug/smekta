@@ -1,3 +1,7 @@
+import type { ExtraWorkStatus } from '@prisma/client';
+
+import { isExtraWorkAgreedForBudget } from './extraWorkStatus';
+
 export const getExtraWorkAmount = (
   quantity: string | number | { toString(): string },
   unitPrice: string | number | { toString(): string }
@@ -7,6 +11,7 @@ interface IBudgetRow {
   quantity: string | number | { toString(): string };
   unitPrice: string | number | { toString(): string };
   includedInBudget: boolean;
+  status: ExtraWorkStatus;
   isVisibleToClient?: boolean;
 }
 
@@ -14,7 +19,7 @@ export const sumExtraWorksInBudget = (rows: IBudgetRow[], clientVisibleOnly = fa
   let sum = 0;
 
   for (const row of rows) {
-    if (!row.includedInBudget) continue;
+    if (!row.includedInBudget || !isExtraWorkAgreedForBudget(row.status)) continue;
     if (clientVisibleOnly && !row.isVisibleToClient) continue;
     sum += getExtraWorkAmount(row.quantity, row.unitPrice);
   }
