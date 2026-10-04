@@ -18,12 +18,12 @@ export const useClientsFilters = () => {
   const updateFilters = (updates: Partial<IClientListFilters>) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (updates.search !== undefined) {
+    if ('search' in updates) {
       if (updates.search) params.set('search', updates.search);
       else params.delete('search');
     }
 
-    if (updates.status !== undefined) {
+    if ('status' in updates) {
       if (updates.status) params.set('status', updates.status);
       else params.delete('status');
     }

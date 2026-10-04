@@ -10,6 +10,7 @@ export type {
   IClientInviteInfo,
 } from './types';
 export { validateCreateClient, validateUpdateClientCard } from './validation';
+export { getProjectStatusLabel } from './helpers/getProjectStatusLabel';
 
 import type {
   IClientListFilters,

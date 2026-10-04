@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { IClientListItem } from '@/domain/clients';
 import { formatMoney } from '../helpers/formatMoney';
 import { formatDate } from '../helpers/formatDate';
-import { getStatusLabel } from '../helpers/getStatusLabel';
+import { ProjectStatusBadge } from '@/components/project-status-badge';
 
 interface IClientsTableProps {
   items: IClientListItem[];
@@ -72,7 +72,7 @@ export const ClientsTable = ({ items }: IClientsTableProps) => {
                   {item.address || '—'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getStatusLabel(item.projectStatus)}
+                  {item.projectStatus ? <ProjectStatusBadge status={item.projectStatus} /> : '—'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                   {formatMoney(item.estimateTotal)}

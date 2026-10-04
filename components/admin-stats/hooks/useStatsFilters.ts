@@ -27,9 +27,9 @@ export const useStatsFilters = () => {
       else params.delete(key);
     };
 
-    if (updates.status !== undefined) setOrDelete('status', updates.status);
-    if (updates.dateFrom !== undefined) setOrDelete('dateFrom', updates.dateFrom);
-    if (updates.dateTo !== undefined) setOrDelete('dateTo', updates.dateTo);
+    if ('status' in updates) setOrDelete('status', updates.status);
+    if ('dateFrom' in updates) setOrDelete('dateFrom', updates.dateFrom);
+    if ('dateTo' in updates) setOrDelete('dateTo', updates.dateTo);
 
     router.push(`?${params.toString()}`);
   };
