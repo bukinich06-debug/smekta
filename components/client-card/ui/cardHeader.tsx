@@ -3,7 +3,7 @@
 import type { IClientCardDetails } from '@/domain/clients';
 import { formatMoney } from '../helpers/formatMoney';
 import { formatDate } from '../helpers/formatDate';
-import { getStatusLabel } from '../helpers/getStatusLabel';
+import { ProjectStatusBadge } from '@/components/project-status-badge';
 
 interface ICardHeaderProps {
   data: IClientCardDetails;
@@ -41,9 +41,9 @@ export const CardHeader = ({ data, managerName, showProjectName }: ICardHeaderPr
         )}
         <div>
           <p className="text-sm text-gray-500">Статус проекта</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {getStatusLabel(data.project.status)}
-          </p>
+          <div className="mt-1">
+            <ProjectStatusBadge status={data.project.status} />
+          </div>
         </div>
         {managerName !== undefined && (
           <div>
