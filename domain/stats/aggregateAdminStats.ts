@@ -2,6 +2,8 @@ import { getExtraWorkAmount, isExtraWorkDone } from '@/domain/extra-works';
 import { computeProjectFinance } from '@/domain/finance';
 import { roundMoney } from '@/domain/finance/helpers/roundMoney';
 import { getReceiptStatus } from '@/domain/receipts';
+import { buildMonthlyMoney } from './helpers/buildMonthlyMoney';
+import { buildProjectFinanceBars } from './helpers/buildProjectFinanceBars';
 import { formatActivityDescription } from './helpers/formatActivityDescription';
 import { hasStatsPeriod, isDateInPeriod } from './helpers/isDateInPeriod';
 import type {
@@ -148,6 +150,8 @@ export const aggregateAdminStats = (
       completedExtraWorksVolume,
       periodAppliedToMoney: periodApplied,
     },
+    monthlyMoney: buildMonthlyMoney(projects, filters),
+    projectFinanceBars: buildProjectFinanceBars(projects),
     recentActivity: mapActivity(activityRows),
   };
 };

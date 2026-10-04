@@ -3,6 +3,8 @@ export type {
   IAdminStatsActivityItem,
   IAdminStatsFilters,
   IAdminStatsKpi,
+  IAdminStatsMonthlyPoint,
+  IAdminStatsProjectFinanceBar,
   IAdminStatsProjectRow,
   IAdminStatsReceiptRow,
   IActivityLogRow,
