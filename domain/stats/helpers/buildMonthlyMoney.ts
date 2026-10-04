@@ -16,15 +16,90 @@ const normalizeBoundaryMonth = (value: Date | string): string => {
   return toMinskCalendarDay(value).slice(0, 7);
 };
 
-const resolveMonthRange = (filters: IAdminStatsFilters): { start: string; end: string } => {
+const isEventInStatsPeriod = (date: Date, filters: IAdminStatsFilters): boolean =>
+  !hasStatsPeriod(filters) || isDateInPeriod(date, filters);
+
+const forEachChartEvent = (
+  projects: IAdminStatsProjectRow[],
+  filters: IAdminStatsFilters,
+  onEvent: (monthKey: string) => void
+) => {
+  for (const project of projects) {
+    const input = project.financeInput;
+
+    for (const inflow of input.inflows) {
+      if (!isEventInStatsPeriod(inflow.date, filters)) continue;
+      onEvent(toMinskMonthKey(inflow.date));
+    }
+
+    for (const act of input.acts) {
+      if (act.status !== 'SIGNED') continue;
+      if (!isEventInStatsPeriod(act.date, filters)) continue;
+      onEvent(toMinskMonthKey(act.date));
+    }
+
+    for (const payment of input.payments) {
+      if (!isEventInStatsPeriod(payment.date, filters)) continue;
+      onEvent(toMinskMonthKey(payment.date));
+    }
+
+    for (const row of input.extraWorks) {
+      if (!isExtraWorkDone(row.status)) continue;
+      if (!isEventInStatsPeriod(row.date, filters)) continue;
+      onEvent(toMinskMonthKey(row.date));
+    }
+  }
+};
+
+const findRecordMonthBounds = (
+  projects: IAdminStatsProjectRow[],
+  filters: IAdminStatsFilters
+): { min: string; max: string } | null => {
+  let min: string | null = null;
+  let max: string | null = null;
+
+  forEachChartEvent(projects, filters, (monthKey) => {
+    if (!min || monthKey < min) min = monthKey;
+    if (!max || monthKey > max) max = monthKey;
+  });
+
+  if (!min || !max) return null;
+  return { min, max };
+};
+
+const orderMonthRange = (start: string, end: string): { start: string; end: string } =>
+  start <= end ? { start, end } : { start: end, end: start };
+
+const resolveMonthRange = (
+  filters: IAdminStatsFilters,
+  projects: IAdminStatsProjectRow[]
+): { start: string; end: string } => {
   const current = getMinskCurrentMonthKey();
 
   if (!hasStatsPeriod(filters)) return { start: addMonths(current, -11), end: current };
 
-  const end = filters.dateTo ? normalizeBoundaryMonth(filters.dateTo) : current;
-  const start = filters.dateFrom ? normalizeBoundaryMonth(filters.dateFrom) : addMonths(end, -11);
+  const recordBounds = findRecordMonthBounds(projects, filters);
 
-  return start <= end ? { start, end } : { start: end, end: start };
+  if (filters.dateFrom && filters.dateTo) {
+    return orderMonthRange(
+      normalizeBoundaryMonth(filters.dateFrom),
+      normalizeBoundaryMonth(filters.dateTo)
+    );
+  }
+
+  if (filters.dateTo && !filters.dateFrom) {
+    const end = normalizeBoundaryMonth(filters.dateTo);
+    const start = recordBounds ? recordBounds.min : addMonths(end, -11);
+    return orderMonthRange(start, end);
+  }
+
+  if (filters.dateFrom && !filters.dateTo) {
+    const start = normalizeBoundaryMonth(filters.dateFrom);
+    const end = recordBounds ? (recordBounds.max > current ? recordBounds.max : current) : current;
+    return orderMonthRange(start, end);
+  }
+
+  return { start: addMonths(current, -11), end: current };
 };
 
 const isEventInChartRange = (
@@ -81,7 +156,7 @@ export const buildMonthlyMoney = (
   projects: IAdminStatsProjectRow[],
   filters: IAdminStatsFilters
 ): IAdminStatsMonthlyPoint[] => {
-  const range = resolveMonthRange(filters);
+  const range = resolveMonthRange(filters, projects);
   const buckets = new Map<string, { received: number; mastered: number }>();
 
   for (const project of projects) collectFromProject(project.financeInput, filters, range, buckets);
