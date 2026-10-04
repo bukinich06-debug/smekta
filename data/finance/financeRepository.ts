@@ -172,7 +172,7 @@ const formatHistoryDetail = (
 
   if (action === ActivityAction.CREATE) {
     return {
-      label: 'Перевод добавён',
+      label: 'Перевод добавлен',
       detail: `${amount ?? '—'} ₽`,
     };
   }

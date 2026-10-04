@@ -311,6 +311,23 @@ export const receiptRepository: IReceiptRepository = {
       await lockProjectFinance(tx, receipt.projectId);
       const balanceBefore = await getMaterialsWalletBalance(tx, receipt.projectId);
 
+      const receiptState = await tx.receipt.findUnique({
+        where: { id: input.receiptId },
+        include: { payments: true },
+      });
+
+      if (!receiptState) throw new Error('RECEIPT_NOT_FOUND');
+
+      const paid = sumPayments(
+        receiptState.payments.map((row) => ({
+          amount: row.amount.toString(),
+        }))
+      );
+      const remainder = getRemainder(receiptState.amountDue.toString(), paid);
+      const payAmount = parseFloat(input.amount);
+
+      if (payAmount > remainder) throw new Error('PAYMENT_EXCEEDS_REMAINDER');
+
       const created = await tx.payment.create({
         data: {
           receiptId: input.receiptId,
