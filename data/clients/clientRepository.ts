@@ -103,7 +103,7 @@ export const clientRepository: IClientRepository = {
     if (!client) return null;
 
     const project = client.projects[0] || null;
-    const finance = project ? computeSummaryFromProject(project, { clientView: true }) : null;
+    const finance = project ? computeSummaryFromProject(project) : null;
 
     return {
       id: client.id,

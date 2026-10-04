@@ -6,6 +6,7 @@ import type { ICreateInflowInput, IProjectInflow } from '@/domain/finance';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
+import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
 interface IResult {
   ok: boolean;
@@ -27,6 +28,9 @@ export const createInflow = async (input: ICreateInflowInput): Promise<IResult> 
     revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {
+    const mapped = mapFinanceRepositoryError(error);
+    if (mapped) return { ok: false, error: mapped };
+
     console.error('Ошибка при создании поступления:', error);
     return { ok: false, error: 'Не удалось сохранить поступление' };
   }

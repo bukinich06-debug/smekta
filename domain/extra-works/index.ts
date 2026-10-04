@@ -13,4 +13,5 @@ export {
   sumExtraWorkListTotal,
 } from './helpers/extraWorkAmount';
 export { getExtraWorkStatusLabel } from './helpers/getStatusLabel';
+export { isExtraWorkAgreedForBudget, isExtraWorkDone } from './helpers/extraWorkStatus';
 export { validateCreateExtraWork, validateUpdateExtraWork } from './validation';

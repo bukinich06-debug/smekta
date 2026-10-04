@@ -1,5 +1,9 @@
 import { sumActItems } from '@/domain/acts';
-import type { IComputeProjectFinanceOptions, IProjectFinanceInput, IProjectFinanceSummary } from '@/domain/finance';
+import type {
+  IBuildFinanceLedgerOptions,
+  IProjectFinanceInput,
+  IProjectFinanceSummary,
+} from '@/domain/finance';
 import { buildFinanceLedger, computeProjectFinance } from '@/domain/finance';
 
 export const projectFinanceQueryInclude = {
@@ -63,7 +67,7 @@ type IProjectFinanceRow = {
     description: string;
     quantity: { toString(): string };
     unitPrice: { toString(): string };
-    status: 'PENDING' | 'AGREED' | 'REJECTED';
+    status: 'PENDING' | 'AGREED' | 'DONE' | 'REJECTED';
     isVisibleToClient: boolean;
     includedInBudget: boolean;
   }[];
@@ -147,21 +151,18 @@ export const mapProjectToFinanceInput = (project: IProjectFinanceRow): IProjectF
   };
 };
 
-export const computeSummaryFromProject = (
-  project: IProjectFinanceRow,
-  options: IComputeProjectFinanceOptions = {}
-): IProjectFinanceSummary => {
+export const computeSummaryFromProject = (project: IProjectFinanceRow): IProjectFinanceSummary => {
   const input = mapProjectToFinanceInput(project);
-  return computeProjectFinance(input, options);
+  return computeProjectFinance(input);
 };
 
 export const buildFinanceViewFromProject = (
   project: IProjectFinanceRow,
-  options: IComputeProjectFinanceOptions = {}
+  ledgerOptions: IBuildFinanceLedgerOptions = {}
 ) => {
   const input = mapProjectToFinanceInput(project);
-  const summary = computeProjectFinance(input, options);
-  const { ledger, dueExtraWorks } = buildFinanceLedger(input, options);
+  const summary = computeProjectFinance(input);
+  const { ledger, dueExtraWorks, pendingExtraWorks } = buildFinanceLedger(input, ledgerOptions);
 
-  return { input, summary, ledger, dueExtraWorks, project };
+  return { input, summary, ledger, dueExtraWorks, pendingExtraWorks, project };
 };

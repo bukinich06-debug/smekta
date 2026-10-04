@@ -1,13 +1,14 @@
-import type { IFinanceDueExtraWork, IFinanceLedgerRow } from '@/domain/finance';
+import type { IFinanceDueExtraWork, IFinanceLedgerRow, IFinancePendingExtraWork } from '@/domain/finance';
 import { formatDate } from '../helpers/formatDate';
 import { formatMoney } from '../helpers/formatMoney';
 
 interface ILedgerPanelProps {
   ledger: IFinanceLedgerRow[];
   dueExtraWorks: IFinanceDueExtraWork[];
+  pendingExtraWorks: IFinancePendingExtraWork[];
 }
 
-export const LedgerPanel = ({ ledger, dueExtraWorks }: ILedgerPanelProps) => (
+export const LedgerPanel = ({ ledger, dueExtraWorks, pendingExtraWorks }: ILedgerPanelProps) => (
   <div>
     <h3 className="text-lg font-semibold text-gray-900 mb-3">Сальдовая ведомость</h3>
     {ledger.length === 0 ? (
@@ -53,6 +54,32 @@ export const LedgerPanel = ({ ledger, dueExtraWorks }: ILedgerPanelProps) => (
             ))}
           </tbody>
         </table>
+      </div>
+    )}
+
+    {pendingExtraWorks.length > 0 && (
+      <div className="mt-6">
+        <h4 className="text-sm font-semibold text-gray-800 mb-2">
+          Ожидают выполнения (согласованы, без списания)
+        </h4>
+        <ul className="space-y-2">
+          {pendingExtraWorks.map((row) => (
+            <li
+              key={row.id}
+              className="flex justify-between gap-3 text-sm border border-gray-200 bg-gray-50 rounded px-3 py-2"
+            >
+              <span>
+                {formatDate(row.date)} — {row.description}
+                {row.includedInBudget && (
+                  <span className="text-gray-500"> (в бюджете сметы)</span>
+                )}
+              </span>
+              <span className="font-medium text-gray-800 whitespace-nowrap">
+                {formatMoney(row.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     )}
 

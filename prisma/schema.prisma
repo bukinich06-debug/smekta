@@ -40,6 +40,7 @@ enum ActStatus {
 enum ExtraWorkStatus {
   PENDING
   AGREED
+  DONE
   REJECTED
 
   @@map("extra_work_status")

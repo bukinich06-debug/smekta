@@ -40,7 +40,11 @@ export const ClientFinanceTab = ({ data }: IClientFinanceTabProps) => (
         onEditTransfer={() => {}}
       />
 
-      <LedgerPanel ledger={data.ledger} dueExtraWorks={data.dueExtraWorks} />
+      <LedgerPanel
+        ledger={data.ledger}
+        dueExtraWorks={data.dueExtraWorks}
+        pendingExtraWorks={data.pendingExtraWorks}
+      />
     </div>
   </div>
 );

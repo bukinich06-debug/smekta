@@ -1,6 +1,6 @@
 import { ActivityAction } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
-import { getMaterialsWalletBalance } from '../helpers/materialsWalletBalance';
+import { assertMaterialsWalletNonNegative, getMaterialsWalletBalance } from '../helpers/materialsWalletBalance';
 import { logDepositOffset } from './logDepositOffset';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
@@ -132,4 +132,6 @@ export const reconcileReceiptDeposit = async ({
     amountDelta: toAdd,
     receiptTitle,
   });
+
+  await assertMaterialsWalletNonNegative(tx, projectId);
 };

@@ -24,6 +24,8 @@ export const ExtraWorksTab = ({ projectId }: IExtraWorksTabProps) => {
     submitUpdate,
     removeWork,
     handleToggleStatus,
+    handleMarkDone,
+    handleUnmarkDone,
     handleToggleVisibility,
     handleToggleBudget,
     clearMessages,
@@ -105,6 +107,8 @@ export const ExtraWorksTab = ({ projectId }: IExtraWorksTabProps) => {
             onEdit={setEditingWork}
             onDelete={removeWork}
             onToggleStatus={handleToggleStatus}
+            onMarkDone={handleMarkDone}
+            onUnmarkDone={handleUnmarkDone}
             onToggleVisibility={handleToggleVisibility}
             onToggleBudget={handleToggleBudget}
           />

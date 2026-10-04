@@ -11,9 +11,11 @@ import type {
 } from '@/domain/receipts';
 import { getReceiptStatus, getRemainder, sumPayments, sumPaymentsBySource } from '@/domain/receipts';
 import type { Prisma } from '@prisma/client';
-import { allocateDepositToUnpaidReceipts } from './deposit/allocateDepositToUnpaidReceipts';
+import { finishMaterialsWalletMutation } from './deposit/applyMaterialsWalletSideEffects';
 import { reconcileReceiptDeposit } from './deposit/reconcileReceiptDeposit';
 import { logDepositOffset } from './deposit/logDepositOffset';
+import { getMaterialsWalletBalance } from './helpers/materialsWalletBalance';
+import { lockProjectFinance } from '@/data/shared/projectFinanceLock';
 
 const mapPayment = (payment: {
   id: number;
@@ -169,6 +171,9 @@ export const receiptRepository: IReceiptRepository = {
 
   async create(input: ICreateReceiptInput, userId: number): Promise<IReceipt> {
     const receipt = await dbClient.$transaction(async (tx) => {
+      await lockProjectFinance(tx, input.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, input.projectId);
+
       const created = await tx.receipt.create({
         data: {
           projectId: input.projectId,
@@ -193,6 +198,8 @@ export const receiptRepository: IReceiptRepository = {
         receiptDate: created.date,
       });
 
+      await finishMaterialsWalletMutation(tx, input.projectId, userId, balanceBefore);
+
       const withPayments = await tx.receipt.findUnique({
         where: { id: created.id },
         include: receiptInclude,
@@ -214,6 +221,9 @@ export const receiptRepository: IReceiptRepository = {
       });
 
       if (!current) throw new Error('RECEIPT_NOT_FOUND');
+
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
 
       const updated = await tx.receipt.update({
         where: { id },
@@ -248,6 +258,8 @@ export const receiptRepository: IReceiptRepository = {
         receiptDate: updated.date,
       });
 
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
+
       const withPayments = await tx.receipt.findUnique({
         where: { id },
         include: receiptInclude,
@@ -270,6 +282,9 @@ export const receiptRepository: IReceiptRepository = {
 
       if (!current) throw new Error('RECEIPT_NOT_FOUND');
 
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
+
       await logDepositPaymentsRemoved(tx, {
         userId,
         projectId: current.projectId,
@@ -279,40 +294,59 @@ export const receiptRepository: IReceiptRepository = {
       });
 
       await tx.receipt.delete({ where: { id } });
+
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
     });
   },
 
   async addPayment(input: IAddPaymentInput, addedById: number): Promise<IReceiptPayment> {
-    const payment = await dbClient.payment.create({
-      data: {
-        receiptId: input.receiptId,
-        date: input.date,
-        amount: input.amount,
-        source: 'DIRECT',
-        comment: input.comment?.trim() || null,
-        addedById,
-      },
-      include: { addedBy: { select: { name: true } } },
+    const payment = await dbClient.$transaction(async (tx) => {
+      const receipt = await tx.receipt.findUnique({
+        where: { id: input.receiptId },
+        select: { projectId: true },
+      });
+
+      if (!receipt) throw new Error('RECEIPT_NOT_FOUND');
+
+      await lockProjectFinance(tx, receipt.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, receipt.projectId);
+
+      const created = await tx.payment.create({
+        data: {
+          receiptId: input.receiptId,
+          date: input.date,
+          amount: input.amount,
+          source: 'DIRECT',
+          comment: input.comment?.trim() || null,
+          addedById,
+        },
+        include: { addedBy: { select: { name: true } } },
+      });
+
+      await finishMaterialsWalletMutation(tx, receipt.projectId, addedById, balanceBefore);
+
+      return created;
     });
 
     return mapPayment(payment);
   },
 
-  async deletePayment(paymentId: number): Promise<void> {
-    const payment = await dbClient.payment.findUnique({
-      where: { id: paymentId },
-      select: { source: true },
-    });
-
-    if (!payment) throw new Error('PAYMENT_NOT_FOUND');
-    if (payment.source === 'DEPOSIT') throw new Error('DEPOSIT_PAYMENT_READONLY');
-
-    await dbClient.payment.delete({ where: { id: paymentId } });
-  },
-
-  async allocateDepositToUnpaidReceipts(projectId: number, userId: number): Promise<void> {
+  async deletePayment(paymentId: number, userId: number): Promise<void> {
     await dbClient.$transaction(async (tx) => {
-      await allocateDepositToUnpaidReceipts(tx, projectId, userId);
+      const payment = await tx.payment.findUnique({
+        where: { id: paymentId },
+        select: { source: true, receipt: { select: { projectId: true } } },
+      });
+
+      if (!payment) throw new Error('PAYMENT_NOT_FOUND');
+      if (payment.source === 'DEPOSIT') throw new Error('DEPOSIT_PAYMENT_READONLY');
+
+      await lockProjectFinance(tx, payment.receipt.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, payment.receipt.projectId);
+
+      await tx.payment.delete({ where: { id: paymentId } });
+
+      await finishMaterialsWalletMutation(tx, payment.receipt.projectId, userId, balanceBefore);
     });
   },
 

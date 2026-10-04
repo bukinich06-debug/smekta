@@ -4,6 +4,7 @@ import { financeRepository } from '@/data/finance';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
+import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
 interface IResult {
   ok: boolean;
@@ -21,9 +22,10 @@ export const deleteWalletTransfer = async (id: number): Promise<IResult> => {
     revalidateFinancePaths();
     return { ok: true };
   } catch (error) {
+    const mapped = mapFinanceRepositoryError(error);
+    if (mapped) return { ok: false, error: mapped };
+
     console.error('Ошибка при удалении перевода:', error);
-    if (error instanceof Error && error.message === 'TRANSFER_NOT_FOUND')
-      return { ok: false, error: 'Перевод не найден' };
     return { ok: false, error: 'Не удалось удалить перевод' };
   }
 };

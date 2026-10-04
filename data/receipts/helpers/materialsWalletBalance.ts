@@ -1,6 +1,35 @@
 import type { Prisma } from '@prisma/client';
+import { MaterialsDepositInsufficientError } from './materialsDepositError';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
+export const getTotalDepositAllocated = async (
+  tx: Prisma.TransactionClient,
+  projectId: number
+): Promise<number> => {
+  const depositPayments = await tx.payment.aggregate({
+    where: {
+      source: 'DEPOSIT',
+      receipt: { projectId },
+    },
+    _sum: { amount: true },
+  });
+
+  if (!depositPayments._sum.amount) return 0;
+
+  return roundMoney(parseFloat(depositPayments._sum.amount.toString()));
+};
+
+export const assertMaterialsWalletNonNegative = async (
+  tx: Prisma.TransactionClient,
+  projectId: number
+): Promise<void> => {
+  const balance = await getMaterialsWalletBalance(tx, projectId);
+  if (balance >= 0) return;
+
+  const allocated = await getTotalDepositAllocated(tx, projectId);
+  throw new MaterialsDepositInsufficientError(allocated);
+};
 
 export const getMaterialsWalletBalance = async (
   tx: Prisma.TransactionClient,

@@ -20,7 +20,7 @@ export const deletePayment = async (paymentId: number): Promise<IResult> => {
   if (!projectId) return { ok: false, error: 'Оплата не найдена' };
 
   try {
-    await receiptRepository.deletePayment(paymentId);
+    await receiptRepository.deletePayment(paymentId, session.user.id);
     revalidateReceiptPaths();
     return { ok: true };
   } catch (error) {

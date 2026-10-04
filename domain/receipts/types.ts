@@ -77,8 +77,7 @@ export interface IReceiptRepository {
   update(id: number, input: IUpdateReceiptInput, userId: number): Promise<IReceipt>;
   delete(id: number, userId: number): Promise<void>;
   addPayment(input: IAddPaymentInput, addedById: number): Promise<IReceiptPayment>;
-  deletePayment(paymentId: number): Promise<void>;
-  allocateDepositToUnpaidReceipts(projectId: number, userId: number): Promise<void>;
+  deletePayment(paymentId: number, userId: number): Promise<void>;
   getProjectIdByReceiptId(receiptId: number): Promise<number | null>;
   getProjectIdByPaymentId(paymentId: number): Promise<number | null>;
 }
