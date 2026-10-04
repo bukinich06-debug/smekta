@@ -23,7 +23,7 @@ export const createReceipt = async (input: ICreateReceiptInput): Promise<IResult
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    const data = await receiptRepository.create(input);
+    const data = await receiptRepository.create(input, session.user.id);
     revalidateReceiptPaths();
     return { ok: true, data };
   } catch (error) {

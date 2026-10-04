@@ -5,6 +5,7 @@ import type { IExtraWork } from '@/domain/extra-works';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidateExtraWorkPaths } from '@/services/extra-works/helpers/revalidateExtraWorkPaths';
+import { revalidateFinancePaths } from '@/services/finance/helpers/revalidateFinancePaths';
 
 interface IResult {
   ok: boolean;
@@ -21,6 +22,7 @@ export const toggleExtraWorkBudget = async (id: number): Promise<IResult> => {
   try {
     const data = await extraWorkRepository.toggleIncludedInBudget(id);
     revalidateExtraWorkPaths();
+    revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {
     console.error('Ошибка при переключении учёта в бюджете:', error);

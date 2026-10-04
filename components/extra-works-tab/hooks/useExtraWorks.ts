@@ -10,6 +10,8 @@ import { deleteExtraWork } from '@/services/extra-works/deleteExtraWork';
 import { toggleExtraWorkStatus } from '@/services/extra-works/toggleExtraWorkStatus';
 import { toggleExtraWorkVisibility } from '@/services/extra-works/toggleExtraWorkVisibility';
 import { toggleExtraWorkBudget } from '@/services/extra-works/toggleExtraWorkBudget';
+import { markExtraWorkDone } from '@/services/extra-works/markExtraWorkDone';
+import { unmarkExtraWorkDone } from '@/services/extra-works/unmarkExtraWorkDone';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IExtraWorkFormValues } from '../ui/extraWorkForm';
 
@@ -184,6 +186,28 @@ export const useExtraWorks = (projectId: number) => {
     setActionLoading(false);
   };
 
+  const handleMarkDone = async (id: number) => {
+    setActionLoading(true);
+    setError(null);
+    const result = await markExtraWorkDone(id);
+    if (result.ok) {
+      await load();
+      router.refresh();
+    } else setError(result.error || 'Не удалось отметить выполненной');
+    setActionLoading(false);
+  };
+
+  const handleUnmarkDone = async (id: number) => {
+    setActionLoading(true);
+    setError(null);
+    const result = await unmarkExtraWorkDone(id);
+    if (result.ok) {
+      await load();
+      router.refresh();
+    } else setError(result.error || 'Не удалось снять отметку выполнения');
+    setActionLoading(false);
+  };
+
   const clearMessages = () => {
     setError(null);
     setSuccess(null);
@@ -203,6 +227,8 @@ export const useExtraWorks = (projectId: number) => {
     submitUpdate,
     removeWork,
     handleToggleStatus,
+    handleMarkDone,
+    handleUnmarkDone,
     handleToggleVisibility,
     handleToggleBudget,
     clearMessages,

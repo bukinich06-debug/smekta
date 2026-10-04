@@ -34,6 +34,9 @@ export const addPayment = async (input: IAddPaymentInput): Promise<IResult> => {
     revalidateReceiptPaths();
     return { ok: true, data };
   } catch (error) {
+    if (error instanceof Error && error.message === 'PAYMENT_EXCEEDS_REMAINDER')
+      return { ok: false, error: 'Сумма оплаты не может превышать остаток' };
+
     console.error('Ошибка при добавлении оплаты:', error);
     return { ok: false, error: 'Не удалось добавить оплату' };
   }

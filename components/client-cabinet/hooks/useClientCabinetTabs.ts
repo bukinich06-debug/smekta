@@ -13,6 +13,7 @@ export const useClientCabinetTabs = () => {
     { id: 'receipts', label: 'Чеки' },
     { id: 'acts', label: 'Акты' },
     { id: 'extra', label: 'Допработы' },
+    { id: 'finance', label: 'Финансы' },
     { id: 'photos', label: 'Фото' },
   ];
 

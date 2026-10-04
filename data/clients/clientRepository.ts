@@ -1,4 +1,5 @@
 import { dbClient } from '@/data/shared/dbClient';
+import { computeSummaryFromProject, projectFinanceQueryInclude } from '@/data/finance';
 import type {
   IClientRepository,
   IClientListItem,
@@ -10,7 +11,6 @@ import type {
   IClientInviteInfo,
 } from '@/domain/clients';
 import { Prisma } from '@prisma/client';
-import { sumExtraWorksInBudget } from '@/domain/extra-works';
 
 export const clientRepository: IClientRepository = {
   async list(filters: IClientListFilters): Promise<IClientListItem[]> {
@@ -35,19 +35,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: {
-            estimateSections: {
-              include: {
-                items: true,
-              },
-            },
-            receipts: {
-              include: {
-                payments: true,
-              },
-            },
-            extraWorks: true,
-          },
+          include: projectFinanceQueryInclude,
         },
       },
     });
@@ -55,36 +43,18 @@ export const clientRepository: IClientRepository = {
     const items: IClientListItem[] = clients.map((client) => {
       const project = client.projects[0] || null;
 
-      let estimateTotal = 0;
-      let paid = 0;
-
-      if (project) {
-        for (const section of project.estimateSections) {
-          for (const item of section.items) {
-            const itemTotal = Number(item.quantity) * Number(item.unitPrice);
-            estimateTotal += itemTotal;
-          }
-        }
-
-        for (const receipt of project.receipts) {
-          for (const payment of receipt.payments) {
-            paid += Number(payment.amount);
-          }
-        }
-
-        estimateTotal += sumExtraWorksInBudget(project.extraWorks);
-      }
-
-      const debt = estimateTotal - paid;
+      const finance = project ? computeSummaryFromProject(project) : null;
 
       return {
         id: client.id,
         fullName: client.fullName,
         address: project?.address || '',
         projectStatus: project?.status || null,
-        estimateTotal,
-        paid,
-        debt,
+        estimateTotal: finance?.estimateTotal ?? 0,
+        receivedTotal: finance?.receivedTotal ?? 0,
+        masteredTotal: finance?.masteredTotal ?? 0,
+        balanceOnHand: finance?.balanceOnHand ?? 0,
+        dueNow: finance?.dueNow ?? 0,
         startDate: project?.startDate || null,
         updatedAt: project?.updatedAt || null,
       };
@@ -125,19 +95,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: {
-            estimateSections: {
-              include: {
-                items: true,
-              },
-            },
-            receipts: {
-              include: {
-                payments: true,
-              },
-            },
-            extraWorks: true,
-          },
+          include: projectFinanceQueryInclude,
         },
       },
     });
@@ -145,30 +103,7 @@ export const clientRepository: IClientRepository = {
     if (!client) return null;
 
     const project = client.projects[0] || null;
-
-    let estimateTotal = 0;
-    let paid = 0;
-
-    if (project) {
-      for (const section of project.estimateSections) {
-        for (const item of section.items) {
-          if (!item.isVisibleToClient) continue;
-
-          const itemTotal = Number(item.quantity) * Number(item.unitPrice);
-          estimateTotal += itemTotal;
-        }
-      }
-
-      for (const receipt of project.receipts) {
-        for (const payment of receipt.payments) {
-          paid += Number(payment.amount);
-        }
-      }
-
-      estimateTotal += sumExtraWorksInBudget(project.extraWorks, true);
-    }
-
-    const debt = estimateTotal - paid;
+    const finance = project ? computeSummaryFromProject(project) : null;
 
     return {
       id: client.id,
@@ -191,9 +126,12 @@ export const clientRepository: IClientRepository = {
             updatedAt: project.updatedAt,
           }
         : null,
-      estimateTotal,
-      paid,
-      debt,
+      estimateTotal: finance?.estimateTotal ?? 0,
+      receivedTotal: finance?.receivedTotal ?? 0,
+      masteredTotal: finance?.masteredTotal ?? 0,
+      balanceOnHand: finance?.balanceOnHand ?? 0,
+      dueNow: finance?.dueNow ?? 0,
+      stillNeededForWorks: finance?.stillNeededForWorks ?? 0,
     };
   },
 
@@ -291,19 +229,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: {
-            estimateSections: {
-              include: {
-                items: true,
-              },
-            },
-            receipts: {
-              include: {
-                payments: true,
-              },
-            },
-            extraWorks: true,
-          },
+          include: projectFinanceQueryInclude,
         },
       },
     });
@@ -311,28 +237,7 @@ export const clientRepository: IClientRepository = {
     if (!client) return null;
 
     const project = client.projects[0] || null;
-
-    let estimateTotal = 0;
-    let paid = 0;
-
-    if (project) {
-      for (const section of project.estimateSections) {
-        for (const item of section.items) {
-          const itemTotal = Number(item.quantity) * Number(item.unitPrice);
-          estimateTotal += itemTotal;
-        }
-      }
-
-      for (const receipt of project.receipts) {
-        for (const payment of receipt.payments) {
-          paid += Number(payment.amount);
-        }
-      }
-
-      estimateTotal += sumExtraWorksInBudget(project.extraWorks);
-    }
-
-    const debt = estimateTotal - paid;
+    const finance = project ? computeSummaryFromProject(project) : null;
 
     return {
       id: client.id,
@@ -355,9 +260,12 @@ export const clientRepository: IClientRepository = {
             updatedAt: project.updatedAt,
           }
         : null,
-      estimateTotal,
-      paid,
-      debt,
+      estimateTotal: finance?.estimateTotal ?? 0,
+      receivedTotal: finance?.receivedTotal ?? 0,
+      masteredTotal: finance?.masteredTotal ?? 0,
+      balanceOnHand: finance?.balanceOnHand ?? 0,
+      dueNow: finance?.dueNow ?? 0,
+      stillNeededForWorks: finance?.stillNeededForWorks ?? 0,
     };
   },
 

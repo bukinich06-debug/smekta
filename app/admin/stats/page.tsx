@@ -1,19 +1,40 @@
 import { redirect } from 'next/navigation';
-import { getSession } from '@/services/auth/getSession';
+import type { ProjectStatus } from '@prisma/client';
 import { AdminPageWrapper } from '@/components/admin-page-wrapper';
+import { AdminStats } from '@/components/admin-stats';
+import { getSession } from '@/services/auth/getSession';
+import { getAdminStats } from '@/services/stats/getAdminStats';
 
-const AdminStatsPage = async () => {
+interface IPageProps {
+  searchParams: Promise<{
+    status?: ProjectStatus;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
+}
+
+const parseDateParam = (value?: string): Date | undefined => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  return value as unknown as Date;
+};
+
+const AdminStatsPage = async ({ searchParams }: IPageProps) => {
   const session = await getSession();
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
 
+  const params = await searchParams;
+
+  const data = await getAdminStats({
+    status: params.status,
+    dateFrom: parseDateParam(params.dateFrom),
+    dateTo: parseDateParam(params.dateTo),
+  });
+
   return (
     <AdminPageWrapper userName={session.user.name}>
-      <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Статистика</h1>
-        <p className="text-gray-500">Страница в разработке</p>
-      </div>
+      <AdminStats data={data} />
     </AdminPageWrapper>
   );
 };

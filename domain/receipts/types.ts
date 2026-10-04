@@ -2,6 +2,8 @@ export type ReceiptStatus = 'pending' | 'underpaid' | 'paid';
 
 export type ReceiptStatusFilter = 'all' | ReceiptStatus;
 
+export type PaymentSource = 'DEPOSIT' | 'DIRECT';
+
 export interface IReceiptSectionOption {
   id: number;
   name: string;
@@ -12,6 +14,7 @@ export interface IReceiptPayment {
   receiptId: number;
   date: Date;
   amount: string;
+  source: PaymentSource;
   comment: string | null;
   addedById: number;
   addedByName: string;
@@ -28,6 +31,8 @@ export interface IReceipt {
   comment: string | null;
   payments: IReceiptPayment[];
   paid: number;
+  paidFromDeposit: number;
+  paidDirect: number;
   remainder: number;
   status: ReceiptStatus;
 }
@@ -68,11 +73,11 @@ export interface IAddPaymentInput {
 export interface IReceiptRepository {
   getByProjectId(projectId: number): Promise<IProjectReceipts>;
   getById(id: number): Promise<IReceipt | null>;
-  create(input: ICreateReceiptInput): Promise<IReceipt>;
-  update(id: number, input: IUpdateReceiptInput): Promise<IReceipt>;
-  delete(id: number): Promise<void>;
+  create(input: ICreateReceiptInput, userId: number): Promise<IReceipt>;
+  update(id: number, input: IUpdateReceiptInput, userId: number): Promise<IReceipt>;
+  delete(id: number, userId: number): Promise<void>;
   addPayment(input: IAddPaymentInput, addedById: number): Promise<IReceiptPayment>;
-  deletePayment(paymentId: number): Promise<void>;
+  deletePayment(paymentId: number, userId: number): Promise<void>;
   getProjectIdByReceiptId(receiptId: number): Promise<number | null>;
   getProjectIdByPaymentId(paymentId: number): Promise<number | null>;
 }
