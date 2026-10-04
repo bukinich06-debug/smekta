@@ -1,4 +1,10 @@
+import { Prisma } from '@prisma/client';
 import { dbClient } from '@/data/shared/dbClient';
+import {
+  EstimateItemDeleteBlockedError,
+  EstimateSectionDeleteBlockedError,
+} from '@/data/estimates/helpers/estimateDeleteBlockedError';
+import { getActNumbersForEstimateItems } from '@/data/estimates/helpers/getActNumbersForEstimateItems';
 import type {
   IEstimateRepository,
   IEstimateSection,
@@ -14,6 +20,17 @@ import type {
 
 const calculateItemTotal = (quantity: string, unitPrice: string): number => {
   return parseFloat(quantity) * parseFloat(unitPrice);
+};
+
+const isForeignKeyViolation = (error: unknown): error is Prisma.PrismaClientKnownRequestError =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003';
+
+const assertEstimateItemsNotInActs = async (estimateItemIds: number[], forSection: boolean) => {
+  const actNumbers = await getActNumbersForEstimateItems(estimateItemIds);
+  if (actNumbers.length === 0) return;
+
+  if (forSection) throw new EstimateSectionDeleteBlockedError(actNumbers);
+  throw new EstimateItemDeleteBlockedError(actNumbers);
 };
 
 export const estimateRepository: IEstimateRepository = {
@@ -179,7 +196,29 @@ export const estimateRepository: IEstimateRepository = {
   },
 
   async deleteSection(id: number): Promise<void> {
-    await dbClient.estimateSection.delete({ where: { id } });
+    const section = await dbClient.estimateSection.findUnique({
+      where: { id },
+      select: { items: { select: { id: true } } },
+    });
+
+    if (section) {
+      const itemIds = section.items.map((item) => item.id);
+      await assertEstimateItemsNotInActs(itemIds, true);
+    }
+
+    try {
+      await dbClient.estimateSection.delete({ where: { id } });
+    } catch (error) {
+      if (!isForeignKeyViolation(error)) throw error;
+
+      const current = await dbClient.estimateSection.findUnique({
+        where: { id },
+        select: { items: { select: { id: true } } },
+      });
+      const itemIds = current?.items.map((item) => item.id) ?? [];
+      await assertEstimateItemsNotInActs(itemIds, true);
+      throw error;
+    }
   },
 
   async createItem(input: ICreateItemInput): Promise<IEstimateItem> {
@@ -250,6 +289,15 @@ export const estimateRepository: IEstimateRepository = {
   },
 
   async deleteItem(id: number): Promise<void> {
-    await dbClient.estimateItem.delete({ where: { id } });
+    await assertEstimateItemsNotInActs([id], false);
+
+    try {
+      await dbClient.estimateItem.delete({ where: { id } });
+    } catch (error) {
+      if (!isForeignKeyViolation(error)) throw error;
+
+      await assertEstimateItemsNotInActs([id], false);
+      throw error;
+    }
   },
 };

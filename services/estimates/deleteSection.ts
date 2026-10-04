@@ -4,6 +4,7 @@ import { estimateRepository } from '@/data/estimates';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { mapEstimateDeleteError } from '@/services/estimates/helpers/mapEstimateDeleteError';
 
 interface IResult {
   ok: boolean;
@@ -22,6 +23,7 @@ export const deleteSection = async (id: number): Promise<IResult> => {
     return { ok: true };
   } catch (error) {
     console.error('Ошибка при удалении раздела:', error);
-    return { ok: false, error: 'Не удалось удалить раздел' };
+    const message = await mapEstimateDeleteError(error, { kind: 'section', sectionId: id });
+    return { ok: false, error: message || 'Не удалось удалить раздел' };
   }
 };

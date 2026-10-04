@@ -4,6 +4,7 @@ import { estimateRepository } from '@/data/estimates';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { mapEstimateDeleteError } from '@/services/estimates/helpers/mapEstimateDeleteError';
 
 interface IResult {
   ok: boolean;
@@ -22,6 +23,7 @@ export const deleteItem = async (id: number): Promise<IResult> => {
     return { ok: true };
   } catch (error) {
     console.error('Ошибка при удалении позиции:', error);
-    return { ok: false, error: 'Не удалось удалить позицию' };
+    const message = await mapEstimateDeleteError(error, { kind: 'item', estimateItemId: id });
+    return { ok: false, error: message || 'Не удалось удалить позицию' };
   }
 };
