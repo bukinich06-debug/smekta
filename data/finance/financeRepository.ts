@@ -1,4 +1,7 @@
 import { dbClient } from '@/data/shared/dbClient';
+import { lockProjectFinance } from '@/data/shared/projectFinanceLock';
+import { finishMaterialsWalletMutation } from '@/data/receipts/deposit/applyMaterialsWalletSideEffects';
+import { getMaterialsWalletBalance } from '@/data/receipts/helpers/materialsWalletBalance';
 import { ActivityAction } from '@prisma/client';
 import type {
   IFinanceRepository,
@@ -194,6 +197,9 @@ export const financeRepository: IFinanceRepository = {
 
   async createInflow(input: ICreateInflowInput, userId: number): Promise<IProjectInflow> {
     const row = await dbClient.$transaction(async (tx) => {
+      await lockProjectFinance(tx, input.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, input.projectId);
+
       const created = await tx.projectInflow.create({
         data: {
           projectId: input.projectId,
@@ -219,6 +225,8 @@ export const financeRepository: IFinanceRepository = {
         },
       });
 
+      await finishMaterialsWalletMutation(tx, input.projectId, userId, balanceBefore);
+
       return created;
     });
 
@@ -233,6 +241,9 @@ export const financeRepository: IFinanceRepository = {
       });
 
       if (!current) throw new Error('INFLOW_NOT_FOUND');
+
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
 
       const updated = await tx.projectInflow.update({
         where: { id },
@@ -259,6 +270,8 @@ export const financeRepository: IFinanceRepository = {
         },
       });
 
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
+
       return updated;
     });
 
@@ -269,6 +282,9 @@ export const financeRepository: IFinanceRepository = {
     await dbClient.$transaction(async (tx) => {
       const current = await tx.projectInflow.findUnique({ where: { id } });
       if (!current) throw new Error('INFLOW_NOT_FOUND');
+
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
 
       await tx.activityLog.create({
         data: {
@@ -284,11 +300,16 @@ export const financeRepository: IFinanceRepository = {
       });
 
       await tx.projectInflow.delete({ where: { id } });
+
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
     });
   },
 
   async createTransfer(input: ICreateTransferInput, userId: number): Promise<IWalletTransfer> {
     const row = await dbClient.$transaction(async (tx) => {
+      await lockProjectFinance(tx, input.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, input.projectId);
+
       const created = await tx.walletTransfer.create({
         data: {
           projectId: input.projectId,
@@ -315,6 +336,8 @@ export const financeRepository: IFinanceRepository = {
         },
       });
 
+      await finishMaterialsWalletMutation(tx, input.projectId, userId, balanceBefore);
+
       return created;
     });
 
@@ -329,6 +352,9 @@ export const financeRepository: IFinanceRepository = {
       });
 
       if (!current) throw new Error('TRANSFER_NOT_FOUND');
+
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
 
       const updated = await tx.walletTransfer.update({
         where: { id },
@@ -356,6 +382,8 @@ export const financeRepository: IFinanceRepository = {
         },
       });
 
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
+
       return updated;
     });
 
@@ -366,6 +394,9 @@ export const financeRepository: IFinanceRepository = {
     await dbClient.$transaction(async (tx) => {
       const current = await tx.walletTransfer.findUnique({ where: { id } });
       if (!current) throw new Error('TRANSFER_NOT_FOUND');
+
+      await lockProjectFinance(tx, current.projectId);
+      const balanceBefore = await getMaterialsWalletBalance(tx, current.projectId);
 
       await tx.activityLog.create({
         data: {
@@ -381,6 +412,8 @@ export const financeRepository: IFinanceRepository = {
       });
 
       await tx.walletTransfer.delete({ where: { id } });
+
+      await finishMaterialsWalletMutation(tx, current.projectId, userId, balanceBefore);
     });
   },
 

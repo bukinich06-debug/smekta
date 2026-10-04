@@ -31,11 +31,21 @@ export const LedgerPanel = ({ ledger, dueExtraWorks, pendingExtraWorks }: ILedge
                 <td className="px-3 py-2">{row.label}</td>
                 <td
                   className={`px-3 py-2 text-right whitespace-nowrap ${
-                    row.amount >= 0 ? 'text-green-700' : 'text-red-600'
+                    row.kind === 'payment_direct'
+                      ? 'text-gray-600'
+                      : row.amount >= 0
+                        ? 'text-green-700'
+                        : 'text-red-600'
                   }`}
                 >
-                  {row.amount >= 0 ? '+' : ''}
-                  {formatMoney(row.amount)}
+                  {row.kind === 'payment_direct' ? (
+                    <span title="Не влияет на остаток кошельков">0 (прямая)</span>
+                  ) : (
+                    <>
+                      {row.amount >= 0 ? '+' : ''}
+                      {formatMoney(row.amount)}
+                    </>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-right font-medium whitespace-nowrap">
                   {formatMoney(row.balanceAfter)}

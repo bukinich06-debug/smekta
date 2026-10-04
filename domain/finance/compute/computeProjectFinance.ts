@@ -82,8 +82,8 @@ export const computeProjectFinance = (input: IProjectFinanceInput): IProjectFina
 
   for (const payment of input.payments) {
     const amount = Number(payment.amount);
-    materialsWallet -= amount;
     paymentsMastered += amount;
+    if (payment.source === 'DEPOSIT') materialsWallet -= amount;
   }
 
   worksWallet = roundMoney(worksWallet);

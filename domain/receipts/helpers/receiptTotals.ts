@@ -1,10 +1,22 @@
-import type { IReceiptPayment, ReceiptStatus } from '../types';
+import type { IReceiptPayment, PaymentSource, ReceiptStatus } from '../types';
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 
 export const sumPayments = (payments: Pick<IReceiptPayment, 'amount'>[]): number => {
   let total = 0;
   for (const payment of payments) total += parseFloat(payment.amount);
+  return roundMoney(total);
+};
+
+export const sumPaymentsBySource = (
+  payments: Pick<IReceiptPayment, 'amount' | 'source'>[],
+  source: PaymentSource
+): number => {
+  let total = 0;
+  for (const payment of payments) {
+    if (payment.source !== source) continue;
+    total += parseFloat(payment.amount);
+  }
   return roundMoney(total);
 };
 

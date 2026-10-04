@@ -1,6 +1,7 @@
 'use client';
 
 import type { IReceipt } from '@/domain/receipts';
+import { getPaymentSourceLabel } from '@/domain/receipts';
 import { formatMoney } from '../helpers/formatMoney';
 import { formatDate, toInputDate, parseInputDate } from '../helpers/formatDate';
 import { useState } from 'react';
@@ -57,18 +58,21 @@ export const ReceiptPayments = ({
                 <span className="font-medium">{formatMoney(parseFloat(payment.amount))}</span>
                 <span className="text-gray-500 ml-2">{formatDate(payment.date)}</span>
                 <span className="text-gray-400 ml-2">— {payment.addedByName}</span>
+                <span className="block text-xs text-gray-500 mt-0.5">{getPaymentSourceLabel(payment.source)}</span>
                 {payment.comment && <p className="text-gray-500 text-xs mt-0.5">{payment.comment}</p>}
               </div>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => {
-                  if (window.confirm('Удалить эту оплату?')) onDeletePayment(payment.id);
-                }}
-                className="text-red-600 hover:text-red-800 text-xs"
-              >
-                Удалить
-              </button>
+              {payment.source === 'DIRECT' && (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => {
+                    if (window.confirm('Удалить эту оплату?')) onDeletePayment(payment.id);
+                  }}
+                  className="text-red-600 hover:text-red-800 text-xs"
+                >
+                  Удалить
+                </button>
+              )}
             </li>
           ))}
         </ul>

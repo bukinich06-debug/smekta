@@ -34,6 +34,7 @@ export interface IFinancePayment {
   id: number;
   date: Date;
   amount: string;
+  source: 'DEPOSIT' | 'DIRECT';
   receiptTitle: string;
 }
 
@@ -90,7 +91,8 @@ export interface IFinanceLedgerRow {
     | 'transfer_out'
     | 'transfer_in'
     | 'act'
-    | 'payment'
+    | 'payment_deposit'
+    | 'payment_direct'
     | 'extra_work';
 }
 

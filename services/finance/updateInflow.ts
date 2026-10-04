@@ -6,6 +6,7 @@ import type { IUpdateInflowInput, IProjectInflow } from '@/domain/finance';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
+import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
 interface IResult {
   ok: boolean;
@@ -27,9 +28,10 @@ export const updateInflow = async (id: number, input: IUpdateInflowInput): Promi
     revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {
+    const mapped = mapFinanceRepositoryError(error);
+    if (mapped) return { ok: false, error: mapped };
+
     console.error('Ошибка при изменении поступления:', error);
-    if (error instanceof Error && error.message === 'INFLOW_NOT_FOUND')
-      return { ok: false, error: 'Поступление не найдено' };
     return { ok: false, error: 'Не удалось сохранить поступление' };
   }
 };
