@@ -12,7 +12,7 @@ export const StatsKpiGrid = ({ kpi }: IStatsKpiGridProps) => (
       <p className="text-2xl font-semibold text-gray-900">{kpi.totalProjects}</p>
     </div>
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-sm text-gray-500">Активные</p>
+      <p className="text-sm text-gray-500">В работе</p>
       <p className="text-2xl font-semibold text-blue-700">{kpi.activeProjects}</p>
     </div>
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">

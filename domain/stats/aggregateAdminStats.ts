@@ -14,7 +14,8 @@ import type {
 } from './types';
 import type { IProjectFinanceInput } from '@/domain/finance';
 
-const isActiveStatus = (status: IAdminStatsProjectRow['status']): boolean => status !== 'COMPLETED';
+const isInProgressStatus = (status: IAdminStatsProjectRow['status']): boolean =>
+  status === 'IN_PROGRESS';
 
 const sumReceivedInPeriod = (input: IProjectFinanceInput, filters: IAdminStatsFilters): number => {
   let sum = 0;
@@ -111,7 +112,7 @@ export const aggregateAdminStats = (
   let completedProjects = 0;
 
   for (const project of projects) {
-    if (isActiveStatus(project.status)) activeProjects += 1;
+    if (isInProgressStatus(project.status)) activeProjects += 1;
     if (project.status === 'COMPLETED') completedProjects += 1;
 
     const summary = computeProjectFinance(project.financeInput);
