@@ -39,8 +39,49 @@ components  →  services  →  domain  ←  data
 1. Правишь `prisma/schema.prisma`.
 2. Применяешь схему: `npm run db:push`.
 3. Обновляешь клиент: `npm run db:generate`.
+4. (Опционально) Заполняешь тестовыми данными: `npm run db:seed`.
 
 Имена таблиц в базе — в нижнем регистре (`@@map`). Поля `createdAt` / `updatedAt` в модели не добавляем.
+
+### Первичная настройка БД и тестовые данные
+
+Скопируй `.env.example` в `.env`, укажи `DATABASE_URL`, `BETTER_AUTH_SECRET` и URL приложения.
+
+```bash
+npm run db:push
+npm run db:generate
+npm run db:seed
+```
+
+**Поведение seed:**
+
+- На **пустой** базе (нет пользователей и проектов) — создаёт демо-данные, ничего не удаляет.
+- Если в базе уже есть пользователь или проект — **ничего не делает** и выходит с кодом 0. Сообщение: пересоздать через `npm run db:seed -- --reset`.
+- Флаг `--reset` очищает все таблицы приложения и заполняет заново; перед удалением нужно ввести `yes` или `да` в консоли. `--yes` пропускает вопрос (для CI/скриптов).
+- Seed работает только с **локальным** хостом в `DATABASE_URL` (`localhost`, `127.0.0.1`, `::1`). Для удалённой dev-базы — явно `--allow-remote`.
+- Запуск **запрещён**, если `NODE_ENV=production` или `VERCEL_ENV=production` (даже с флагами).
+
+Примеры:
+
+```bash
+npm run db:seed
+npm run db:seed -- --reset
+npm run db:seed -- --reset --yes
+npx prisma db seed -- --reset
+```
+
+Тот же сид настроен в `prisma.config.ts` (`migrations.seed`).
+
+### Тестовые логины (после seed)
+
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Администратор | `admin@smekta.test` | `Admin123!` |
+| Заказчик | `client1@smekta.test` | `Client123!` |
+| Заказчик | `client2@smekta.test` | `Client123!` |
+| Заказчик | `client3@smekta.test` | `Client123!` |
+
+Заказчик **Новикова Ольга** создан без привязки к аккаунту; для неё в seed записан инвайт-токен `seed-invite-novikova-demo-2026` (принятие через страницу инвайта в приложении).
 
 ## Запуск
 
