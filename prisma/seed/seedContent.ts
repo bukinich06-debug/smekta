@@ -13,58 +13,42 @@ import { ACT_ENTITY_TYPE } from '@/domain/acts/constants';
 import { PROJECT_INFLOW_ENTITY_TYPE, WALLET_TRANSFER_ENTITY_TYPE } from '@/domain/finance/constants';
 import { PROJECT_TZ_ENTITY_TYPE } from '@/domain/project-tz/constants';
 import { RECEIPT_DEPOSIT_ENTITY_TYPE } from '@/domain/receipts/constants';
-import { SEED_INVITE_TOKEN } from './constants';
+import {
+  SEED_PROJECT_KOVALEVA,
+  SEED_PROJECT_NOVIKOVA,
+  SEED_PROJECT_PETROV,
+  SEED_PROJECT_SIDORENKO,
+} from './constants';
 import { daysAgo, monthsAgo } from './dates';
+import { ensureSeedClients } from './ensureClients';
+import type { ISeedReport } from './report';
+import { markCreated, markSkipped } from './report';
 
 interface ISeedUsers {
   adminId: number;
   clientUserIds: number[];
 }
 
-export const seedContent = async ({ adminId, clientUserIds }: ISeedUsers): Promise<void> => {
-  const [client1UserId, client2UserId, client3UserId] = clientUserIds;
+const findDemoProject = async (name: string) =>
+  dbClient.project.findFirst({ where: { name } });
 
-  const clientKovaleva = await dbClient.client.create({
-    data: {
-      fullName: 'Ковалёва Елена Владимировна',
-      phone: '+375 29 123-45-67',
-      email: 'client1@smekta.test',
-      userId: client1UserId,
-    },
-  });
+export const seedContent = async (
+  { adminId, clientUserIds }: ISeedUsers,
+  report: ISeedReport
+): Promise<void> => {
+  const { kovaleva: clientKovaleva, petrov: clientPetrov, sidorenko: clientSidorenko, novikova: clientNovikova } =
+    await ensureSeedClients(clientUserIds, report);
 
-  const clientPetrov = await dbClient.client.create({
-    data: {
-      fullName: 'Петров Андрей Сергеевич',
-      phone: '+375 33 234-56-78',
-      email: 'client2@smekta.test',
-      userId: client2UserId,
-    },
-  });
+  const seededProjects: { projectId: number; clientId: number }[] = [];
 
-  const clientSidorenko = await dbClient.client.create({
-    data: {
-      fullName: 'Сидоренко Мария Игоревна',
-      phone: '+375 44 345-67-89',
-      email: 'client3@smekta.test',
-      userId: client3UserId,
-    },
-  });
-
-  const clientNovikova = await dbClient.client.create({
-    data: {
-      fullName: 'Новикова Ольга Петровна',
-      phone: '+375 25 456-78-90',
-      email: 'novikova@example.com',
-      inviteToken: SEED_INVITE_TOKEN,
-    },
-  });
-
+  if (await findDemoProject(SEED_PROJECT_KOVALEVA)) {
+    markSkipped(report, `проект «${SEED_PROJECT_KOVALEVA}»`);
+  } else {
   const project1 = await createProject({
     clientId: clientKovaleva.id,
     managerId: adminId,
-    name: 'Капитальный ремонт 2-комнатной',
-    address: 'г. Минск, ул. Немига, д. 12, кв. 45',
+    name: SEED_PROJECT_KOVALEVA,
+    address: 'г. Москва, ул. Арбат, д. 12, кв. 45',
     status: ProjectStatus.IN_PROGRESS,
     startDate: monthsAgo(3, 5),
     tzText: `Техническое задание на капитальный ремонт квартиры 52 м².
@@ -80,57 +64,75 @@ export const seedContent = async ({ adminId, clientUserIds }: ISeedUsers): Promi
     tzUpdatedById: adminId,
   });
 
-  const project2 = await createProject({
-    clientId: clientPetrov.id,
-    managerId: adminId,
-    name: 'Ремонт студии под сдачу',
-    address: 'г. Минск, пр-т Независимости, д. 88, кв. 102',
-    status: ProjectStatus.COMPLETED,
-    startDate: monthsAgo(5, 10),
-    tzText: 'Косметический ремонт студии 28 м²: покраска стен, замена напольного покрытия, обновление санузла.',
-    tzUpdatedAt: monthsAgo(5, 9),
-    tzUpdatedById: adminId,
-  });
+    await seedProject1Finance(project1.id, adminId);
+    await seedProject1Estimate(project1.id);
+    await seedProject1ActsAndExtra(project1.id, adminId);
+    await seedProject1Receipts(project1.id, adminId);
+    markCreated(report, `проект «${SEED_PROJECT_KOVALEVA}»`);
+    seededProjects.push({ projectId: project1.id, clientId: clientKovaleva.id });
+  }
 
-  const project3 = await createProject({
-    clientId: clientSidorenko.id,
-    managerId: adminId,
-    name: 'Дизайн-проект и ремонт кухни',
-    address: 'г. Минск, ул. Сурганова, д. 50, кв. 7',
-    status: ProjectStatus.PLANNING,
-    startDate: null,
-    tzText: 'Планируется ремонт кухни 14 м²: демонтаж, новая электрика под встраиваемую технику, плитка, натяжной потолок.',
-    tzUpdatedAt: daysAgo(12),
-    tzUpdatedById: adminId,
-  });
+  if (await findDemoProject(SEED_PROJECT_PETROV)) {
+    markSkipped(report, `проект «${SEED_PROJECT_PETROV}»`);
+  } else {
+    const project2 = await createProject({
+      clientId: clientPetrov.id,
+      managerId: adminId,
+      name: SEED_PROJECT_PETROV,
+      address: 'г. Москва, Ленинский пр-т, д. 88, кв. 102',
+      status: ProjectStatus.COMPLETED,
+      startDate: monthsAgo(5, 10),
+      tzText:
+        'Косметический ремонт студии 28 м²: покраска стен, замена напольного покрытия, обновление санузла.',
+      tzUpdatedAt: monthsAgo(5, 9),
+      tzUpdatedById: adminId,
+    });
+    await seedProject2Full(project2.id, adminId);
+    markCreated(report, `проект «${SEED_PROJECT_PETROV}»`);
+    seededProjects.push({ projectId: project2.id, clientId: clientPetrov.id });
+  }
 
-  const project4 = await createProject({
-    clientId: clientNovikova.id,
-    managerId: adminId,
-    name: 'Ремонт ванной комнаты',
-    address: 'г. Минск, ул. Притыцкого, д. 156, кв. 12',
-    status: ProjectStatus.PAUSED,
-    startDate: monthsAgo(2, 20),
-    tzText: 'Замена труб, гидроизоляция, укладка плитки, установка сантехники. Работы приостановлены по согласованию с заказчиком.',
-    tzUpdatedAt: monthsAgo(2, 18),
-    tzUpdatedById: adminId,
-  });
+  if (await findDemoProject(SEED_PROJECT_SIDORENKO)) {
+    markSkipped(report, `проект «${SEED_PROJECT_SIDORENKO}»`);
+  } else {
+    const project3 = await createProject({
+      clientId: clientSidorenko.id,
+      managerId: adminId,
+      name: SEED_PROJECT_SIDORENKO,
+      address: 'г. Москва, ул. Профсоюзная, д. 50, кв. 7',
+      status: ProjectStatus.PLANNING,
+      startDate: null,
+      tzText:
+        'Планируется ремонт кухни 14 м²: демонтаж, новая электрика под встраиваемую технику, плитка, натяжной потолок.',
+      tzUpdatedAt: daysAgo(12),
+      tzUpdatedById: adminId,
+    });
+    await seedProject3Planning(project3.id, adminId);
+    markCreated(report, `проект «${SEED_PROJECT_SIDORENKO}»`);
+    seededProjects.push({ projectId: project3.id, clientId: clientSidorenko.id });
+  }
 
-  await seedProject1Finance(project1.id, adminId);
-  await seedProject1Estimate(project1.id);
-  await seedProject1ActsAndExtra(project1.id, adminId);
-  await seedProject1Receipts(project1.id, adminId);
+  if (await findDemoProject(SEED_PROJECT_NOVIKOVA)) {
+    markSkipped(report, `проект «${SEED_PROJECT_NOVIKOVA}»`);
+  } else {
+    const project4 = await createProject({
+      clientId: clientNovikova.id,
+      managerId: adminId,
+      name: SEED_PROJECT_NOVIKOVA,
+      address: 'г. Москва, ул. Барклая, д. 156, кв. 12',
+      status: ProjectStatus.PAUSED,
+      startDate: monthsAgo(2, 20),
+      tzText:
+        'Замена труб, гидроизоляция, укладка плитки, установка сантехники. Работы приостановлены по согласованию с заказчиком.',
+      tzUpdatedAt: monthsAgo(2, 18),
+      tzUpdatedById: adminId,
+    });
+    await seedProject4Paused(project4.id, adminId);
+    markCreated(report, `проект «${SEED_PROJECT_NOVIKOVA}»`);
+    seededProjects.push({ projectId: project4.id, clientId: clientNovikova.id });
+  }
 
-  await seedProject2Full(project2.id, adminId);
-  await seedProject3Planning(project3.id, adminId);
-  await seedProject4Paused(project4.id, adminId);
-
-  await seedActivityLog(adminId, [
-    { projectId: project1.id, clientId: clientKovaleva.id },
-    { projectId: project2.id, clientId: clientPetrov.id },
-    { projectId: project3.id, clientId: clientSidorenko.id },
-    { projectId: project4.id, clientId: clientNovikova.id },
-  ]);
+  if (seededProjects.length > 0) await seedActivityLog(adminId, seededProjects);
 };
 
 const createProject = async (data: {
