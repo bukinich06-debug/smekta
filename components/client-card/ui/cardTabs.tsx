@@ -7,6 +7,7 @@ import { AdminTzTab } from '@/components/tz-tab';
 import { ExtraWorksTab } from '@/components/extra-works-tab';
 import { ActsTab } from '@/components/acts-tab';
 import { FinanceTab } from '@/components/finance-tab';
+import { AdminPhotosTab } from '@/components/photos-tab';
 
 interface ICardTabsProps {
   projectId: number;
@@ -21,7 +22,8 @@ export const CardTabs = ({ projectId }: ICardTabsProps) => {
     activeTab !== 'receipts' &&
     activeTab !== 'extra' &&
     activeTab !== 'acts' &&
-    activeTab !== 'finance';
+    activeTab !== 'finance' &&
+    activeTab !== 'photos';
 
   return (
     <div className="bg-white shadow rounded-lg">
@@ -50,6 +52,7 @@ export const CardTabs = ({ projectId }: ICardTabsProps) => {
         {activeTab === 'extra' && <ExtraWorksTab projectId={projectId} />}
         {activeTab === 'acts' && <ActsTab projectId={projectId} />}
         {activeTab === 'finance' && <FinanceTab projectId={projectId} />}
+        {activeTab === 'photos' && <AdminPhotosTab projectId={projectId} />}
         {isPlaceholder && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-lg">Содержимое вкладки будет реализовано позднее</p>

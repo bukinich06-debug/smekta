@@ -56,3 +56,17 @@ export const purgeBlobFilesForProjectTz = async (projectId: number): Promise<voi
   const storageKeys = await listStorageKeysByProjectIdTz(projectId);
   await deleteBlobObjects(storageKeys);
 };
+
+const listStorageKeysByProjectIdPhotos = async (projectId: number): Promise<string[]> => {
+  const rows = await dbClient.file.findMany({
+    where: { projectId, tab: 'PHOTOS' },
+    select: { storageKey: true },
+  });
+
+  return rows.map((row) => row.storageKey);
+};
+
+export const purgeBlobFilesForProjectPhotos = async (projectId: number): Promise<void> => {
+  const storageKeys = await listStorageKeysByProjectIdPhotos(projectId);
+  await deleteBlobObjects(storageKeys);
+};
