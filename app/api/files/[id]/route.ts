@@ -1,7 +1,7 @@
 import { get } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
 import { getSession } from '@/services/auth/getSession';
-import { assertReceiptFileReadAccess } from '@/services/files/helpers/assertReceiptFileAccess';
+import { assertFileReadAccess } from '@/services/files/helpers/assertFileReadAccess';
 
 interface IRouteContext {
   params: Promise<{ id: string }>;
@@ -18,7 +18,7 @@ export const GET = async (request: Request, context: IRouteContext) => {
   const file = await fileRepository.getById(fileId);
   if (!file) return new Response('Не найдено', { status: 404 });
 
-  const access = await assertReceiptFileReadAccess(session, file);
+  const access = await assertFileReadAccess(session, file);
   if (!access.ok) return new Response(access.error || 'Нет доступа', { status: 403 });
 
   const blobResult = await get(file.storageKey, { access: 'private' });
