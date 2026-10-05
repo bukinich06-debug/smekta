@@ -85,3 +85,5 @@ npm run dev
 ```
 
 Приложение откроется на [http://localhost:3000](http://localhost:3000).
+
+Деплой на Vercel: в переменных окружения проекта задайте `DATABASE_URL` — `npm run build` перед `next build` выполняет `prisma generate`.
