@@ -3,7 +3,7 @@
 import { useAdminTzTab } from '../hooks/useAdminTzTab';
 import { formatDateTime } from '../helpers/formatDateTime';
 import { TzTextDisplay } from './tzTextDisplay';
-import { TzFilesBlock } from './tzFilesBlock';
+import { TzAttachments } from '../tz-attachments';
 import { TzHistoryList } from './tzHistoryList';
 
 interface IAdminTzTabProps {
@@ -95,7 +95,7 @@ export const AdminTzTab = ({ projectId }: IAdminTzTabProps) => {
         </div>
       )}
 
-      <TzFilesBlock />
+      <TzAttachments projectId={projectId} />
 
       <div className="mt-8 border-t border-gray-200 pt-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">История изменений</h3>

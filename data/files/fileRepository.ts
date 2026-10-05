@@ -1,6 +1,12 @@
 import { FileTab as PrismaFileTab } from '@prisma/client';
 import { dbClient } from '@/data/shared/dbClient';
-import type { IFileRepository, IFile, ICreateReceiptFileInput, ICreateActFileInput } from '@/domain/files';
+import type {
+  IFileRepository,
+  IFile,
+  ICreateReceiptFileInput,
+  ICreateActFileInput,
+  ICreateTzFileInput,
+} from '@/domain/files';
 
 const mapFile = (row: {
   id: number;
@@ -68,6 +74,16 @@ export const fileRepository: IFileRepository = {
     return rows.map(mapFile);
   },
 
+  async listByProjectIdTz(projectId: number): Promise<IFile[]> {
+    const rows = await dbClient.file.findMany({
+      where: { projectId, tab: 'TZ' },
+      include: { uploadedBy: { select: { name: true } } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return rows.map(mapFile);
+  },
+
   async create(input: ICreateReceiptFileInput): Promise<IFile> {
     const row = await dbClient.file.create({
       data: {
@@ -95,6 +111,25 @@ export const fileRepository: IFileRepository = {
         projectId: input.projectId,
         tab: 'ACTS',
         actId: input.actId,
+        storageKey: input.storageKey,
+        originalName: input.originalName,
+        mimeType: input.mimeType,
+        size: input.size,
+        uploadedById: input.uploadedById,
+        isPhoto: input.isPhoto,
+        isVisibleToClient: true,
+      },
+      include: { uploadedBy: { select: { name: true } } },
+    });
+
+    return mapFile(row);
+  },
+
+  async createTzFile(input: ICreateTzFileInput): Promise<IFile> {
+    const row = await dbClient.file.create({
+      data: {
+        projectId: input.projectId,
+        tab: 'TZ',
         storageKey: input.storageKey,
         originalName: input.originalName,
         mimeType: input.mimeType,

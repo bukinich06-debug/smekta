@@ -1,4 +1,5 @@
 import type { IProjectTz } from '@/domain/project-tz';
+import { TzAttachments } from '@/components/tz-tab/tz-attachments';
 import { TzTextDisplay } from '@/components/tz-tab/ui/tzTextDisplay';
 import { formatDateTime } from '@/components/tz-tab/helpers/formatDateTime';
 
@@ -13,5 +14,6 @@ export const ClientTzTab = ({ tz }: IClientTzTabProps) => (
     {tz.updatedAt && (
       <p className="text-sm text-gray-500 mt-4">Обновлено: {formatDateTime(tz.updatedAt)}</p>
     )}
+    <TzAttachments projectId={tz.projectId} readOnly />
   </div>
 );

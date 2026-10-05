@@ -41,11 +41,23 @@ export interface ICreateActFileInput {
   isPhoto: boolean;
 }
 
+export interface ICreateTzFileInput {
+  projectId: number;
+  storageKey: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedById: number;
+  isPhoto: boolean;
+}
+
 export interface IFileRepository {
   getById(id: number): Promise<IFile | null>;
   listByReceiptId(receiptId: number): Promise<IFile[]>;
   listByActId(actId: number): Promise<IFile[]>;
+  listByProjectIdTz(projectId: number): Promise<IFile[]>;
   create(input: ICreateReceiptFileInput): Promise<IFile>;
   createActFile(input: ICreateActFileInput): Promise<IFile>;
+  createTzFile(input: ICreateTzFileInput): Promise<IFile>;
   delete(id: number): Promise<void>;
 }
