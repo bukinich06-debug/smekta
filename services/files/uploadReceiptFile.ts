@@ -2,6 +2,7 @@
 
 import { put } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
+import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import { receiptRepository } from '@/data/receipts';
 import { validateReceiptFileMeta } from '@/domain/files';
 import { getSession } from '@/services/auth/getSession';
@@ -56,12 +57,16 @@ export const uploadReceiptFile = async (formData: FormData): Promise<IResult> =>
 
   const pathname = buildReceiptBlobPathname(access.projectId, receiptId, file.name);
 
+  let uploadedPathname: string | null = null;
+
   try {
     const blob = await put(pathname, file, {
       access: 'private',
       contentType: file.type,
       addRandomSuffix: false,
     });
+
+    uploadedPathname = blob.pathname;
 
     await fileRepository.create({
       projectId: access.projectId,
@@ -78,6 +83,14 @@ export const uploadReceiptFile = async (formData: FormData): Promise<IResult> =>
     revalidateReceiptPaths();
     return { ok: true };
   } catch (error) {
+    if (uploadedPathname) {
+      try {
+        await deleteBlobObjects([uploadedPathname]);
+      } catch (rollbackError) {
+        console.error('Не удалось удалить blob после ошибки записи в БД:', rollbackError);
+      }
+    }
+
     console.error('Ошибка загрузки файла чека:', error);
     return { ok: false, error: 'Не удалось загрузить файл' };
   }

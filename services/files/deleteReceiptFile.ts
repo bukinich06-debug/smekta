@@ -1,7 +1,7 @@
 'use server';
 
-import { del } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
+import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
 import { revalidateReceiptPaths } from '@/services/receipts/helpers/revalidateReceiptPaths';
@@ -26,7 +26,7 @@ export const deleteReceiptFile = async (fileId: number): Promise<IResult> => {
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   try {
-    await del(file.storageKey);
+    await deleteBlobObjects([file.storageKey]);
     await fileRepository.delete(fileId);
     revalidateReceiptPaths();
     return { ok: true };

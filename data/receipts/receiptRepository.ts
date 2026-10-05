@@ -16,6 +16,7 @@ import { reconcileReceiptDeposit } from './deposit/reconcileReceiptDeposit';
 import { logDepositOffset } from './deposit/logDepositOffset';
 import { getMaterialsWalletBalance } from './helpers/materialsWalletBalance';
 import { lockProjectFinance } from '@/data/shared/projectFinanceLock';
+import { purgeBlobFilesForPayment, purgeBlobFilesForReceipt } from '@/data/files/helpers/purgeBlobFiles';
 
 const mapPayment = (payment: {
   id: number;
@@ -274,6 +275,8 @@ export const receiptRepository: IReceiptRepository = {
   },
 
   async delete(id: number, userId: number): Promise<void> {
+    await purgeBlobFilesForReceipt(id);
+
     await dbClient.$transaction(async (tx) => {
       const current = await tx.receipt.findUnique({
         where: { id },
@@ -349,6 +352,8 @@ export const receiptRepository: IReceiptRepository = {
   },
 
   async deletePayment(paymentId: number, userId: number): Promise<void> {
+    await purgeBlobFilesForPayment(paymentId);
+
     await dbClient.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({
         where: { id: paymentId },
