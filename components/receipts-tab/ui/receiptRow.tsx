@@ -6,6 +6,7 @@ import { formatMoney } from '../helpers/formatMoney';
 import { formatDate } from '../helpers/formatDate';
 import { ReceiptStatusBadge } from './receiptStatusBadge';
 import { ReceiptPayments } from './receiptPayments';
+import { ReceiptAttachments } from '../receipt-attachments';
 
 interface IReceiptRowProps {
   receipt: IReceipt;
@@ -68,6 +69,8 @@ export const ReceiptRow = ({
         <p className="text-sm text-gray-600 mt-2">{receipt.comment}</p>
       )}
 
+      <ReceiptAttachments receiptId={receipt.id} readOnly={readOnly} />
+
       {!readOnly && (
         <div className="flex flex-wrap gap-2 mt-3">
           <button
@@ -119,9 +122,16 @@ export const ReceiptRow = ({
       {expanded && readOnly && receipt.payments.length > 0 && (
         <ul className="mt-4 space-y-2 border-t border-gray-100 pt-4">
           {receipt.payments.map((payment) => (
-            <li key={payment.id} className="text-sm text-gray-700">
+            <li key={payment.id} className="text-sm text-gray-700 border border-gray-100 rounded-md p-3">
               {formatDate(payment.date)} — {formatMoney(parseFloat(payment.amount))}
               <span className="text-gray-500"> ({payment.source === 'DEPOSIT' ? 'из депозита' : 'напрямую'})</span>
+              <ReceiptAttachments
+                receiptId={receipt.id}
+                paymentId={payment.id}
+                readOnly
+                title="Документы по оплате"
+                compact
+              />
             </li>
           ))}
         </ul>

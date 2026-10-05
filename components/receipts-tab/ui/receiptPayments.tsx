@@ -5,6 +5,7 @@ import { getPaymentSourceLabel } from '@/domain/receipts';
 import { formatMoney } from '../helpers/formatMoney';
 import { formatDate, toInputDate, parseInputDate } from '../helpers/formatDate';
 import { useState } from 'react';
+import { ReceiptAttachments } from '../receipt-attachments';
 
 interface IReceiptPaymentsProps {
   receipt: IReceipt;
@@ -73,6 +74,12 @@ export const ReceiptPayments = ({
                   Удалить
                 </button>
               )}
+              <ReceiptAttachments
+                receiptId={receipt.id}
+                paymentId={payment.id}
+                title="Документы по оплате"
+                compact
+              />
             </li>
           ))}
         </ul>

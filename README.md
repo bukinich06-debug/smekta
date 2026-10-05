@@ -45,7 +45,7 @@ components  →  services  →  domain  ←  data
 
 ### Первичная настройка БД и тестовые данные
 
-Скопируй `.env.example` в `.env`, укажи `DATABASE_URL`, `BETTER_AUTH_SECRET` и URL приложения.
+Скопируй `.env.example` в `.env`, укажи `DATABASE_URL`, `BETTER_AUTH_SECRET`, URL приложения и `BLOB_READ_WRITE_TOKEN` (для загрузки вложений на Vercel Blob; на Vercel задаётся в настройках Storage).
 
 ```bash
 npm run db:push
@@ -86,4 +86,8 @@ npm run dev
 
 Приложение откроется на [http://localhost:3000](http://localhost:3000).
 
-Деплой на Vercel: в переменных окружения проекта задайте `DATABASE_URL` — `npm run build` перед `next build` выполняет `prisma generate`.
+Деплой на Vercel: в переменных окружения проекта задайте `DATABASE_URL` и `BLOB_READ_WRITE_TOKEN` — `npm run build` перед `next build` выполняет `prisma generate`.
+
+### Вложения (Vercel Blob)
+
+Файлы чеков загружаются в приватный Blob store. В БД поле `File.storageKey` хранит **pathname** объекта в store (например `projects/1/receipts/5/…-scan.pdf`); чтение и удаление идут через SDK `@vercel/blob` по этому pathname. Скачивание и предпросмотр для пользователя — через `GET /api/files/[id]` с проверкой роли и проекта.
