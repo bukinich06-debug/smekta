@@ -1,6 +1,7 @@
 export type {
   IClient,
   IProject,
+  IProjectManager,
   IClientWithProject,
   IClientListItem,
   ICreateClientInput,

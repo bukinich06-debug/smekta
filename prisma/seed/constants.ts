@@ -5,6 +5,7 @@ export const SEED_ADMIN = {
   email: 'admin@smekta.test',
   password: 'Admin123!',
   name: 'Иван Администратор',
+  phone: '+375 29 123-45-67',
 };
 
 export const SEED_CLIENT_USERS = [

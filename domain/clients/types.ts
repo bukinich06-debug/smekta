@@ -65,8 +65,15 @@ export interface IClientListFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
+export interface IProjectManager {
+  name: string;
+  phone: string | null;
+  email: string;
+}
+
 export interface IClientCardDetails extends IClient {
   project: IProject | null;
+  manager: IProjectManager | null;
   estimateTotal: number;
   receivedTotal: number;
   masteredTotal: number;

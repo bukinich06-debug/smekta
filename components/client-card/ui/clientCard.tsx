@@ -87,7 +87,7 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
           admins={admins}
         />
       ) : (
-        <CardHeader data={data} managerName={managerName} />
+        <CardHeader data={data} role="admin" managerName={managerName} />
       )}
 
       <ClientInvite
