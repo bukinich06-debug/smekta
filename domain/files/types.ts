@@ -1,3 +1,5 @@
+import type { PhotoAlbum } from './photoAlbum';
+
 export type FileTab = 'TZ' | 'ESTIMATE' | 'RECEIPTS' | 'ACTS' | 'EXTRA_WORKS' | 'PHOTOS';
 
 export interface IFile {
@@ -15,6 +17,8 @@ export interface IFile {
   uploadedByName: string;
   uploadedAt: Date;
   isPhoto: boolean;
+  caption: string | null;
+  album: PhotoAlbum | null;
   isVisibleToClient: boolean;
 }
 
@@ -51,13 +55,32 @@ export interface ICreateTzFileInput {
   isPhoto: boolean;
 }
 
+export interface ICreatePhotoFileInput {
+  projectId: number;
+  storageKey: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedById: number;
+  album: PhotoAlbum;
+  caption?: string | null;
+}
+
+export interface IUpdatePhotoFileInput {
+  caption?: string | null;
+  album?: PhotoAlbum;
+}
+
 export interface IFileRepository {
   getById(id: number): Promise<IFile | null>;
   listByReceiptId(receiptId: number): Promise<IFile[]>;
   listByActId(actId: number): Promise<IFile[]>;
   listByProjectIdTz(projectId: number): Promise<IFile[]>;
+  listByProjectIdPhotos(projectId: number): Promise<IFile[]>;
   create(input: ICreateReceiptFileInput): Promise<IFile>;
   createActFile(input: ICreateActFileInput): Promise<IFile>;
   createTzFile(input: ICreateTzFileInput): Promise<IFile>;
+  createPhotoFile(input: ICreatePhotoFileInput): Promise<IFile>;
+  updatePhotoFile(id: number, input: IUpdatePhotoFileInput): Promise<IFile>;
   delete(id: number): Promise<void>;
 }

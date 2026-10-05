@@ -6,7 +6,10 @@ import type {
   ICreateReceiptFileInput,
   ICreateActFileInput,
   ICreateTzFileInput,
+  ICreatePhotoFileInput,
+  IUpdatePhotoFileInput,
 } from '@/domain/files';
+import { PhotoAlbum as PrismaPhotoAlbum } from '@prisma/client';
 
 const mapFile = (row: {
   id: number;
@@ -23,6 +26,8 @@ const mapFile = (row: {
   uploadedBy: { name: string };
   uploadedAt: Date;
   isPhoto: boolean;
+  caption: string | null;
+  album: PrismaPhotoAlbum | null;
   isVisibleToClient: boolean;
 }): IFile => ({
   id: row.id,
@@ -39,6 +44,8 @@ const mapFile = (row: {
   uploadedByName: row.uploadedBy.name,
   uploadedAt: row.uploadedAt,
   isPhoto: row.isPhoto,
+  caption: row.caption,
+  album: row.album,
   isVisibleToClient: row.isVisibleToClient,
 });
 
@@ -77,6 +84,16 @@ export const fileRepository: IFileRepository = {
   async listByProjectIdTz(projectId: number): Promise<IFile[]> {
     const rows = await dbClient.file.findMany({
       where: { projectId, tab: 'TZ' },
+      include: { uploadedBy: { select: { name: true } } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return rows.map(mapFile);
+  },
+
+  async listByProjectIdPhotos(projectId: number): Promise<IFile[]> {
+    const rows = await dbClient.file.findMany({
+      where: { projectId, tab: 'PHOTOS' },
       include: { uploadedBy: { select: { name: true } } },
       orderBy: { uploadedAt: 'desc' },
     });
@@ -138,6 +155,49 @@ export const fileRepository: IFileRepository = {
         isPhoto: input.isPhoto,
         isVisibleToClient: true,
       },
+      include: { uploadedBy: { select: { name: true } } },
+    });
+
+    return mapFile(row);
+  },
+
+  async createPhotoFile(input: ICreatePhotoFileInput): Promise<IFile> {
+    const row = await dbClient.file.create({
+      data: {
+        projectId: input.projectId,
+        tab: 'PHOTOS',
+        storageKey: input.storageKey,
+        originalName: input.originalName,
+        mimeType: input.mimeType,
+        size: input.size,
+        uploadedById: input.uploadedById,
+        isPhoto: true,
+        album: input.album,
+        caption: input.caption ?? null,
+        isVisibleToClient: input.album !== 'HIDDEN',
+      },
+      include: { uploadedBy: { select: { name: true } } },
+    });
+
+    return mapFile(row);
+  },
+
+  async updatePhotoFile(id: number, input: IUpdatePhotoFileInput): Promise<IFile> {
+    const data: {
+      caption?: string | null;
+      album?: PrismaPhotoAlbum;
+      isVisibleToClient?: boolean;
+    } = {};
+
+    if (input.caption !== undefined) data.caption = input.caption;
+    if (input.album !== undefined) {
+      data.album = input.album;
+      data.isVisibleToClient = input.album !== 'HIDDEN';
+    }
+
+    const row = await dbClient.file.update({
+      where: { id },
+      data,
       include: { uploadedBy: { select: { name: true } } },
     });
 
