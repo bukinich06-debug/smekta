@@ -1,6 +1,6 @@
 import { FileTab as PrismaFileTab } from '@prisma/client';
 import { dbClient } from '@/data/shared/dbClient';
-import type { IFileRepository, IFile, ICreateReceiptFileInput } from '@/domain/files';
+import type { IFileRepository, IFile, ICreateReceiptFileInput, ICreateActFileInput } from '@/domain/files';
 
 const mapFile = (row: {
   id: number;
@@ -8,6 +8,7 @@ const mapFile = (row: {
   tab: PrismaFileTab;
   receiptId: number | null;
   paymentId: number | null;
+  actId: number | null;
   storageKey: string;
   originalName: string;
   mimeType: string;
@@ -23,6 +24,7 @@ const mapFile = (row: {
   tab: row.tab,
   receiptId: row.receiptId,
   paymentId: row.paymentId,
+  actId: row.actId,
   storageKey: row.storageKey,
   originalName: row.originalName,
   mimeType: row.mimeType,
@@ -56,6 +58,16 @@ export const fileRepository: IFileRepository = {
     return rows.map(mapFile);
   },
 
+  async listByActId(actId: number): Promise<IFile[]> {
+    const rows = await dbClient.file.findMany({
+      where: { actId, tab: 'ACTS' },
+      include: { uploadedBy: { select: { name: true } } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return rows.map(mapFile);
+  },
+
   async create(input: ICreateReceiptFileInput): Promise<IFile> {
     const row = await dbClient.file.create({
       data: {
@@ -63,6 +75,26 @@ export const fileRepository: IFileRepository = {
         tab: 'RECEIPTS',
         receiptId: input.receiptId,
         paymentId: input.paymentId ?? null,
+        storageKey: input.storageKey,
+        originalName: input.originalName,
+        mimeType: input.mimeType,
+        size: input.size,
+        uploadedById: input.uploadedById,
+        isPhoto: input.isPhoto,
+        isVisibleToClient: true,
+      },
+      include: { uploadedBy: { select: { name: true } } },
+    });
+
+    return mapFile(row);
+  },
+
+  async createActFile(input: ICreateActFileInput): Promise<IFile> {
+    const row = await dbClient.file.create({
+      data: {
+        projectId: input.projectId,
+        tab: 'ACTS',
+        actId: input.actId,
         storageKey: input.storageKey,
         originalName: input.originalName,
         mimeType: input.mimeType,

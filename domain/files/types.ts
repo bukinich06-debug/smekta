@@ -6,6 +6,7 @@ export interface IFile {
   tab: FileTab;
   receiptId: number | null;
   paymentId: number | null;
+  actId: number | null;
   storageKey: string;
   originalName: string;
   mimeType: string;
@@ -29,9 +30,22 @@ export interface ICreateReceiptFileInput {
   isPhoto: boolean;
 }
 
+export interface ICreateActFileInput {
+  projectId: number;
+  actId: number;
+  storageKey: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedById: number;
+  isPhoto: boolean;
+}
+
 export interface IFileRepository {
   getById(id: number): Promise<IFile | null>;
   listByReceiptId(receiptId: number): Promise<IFile[]>;
+  listByActId(actId: number): Promise<IFile[]>;
   create(input: ICreateReceiptFileInput): Promise<IFile>;
+  createActFile(input: ICreateActFileInput): Promise<IFile>;
   delete(id: number): Promise<void>;
 }

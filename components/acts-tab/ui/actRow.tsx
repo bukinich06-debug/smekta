@@ -9,6 +9,7 @@ import { formatDate } from '../helpers/formatDate';
 import { formatMoney } from '../helpers/formatMoney';
 import { ActStatusBadge } from './actStatusBadge';
 import { ActHistory } from './actHistory';
+import { ActAttachments } from '../act-attachments';
 
 interface IActRowData {
   id: number;
@@ -154,7 +155,10 @@ export const ActRow = ({
             </div>
           )}
 
-          <p className="text-xs text-gray-500">Файлы акта — скоро.</p>
+          <div>
+            <p className="text-sm font-medium text-gray-800 mb-2">Файлы акта</p>
+            <ActAttachments actId={act.id} readOnly={readOnly} />
+          </div>
         </div>
       )}
     </div>
