@@ -1,27 +1,21 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useUrlTab } from '@/components/shared/hooks/useUrlTab';
+
+const TABS = [
+  { id: 'tz', label: 'ТЗ / Проект' },
+  { id: 'estimate', label: 'Смета' },
+  { id: 'receipts', label: 'Чеки' },
+  { id: 'acts', label: 'Акты выполненных работ' },
+  { id: 'extra', label: 'Дополнительные работы' },
+  { id: 'finance', label: 'Финансы' },
+  { id: 'photos', label: 'Фото' },
+];
+
+const TAB_IDS = TABS.map((tab) => tab.id);
 
 export const useCardTabs = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const activeTab = searchParams.get('tab') || 'tz';
+  const { activeTab, setActiveTab } = useUrlTab({ defaultTab: 'tz', validTabIds: TAB_IDS });
 
-  const tabs = [
-    { id: 'tz', label: 'ТЗ / Проект' },
-    { id: 'estimate', label: 'Смета' },
-    { id: 'receipts', label: 'Чеки' },
-    { id: 'acts', label: 'Акты выполненных работ' },
-    { id: 'extra', label: 'Дополнительные работы' },
-    { id: 'finance', label: 'Финансы' },
-    { id: 'photos', label: 'Фото' },
-  ];
-
-  const setActiveTab = (tabId: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', tabId);
-    router.push(`?${params.toString()}`);
-  };
-
-  return { activeTab, tabs, setActiveTab };
+  return { activeTab, tabs: TABS, setActiveTab };
 };
