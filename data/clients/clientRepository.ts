@@ -367,4 +367,19 @@ export const clientRepository: IClientRepository = {
 
     return result.count > 0;
   },
+
+  async disconnectLinkedUser(clientId: number): Promise<boolean> {
+    const result = await dbClient.client.updateMany({
+      where: {
+        id: clientId,
+        userId: { not: null },
+      },
+      data: {
+        userId: null,
+        inviteToken: null,
+      },
+    });
+
+    return result.count > 0;
+  },
 };
