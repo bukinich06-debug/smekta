@@ -9,8 +9,32 @@ import type {
   IClientCardDetails,
   IUpdateClientCardInput,
   IClientInviteInfo,
+  IProjectManager,
 } from '@/domain/clients';
 import { Prisma } from '@prisma/client';
+
+const projectCardInclude = {
+  ...projectFinanceQueryInclude,
+  manager: {
+    select: {
+      name: true,
+      phone: true,
+      email: true,
+    },
+  },
+};
+
+const mapProjectManager = (
+  manager: { name: string; phone: string | null; email: string } | null | undefined
+): IProjectManager | null => {
+  if (!manager) return null;
+
+  return {
+    name: manager.name,
+    phone: manager.phone,
+    email: manager.email,
+  };
+};
 
 export const clientRepository: IClientRepository = {
   async list(filters: IClientListFilters): Promise<IClientListItem[]> {
@@ -95,7 +119,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: projectFinanceQueryInclude,
+          include: projectCardInclude,
         },
       },
     });
@@ -113,6 +137,7 @@ export const clientRepository: IClientRepository = {
       userId: client.userId,
       inviteToken: client.inviteToken,
       userEmail: null,
+      manager: mapProjectManager(project?.manager),
       project: project
         ? {
             id: project.id,
@@ -229,7 +254,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: projectFinanceQueryInclude,
+          include: projectCardInclude,
         },
       },
     });
@@ -247,6 +272,7 @@ export const clientRepository: IClientRepository = {
       userId: client.userId,
       inviteToken: client.inviteToken,
       userEmail: client.user?.email || null,
+      manager: mapProjectManager(project?.manager),
       project: project
         ? {
             id: project.id,

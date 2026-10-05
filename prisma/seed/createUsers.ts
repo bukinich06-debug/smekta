@@ -13,7 +13,7 @@ export const createSeedUsers = async (): Promise<{ adminId: number; clientUserId
 
   const admin = await dbClient.user.update({
     where: { email: SEED_ADMIN.email },
-    data: { role: 'ADMIN', emailVerified: true },
+    data: { role: 'ADMIN', emailVerified: true, phone: SEED_ADMIN.phone },
   });
 
   const clientUserIds: number[] = [];

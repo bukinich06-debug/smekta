@@ -68,7 +68,7 @@ export const ClientCabinet = ({
 
   return (
     <ClientCabinetShell userName={userName}>
-      <CardHeader data={data} showProjectName />
+      <CardHeader data={data} role="client" />
       <CabinetTabs
         estimate={estimateData}
         tz={tz}
