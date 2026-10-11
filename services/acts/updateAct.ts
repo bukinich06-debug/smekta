@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { actRepository } from '@/data/acts';
 import { validateUpdateAct } from '@/domain/acts';
@@ -28,6 +29,10 @@ export const updateAct = async (id: number, input: IUpdateActInput): Promise<IRe
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await actRepository.getProjectIdByActId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Акт не найден' };
 
   const validationError = validateUpdateAct(input);
   if (validationError) return { ok: false, error: validationError };

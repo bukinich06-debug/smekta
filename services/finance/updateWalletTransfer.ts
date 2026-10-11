@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { financeRepository } from '@/data/finance';
 import { validateUpdateTransfer } from '@/domain/finance';
@@ -22,6 +23,10 @@ export const updateWalletTransfer = async (
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await financeRepository.getProjectIdByTransferId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Перевод не найден' };
 
   const current = await financeRepository.getTransferById(id);
   if (!current) return { ok: false, error: 'Перевод не найден' };

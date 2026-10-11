@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import { validateAddPayment } from '@/domain/receipts';
@@ -18,6 +19,10 @@ export const addPayment = async (input: IAddPaymentInput): Promise<IResult> => {
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await receiptRepository.getProjectIdByReceiptId(input.receiptId);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Чек не найден' };
 
   const receipt = await receiptRepository.getById(input.receiptId);
   if (!receipt) return { ok: false, error: 'Чек не найден' };

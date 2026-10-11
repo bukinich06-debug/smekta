@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { extraWorkRepository } from '@/data/extra-works';
 import type { IExtraWork } from '@/domain/extra-works';
@@ -18,6 +19,10 @@ export const toggleExtraWorkStatus = async (id: number): Promise<IResult> => {
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await extraWorkRepository.getProjectIdById(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Допработа не найдена' };
 
   try {
     const data = await extraWorkRepository.toggleStatus(id);

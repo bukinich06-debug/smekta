@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { financeRepository } from '@/data/finance';
 import { validateCreateInflow } from '@/domain/finance';
@@ -19,6 +20,9 @@ export const createInflow = async (input: ICreateInflowInput): Promise<IResult> 
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  if (!(await ownsProject(session.user.id, input.projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateInflow(input);
   if (validationError) return { ok: false, error: validationError };

@@ -1,6 +1,7 @@
 'use server';
 
 import { actRepository } from '@/data/acts';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { clientRepository } from '@/data/clients';
 import { fileRepository } from '@/data/files';
 import type { IFile } from '@/domain/files';
@@ -17,7 +18,11 @@ export const listActFiles = async (actId: number): Promise<IFile[]> => {
   const projectId = await actRepository.getProjectIdByActId(actId);
   if (!projectId) return [];
 
-  if (session.user.role === 'ADMIN') return await fileRepository.listByActId(actId);
+  if (session.user.role === 'ADMIN') {
+    const own = await ownsProject(session.user.id, projectId);
+    if (!own) return [];
+    return await fileRepository.listByActId(actId);
+  }
 
   if (session.user.role !== 'CLIENT') redirect('/login');
 

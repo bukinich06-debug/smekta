@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { actRepository } from '@/data/acts';
 import { validateCreateAct } from '@/domain/acts';
@@ -27,6 +28,9 @@ export const createAct = async (input: ICreateActInput): Promise<IResult> => {
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  if (!(await ownsProject(session.user.id, input.projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateAct(input);
   if (validationError) return { ok: false, error: validationError };

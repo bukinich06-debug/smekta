@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { estimateRepository } from '@/data/estimates';
 import { validateUpdateSection } from '@/domain/estimates';
@@ -18,6 +19,10 @@ export const updateSection = async (id: number, input: IUpdateSectionInput): Pro
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await estimateRepository.getProjectIdBySectionId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Раздел не найден' };
 
   const validationError = validateUpdateSection(input);
   if (validationError) return { ok: false, error: validationError };

@@ -63,6 +63,7 @@ export interface IUpdateExtraWorkInput {
 
 export interface IExtraWorkRepository {
   getByProjectId(projectId: number): Promise<IProjectExtraWorks>;
+  getProjectIdById(id: number): Promise<number | null>;
   getClientVisibleByProjectId(projectId: number): Promise<IClientProjectExtraWorks>;
   create(input: ICreateExtraWorkInput): Promise<IExtraWork>;
   update(id: number, input: IUpdateExtraWorkInput): Promise<IExtraWork>;

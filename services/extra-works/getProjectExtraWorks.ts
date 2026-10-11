@@ -1,4 +1,5 @@
 'use server';
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { extraWorkRepository } from '@/data/extra-works';
 import type { IProjectExtraWorks } from '@/domain/extra-works';
@@ -10,6 +11,8 @@ export const getProjectExtraWorks = async (projectId: number): Promise<IProjectE
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  await requireOwnProject(session.user.id, projectId);
 
   return await extraWorkRepository.getByProjectId(projectId);
 };

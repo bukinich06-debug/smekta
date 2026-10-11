@@ -1,4 +1,5 @@
 'use server';
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { actRepository } from '@/data/acts';
 import type { IProjectActs } from '@/domain/acts';
@@ -10,6 +11,8 @@ export const getProjectActs = async (projectId: number): Promise<IProjectActs> =
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  await requireOwnProject(session.user.id, projectId);
 
   return await actRepository.getByProjectId(projectId);
 };

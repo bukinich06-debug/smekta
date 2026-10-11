@@ -11,5 +11,5 @@ export const getAdminStats = async (filters: IAdminStatsFilters): Promise<IAdmin
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
 
-  return await statsRepository.getAdminStats(filters);
+  return await statsRepository.getAdminStats(filters, session.user.id);
 };

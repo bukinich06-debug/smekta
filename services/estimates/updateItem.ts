@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { estimateRepository } from '@/data/estimates';
 import { validateUpdateItem } from '@/domain/estimates';
@@ -18,6 +19,10 @@ export const updateItem = async (id: number, input: IUpdateItemInput): Promise<I
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await estimateRepository.getProjectIdByItemId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Позиция не найдена' };
 
   const validationError = validateUpdateItem(input);
   if (validationError) return { ok: false, error: validationError };

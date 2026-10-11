@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { projectTzRepository } from '@/data/project-tz';
 import { validateProjectTzText } from '@/domain/project-tz';
@@ -21,6 +22,9 @@ export const updateProjectTz = async (
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  if (!(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateProjectTzText(text);
   if (validationError) return { ok: false, error: validationError };

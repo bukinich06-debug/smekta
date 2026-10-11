@@ -34,6 +34,24 @@ const assertEstimateItemsNotInActs = async (estimateItemIds: number[], forSectio
 };
 
 export const estimateRepository: IEstimateRepository = {
+  async getProjectIdBySectionId(sectionId: number): Promise<number | null> {
+    const row = await dbClient.estimateSection.findUnique({
+      where: { id: sectionId },
+      select: { projectId: true },
+    });
+
+    return row?.projectId ?? null;
+  },
+
+  async getProjectIdByItemId(itemId: number): Promise<number | null> {
+    const row = await dbClient.estimateItem.findUnique({
+      where: { id: itemId },
+      select: { section: { select: { projectId: true } } },
+    });
+
+    return row?.section.projectId ?? null;
+  },
+
   async getByProjectId(projectId: number): Promise<IProjectEstimate> {
     const sections = await dbClient.estimateSection.findMany({
       where: { projectId },

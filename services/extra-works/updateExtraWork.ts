@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { extraWorkRepository } from '@/data/extra-works';
 import { validateUpdateExtraWork } from '@/domain/extra-works';
@@ -18,6 +19,10 @@ export const updateExtraWork = async (id: number, input: IUpdateExtraWorkInput):
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await extraWorkRepository.getProjectIdById(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Допработа не найдена' };
 
   const validationError = validateUpdateExtraWork(input);
   if (validationError) return { ok: false, error: validationError };

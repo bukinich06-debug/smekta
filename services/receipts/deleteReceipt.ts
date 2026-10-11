@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import { getSession } from '@/services/auth/getSession';
@@ -15,6 +16,10 @@ export const deleteReceipt = async (id: number): Promise<IResult> => {
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await receiptRepository.getProjectIdByReceiptId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Чек не найден' };
 
   const existing = await receiptRepository.getById(id);
   if (!existing) return { ok: false, error: 'Чек не найден' };

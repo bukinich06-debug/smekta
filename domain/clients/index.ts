@@ -24,7 +24,8 @@ import type {
 } from './types';
 
 export interface IClientRepository {
-  list(filters: IClientListFilters): Promise<IClientListItem[]>;
+  list(filters: IClientListFilters, managerId: number): Promise<IClientListItem[]>;
+  isManager(userId: number, scope: { projectId?: number; clientId?: number }): Promise<boolean>;
   getById(id: number): Promise<IClientWithProject | null>;
   getCabinetByUserId(userId: number): Promise<IClientCardDetails | null>;
   getCardDetails(id: number): Promise<IClientCardDetails | null>;

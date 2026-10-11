@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import { getSession } from '@/services/auth/getSession';
@@ -17,7 +18,8 @@ export const deletePayment = async (paymentId: number): Promise<IResult> => {
   if (session.user.role !== 'ADMIN') redirect('/client');
 
   const projectId = await receiptRepository.getProjectIdByPaymentId(paymentId);
-  if (!projectId) return { ok: false, error: 'Оплата не найдена' };
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Оплата не найдена' };
 
   try {
     await receiptRepository.deletePayment(paymentId, session.user.id);

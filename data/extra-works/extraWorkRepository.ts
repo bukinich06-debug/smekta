@@ -34,6 +34,15 @@ const mapRow = (row: ExtraWork): IExtraWork => {
 };
 
 export const extraWorkRepository: IExtraWorkRepository = {
+  async getProjectIdById(id: number): Promise<number | null> {
+    const row = await dbClient.extraWork.findUnique({
+      where: { id },
+      select: { projectId: true },
+    });
+
+    return row?.projectId ?? null;
+  },
+
   async getByProjectId(projectId: number): Promise<IProjectExtraWorks> {
     const rows = await dbClient.extraWork.findMany({
       where: { projectId },

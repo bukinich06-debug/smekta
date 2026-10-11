@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { estimateRepository } from '@/data/estimates';
 import type { IEstimateItem } from '@/domain/estimates';
@@ -17,6 +18,10 @@ export const toggleItemVisibility = async (id: number): Promise<IResult> => {
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await estimateRepository.getProjectIdByItemId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Позиция не найдена' };
 
   try {
     const { dbClient } = await import('@/data/shared/dbClient');

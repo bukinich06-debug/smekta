@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { financeRepository } from '@/data/finance';
 import { validateUpdateInflow } from '@/domain/finance';
@@ -19,6 +20,10 @@ export const updateInflow = async (id: number, input: IUpdateInflowInput): Promi
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await financeRepository.getProjectIdByInflowId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Поступление не найдено' };
 
   const validationError = validateUpdateInflow(input);
   if (validationError) return { ok: false, error: validationError };

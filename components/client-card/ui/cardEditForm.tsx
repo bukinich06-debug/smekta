@@ -153,9 +153,9 @@ export const CardEditForm = ({
             <select
               id="managerId"
               required
+              disabled
               value={formData.managerId}
-              onChange={(e) => updateField('managerId', Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700"
             >
               <option value="">Выберите администратора</option>
               {admins.map((admin) => (

@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import type { ActStatus } from '@prisma/client';
 import { actRepository } from '@/data/acts';
@@ -20,6 +21,10 @@ export const updateActStatus = async (id: number, status: ActStatus): Promise<IR
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await actRepository.getProjectIdByActId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Акт не найден' };
 
   if (!allowed.includes(status)) return { ok: false, error: 'Некорректный статус' };
 

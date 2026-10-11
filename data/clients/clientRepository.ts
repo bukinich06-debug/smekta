@@ -37,26 +37,43 @@ const mapProjectManager = (
 };
 
 export const clientRepository: IClientRepository = {
-  async list(filters: IClientListFilters): Promise<IClientListItem[]> {
-    const where: Prisma.ClientWhereInput = {};
+  async isManager(userId: number, scope: { projectId?: number; clientId?: number }): Promise<boolean> {
+    if (!scope.projectId && !scope.clientId) return false;
+
+    const row = await dbClient.project.findFirst({
+      where: {
+        managerId: userId,
+        ...(scope.projectId ? { id: scope.projectId } : {}),
+        ...(scope.clientId ? { clientId: scope.clientId } : {}),
+      },
+      select: { id: true },
+    });
+
+    return !!row;
+  },
+
+  async list(filters: IClientListFilters, managerId: number): Promise<IClientListItem[]> {
+    const projectMatch: Prisma.ProjectWhereInput = { managerId };
+    if (filters.status) projectMatch.status = filters.status;
+
+    const where: Prisma.ClientWhereInput = {
+      projects: { some: projectMatch },
+    };
 
     if (filters.search) {
       where.OR = [
         { fullName: { contains: filters.search, mode: 'insensitive' } },
-        { projects: { some: { address: { contains: filters.search, mode: 'insensitive' } } } },
-        { projects: { some: { number: { contains: filters.search, mode: 'insensitive' } } } },
-        { projects: { some: { name: { contains: filters.search, mode: 'insensitive' } } } },
+        { projects: { some: { ...projectMatch, address: { contains: filters.search, mode: 'insensitive' } } } },
+        { projects: { some: { ...projectMatch, number: { contains: filters.search, mode: 'insensitive' } } } },
+        { projects: { some: { ...projectMatch, name: { contains: filters.search, mode: 'insensitive' } } } },
       ];
-    }
-
-    if (filters.status) {
-      where.projects = { some: { status: filters.status } };
     }
 
     const clients = await dbClient.client.findMany({
       where,
       include: {
         projects: {
+          where: { managerId },
           take: 1,
           orderBy: { updatedAt: 'desc' },
           include: projectFinanceQueryInclude,
@@ -316,7 +333,6 @@ export const clientRepository: IClientRepository = {
           address: input.address,
           status: input.projectStatus,
           startDate: input.startDate,
-          managerId: input.managerId,
         },
       }),
     ]);

@@ -90,6 +90,8 @@ export interface IUpdateItemInput {
 
 export interface IEstimateRepository {
   getByProjectId(projectId: number): Promise<IProjectEstimate>;
+  getProjectIdBySectionId(sectionId: number): Promise<number | null>;
+  getProjectIdByItemId(itemId: number): Promise<number | null>;
   getClientVisibleByProjectId(projectId: number): Promise<IClientProjectEstimate>;
   createSection(input: ICreateSectionInput): Promise<IEstimateSection>;
   updateSection(id: number, input: IUpdateSectionInput): Promise<IEstimateSection>;

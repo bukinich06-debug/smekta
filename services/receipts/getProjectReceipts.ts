@@ -1,4 +1,5 @@
 'use server';
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import type { IProjectReceipts } from '@/domain/receipts';
@@ -10,6 +11,8 @@ export const getProjectReceipts = async (projectId: number): Promise<IProjectRec
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  await requireOwnProject(session.user.id, projectId);
 
   return await receiptRepository.getByProjectId(projectId);
 };

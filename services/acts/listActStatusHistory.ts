@@ -1,6 +1,7 @@
 'use server';
 
 import { actRepository } from '@/data/acts';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import type { IActStatusHistoryItem } from '@/domain/acts';
 import { getSession } from '@/services/auth/getSession';
 import { redirect } from 'next/navigation';
@@ -12,7 +13,7 @@ export const listActStatusHistory = async (actId: number): Promise<IActStatusHis
   if (session.user.role !== 'ADMIN') redirect('/client');
 
   const projectId = await actRepository.getProjectIdByActId(actId);
-  if (!projectId) return [];
+  if (!projectId || !(await ownsProject(session.user.id, projectId))) return [];
 
   return await actRepository.listStatusHistory(actId);
 };

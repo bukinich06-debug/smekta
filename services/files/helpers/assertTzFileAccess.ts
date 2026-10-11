@@ -1,5 +1,5 @@
 import { clientRepository } from '@/data/clients';
-import { projectTzRepository } from '@/data/project-tz';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import type { IFile } from '@/domain/files';
 import type { IAuthSession } from '@/domain/auth';
 
@@ -11,7 +11,11 @@ interface IAccessResult {
 export const assertTzFileReadAccess = async (session: IAuthSession, file: IFile): Promise<IAccessResult> => {
   if (file.tab !== 'TZ') return { ok: false, error: 'Файл недоступен' };
 
-  if (session.user.role === 'ADMIN') return { ok: true };
+  if (session.user.role === 'ADMIN') {
+    const own = await ownsProject(session.user.id, file.projectId);
+    if (!own) return { ok: false, error: 'Файл недоступен' };
+    return { ok: true };
+  }
 
   if (session.user.role !== 'CLIENT') return { ok: false, error: 'Нет доступа' };
 
@@ -30,8 +34,8 @@ export const assertTzAdminWriteAccess = async (
 ): Promise<IAccessResult> => {
   if (session.user.role !== 'ADMIN') return { ok: false, error: 'Недостаточно прав' };
 
-  const tz = await projectTzRepository.getByProjectId(projectId);
-  if (!tz) return { ok: false, error: 'Проект не найден' };
+  const own = await ownsProject(session.user.id, projectId);
+  if (!own) return { ok: false, error: 'Проект не найден' };
 
   return { ok: true };
 };

@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import { validateUpdateReceipt } from '@/domain/receipts';
@@ -18,6 +19,10 @@ export const updateReceipt = async (id: number, input: IUpdateReceiptInput): Pro
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  const projectId = await receiptRepository.getProjectIdByReceiptId(id);
+  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+    return { ok: false, error: 'Чек не найден' };
 
   const validationError = validateUpdateReceipt(input);
   if (validationError) return { ok: false, error: validationError };

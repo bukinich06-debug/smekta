@@ -1,4 +1,5 @@
 import { clientRepository } from '@/data/clients';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { receiptRepository } from '@/data/receipts';
 import type { IFile } from '@/domain/files';
 import type { IAuthSession } from '@/domain/auth';
@@ -14,7 +15,11 @@ export const assertReceiptFileReadAccess = async (
 ): Promise<IAccessResult> => {
   if (file.tab !== 'RECEIPTS') return { ok: false, error: 'Файл недоступен' };
 
-  if (session.user.role === 'ADMIN') return { ok: true };
+  if (session.user.role === 'ADMIN') {
+    const own = await ownsProject(session.user.id, file.projectId);
+    if (!own) return { ok: false, error: 'Файл недоступен' };
+    return { ok: true };
+  }
 
   if (session.user.role !== 'CLIENT') return { ok: false, error: 'Нет доступа' };
 
@@ -35,6 +40,9 @@ export const assertReceiptAdminWriteAccess = async (
 
   const projectId = await receiptRepository.getProjectIdByReceiptId(receiptId);
   if (!projectId) return { ok: false, error: 'Чек не найден' };
+
+  const own = await ownsProject(session.user.id, projectId);
+  if (!own) return { ok: false, error: 'Чек не найден' };
 
   return { ok: true, projectId };
 };

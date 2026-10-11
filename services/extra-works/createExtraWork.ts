@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { extraWorkRepository } from '@/data/extra-works';
 import { validateCreateExtraWork } from '@/domain/extra-works';
@@ -18,6 +19,9 @@ export const createExtraWork = async (input: ICreateExtraWorkInput): Promise<IRe
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  if (!(await ownsProject(session.user.id, input.projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateExtraWork(input);
   if (validationError) return { ok: false, error: validationError };

@@ -11,5 +11,5 @@ export const listClients = async (filters: IClientListFilters): Promise<IClientL
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
 
-  return await clientRepository.list(filters);
+  return await clientRepository.list(filters, session.user.id);
 };

@@ -2,6 +2,7 @@
 
 import { getSession } from '@/services/auth/getSession';
 import { clientRepository } from '@/data/clients';
+import { ownsClient } from '@/services/clients/helpers/assertProjectManager';
 
 export const disconnectClient = async (
   clientId: number
@@ -10,6 +11,9 @@ export const disconnectClient = async (
 
   if (!session) return { error: 'Требуется авторизация' };
   if (session.user.role !== 'ADMIN') return { error: 'Недостаточно прав' };
+
+  const own = await ownsClient(session.user.id, clientId);
+  if (!own) return { error: 'Заказчик не найден' };
 
   const client = await clientRepository.getById(clientId);
 

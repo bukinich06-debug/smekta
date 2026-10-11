@@ -11,8 +11,8 @@ import { sumPayments } from '@/domain/receipts';
 import type { Prisma } from '@prisma/client';
 
 export const statsRepository: IStatsRepository = {
-  async getAdminStats(filters: IAdminStatsFilters): Promise<IAdminStats> {
-    const projectWhere: Prisma.ProjectWhereInput = {};
+  async getAdminStats(filters: IAdminStatsFilters, managerId: number): Promise<IAdminStats> {
+    const projectWhere: Prisma.ProjectWhereInput = { managerId };
 
     if (filters.status) projectWhere.status = filters.status;
 

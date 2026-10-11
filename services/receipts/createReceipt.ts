@@ -1,4 +1,5 @@
 'use server';
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 
 import { receiptRepository } from '@/data/receipts';
 import { validateCreateReceipt } from '@/domain/receipts';
@@ -18,6 +19,9 @@ export const createReceipt = async (input: ICreateReceiptInput): Promise<IResult
 
   if (!session) redirect('/login');
   if (session.user.role !== 'ADMIN') redirect('/client');
+
+  if (!(await ownsProject(session.user.id, input.projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateReceipt(input);
   if (validationError) return { ok: false, error: validationError };
