@@ -1,4 +1,4 @@
-'use server';
+import 'server-only';
 
 import { getSession } from '@/services/auth/getSession';
 import { clientRepository } from '@/data/clients';

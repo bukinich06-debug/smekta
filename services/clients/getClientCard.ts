@@ -1,4 +1,4 @@
-'use server';
+import 'server-only';
 
 import { clientRepository } from '@/data/clients';
 import { ownsClient } from '@/services/clients/helpers/assertProjectManager';

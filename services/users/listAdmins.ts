@@ -1,4 +1,4 @@
-'use server';
+import 'server-only';
 
 import { dbClient } from '@/data/shared/dbClient';
 import { getSession } from '@/services/auth/getSession';

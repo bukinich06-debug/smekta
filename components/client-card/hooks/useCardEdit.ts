@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { IUpdateClientCardInput } from '@/domain/clients';
-import { updateClientCard } from '@/services/clients/updateClientCard';
+import { apiFetch } from '@/components/shared/api';
 import { useRouter } from 'next/navigation';
 
 interface IUseCardEditParams {
@@ -43,16 +43,19 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
     setError(null);
     setSuccess(false);
 
-    const result = await updateClientCard(clientId, projectId, formData);
+    try {
+      await apiFetch<{ ok: boolean }>(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ projectId, ...formData }),
+      });
 
-    setLoading(false);
-
-    if (result.ok) {
       setSuccess(true);
       setIsEditing(false);
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при сохранении');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при сохранении');
+    } finally {
+      setLoading(false);
     }
   };
 
