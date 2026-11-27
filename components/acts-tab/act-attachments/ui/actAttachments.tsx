@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import type { IFile } from '@/domain/files';
 import { useActAttachments } from '../hooks/useActAttachments';
 import { ActAttachmentItem } from './actAttachmentItem';
 
@@ -8,23 +9,19 @@ interface IActAttachmentsProps {
   projectId: number;
   actId: number;
   readOnly?: boolean;
+  allFiles: IFile[];
+  onReload: () => Promise<void>;
 }
 
-export const ActAttachments = ({ projectId, actId, readOnly }: IActAttachmentsProps) => {
+export const ActAttachments = ({ projectId, actId, readOnly, allFiles, onReload }: IActAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { files, loading, uploading, error, upload, remove, readOnly: isReadOnly } = useActAttachments({
+  const { files, uploading, error, upload, remove, readOnly: isReadOnly } = useActAttachments({
     projectId,
     actId,
     readOnly,
+    allFiles,
+    onReload,
   });
-
-  if (loading) {
-    return (
-      <div>
-        <p className="text-xs text-gray-500">Загрузка вложений…</p>
-      </div>
-    );
-  }
 
   return (
     <div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { IReceipt } from '@/domain/receipts';
+import type { IFile } from '@/domain/files';
 import { formatMoney } from '../helpers/formatMoney';
 import { formatDate } from '../helpers/formatDate';
 import { ReceiptStatusBadge } from './receiptStatusBadge';
@@ -17,6 +18,8 @@ interface IReceiptRowProps {
   onPayPartial: (receiptId: number, date: Date, amount: string) => void;
   onDeletePayment: (receiptId: number, paymentId: number) => void;
   readOnly?: boolean;
+  allFiles: IFile[];
+  onReloadFiles: () => Promise<void>;
 }
 
 export const ReceiptRow = ({
@@ -28,6 +31,8 @@ export const ReceiptRow = ({
   onPayPartial,
   onDeletePayment,
   readOnly,
+  allFiles,
+  onReloadFiles,
 }: IReceiptRowProps) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -69,7 +74,7 @@ export const ReceiptRow = ({
         <p className="text-sm text-gray-600 mt-2">{receipt.comment}</p>
       )}
 
-      <ReceiptAttachments projectId={receipt.projectId} receiptId={receipt.id} readOnly={readOnly} />
+      <ReceiptAttachments projectId={receipt.projectId} receiptId={receipt.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} />
 
       {!readOnly && (
         <div className="flex flex-wrap gap-2 mt-3">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import type { IFile } from '@/domain/files';
 import { useReceiptAttachments } from '../hooks/useReceiptAttachments';
 import { ReceiptAttachmentItem } from './receiptAttachmentItem';
 
@@ -11,6 +12,8 @@ interface IReceiptAttachmentsProps {
   paymentId?: number | null;
   title?: string;
   compact?: boolean;
+  allFiles: IFile[];
+  onReload: () => Promise<void>;
 }
 
 export const ReceiptAttachments = ({
@@ -20,24 +23,20 @@ export const ReceiptAttachments = ({
   paymentId = null,
   title,
   compact,
+  allFiles,
+  onReload,
 }: IReceiptAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { files, loading, uploading, error, upload, remove, readOnly: isReadOnly } = useReceiptAttachments({
+  const { files, uploading, error, upload, remove, readOnly: isReadOnly } = useReceiptAttachments({
     projectId,
     receiptId,
     readOnly,
     paymentId,
+    allFiles,
+    onReload,
   });
 
   const heading = title ?? (paymentId === null ? 'Вложения' : 'Документы по оплате');
-
-  if (loading) {
-    return (
-      <div className={compact ? 'mt-2' : 'mt-4'}>
-        <p className="text-xs text-gray-500">Загрузка вложений…</p>
-      </div>
-    );
-  }
 
   return (
     <div className={compact ? 'mt-2' : 'mt-4 border-t border-gray-100 pt-4'}>

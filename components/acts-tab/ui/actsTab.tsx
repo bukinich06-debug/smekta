@@ -11,6 +11,7 @@ interface IActsTabProps {
 export const ActsTab = ({ projectId }: IActsTabProps) => {
   const {
     data,
+    attachments,
     loading,
     actionLoading,
     error,
@@ -24,6 +25,7 @@ export const ActsTab = ({ projectId }: IActsTabProps) => {
     removeAct,
     changeStatus,
     clearMessages,
+    reloadSilently,
   } = useActs(projectId);
 
   if (loading) {
@@ -109,6 +111,8 @@ export const ActsTab = ({ projectId }: IActsTabProps) => {
           }}
           onDelete={removeAct}
           onStatusChange={changeStatus}
+          allFiles={attachments}
+          onReloadFiles={reloadSilently}
         />
       ))}
     </div>

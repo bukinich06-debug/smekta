@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/components/shared/api';
 import type { IProjectReceipts, IReceipt, ReceiptStatusFilter } from '@/domain/receipts';
+import type { IFile } from '@/domain/files';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IReceiptFormValues } from '../ui/receiptForm';
 import { filterReceiptsByStatus, sortReceiptsByDate } from '../helpers/filterReceipts';
@@ -11,6 +12,7 @@ import { filterReceiptsByStatus, sortReceiptsByDate } from '../helpers/filterRec
 export const useReceipts = (projectId: number) => {
   const router = useRouter();
   const [data, setData] = useState<IProjectReceipts | null>(null);
+  const [attachments, setAttachments] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +26,12 @@ export const useReceipts = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
+      const [receipts, files] = await Promise.all([
+        apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`),
+        apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/files`),
+      ]);
       setData(receipts);
+      setAttachments(files);
     } catch (err) {
       console.error('Ошибка при загрузке чеков:', err);
       setError('Не удалось загрузить чеки');
@@ -41,8 +47,14 @@ export const useReceipts = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
-        if (!cancelled) setData(receipts);
+        const [receipts, files] = await Promise.all([
+          apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`),
+          apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/files`),
+        ]);
+        if (!cancelled) {
+          setData(receipts);
+          setAttachments(files);
+        }
       } catch (err) {
         if (!cancelled) {
           console.error('Ошибка при загрузке чеков:', err);
@@ -62,8 +74,12 @@ export const useReceipts = (projectId: number) => {
 
   const reloadSilently = useCallback(async () => {
     try {
-      const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
+      const [receipts, files] = await Promise.all([
+        apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`),
+        apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/files`),
+      ]);
       setData(receipts);
+      setAttachments(files);
     } catch (err) {
       console.error('Ошибка при обновлении чеков:', err);
     }
@@ -186,6 +202,7 @@ export const useReceipts = (projectId: number) => {
 
   return {
     data,
+    attachments,
     loading,
     actionLoading,
     error,
@@ -206,5 +223,6 @@ export const useReceipts = (projectId: number) => {
     handlePayPartial,
     handleDeletePayment,
     clearMessages,
+    reloadSilently,
   };
 };
