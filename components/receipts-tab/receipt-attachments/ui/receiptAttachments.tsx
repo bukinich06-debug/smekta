@@ -5,6 +5,7 @@ import { useReceiptAttachments } from '../hooks/useReceiptAttachments';
 import { ReceiptAttachmentItem } from './receiptAttachmentItem';
 
 interface IReceiptAttachmentsProps {
+  projectId: number;
   receiptId: number;
   readOnly?: boolean;
   paymentId?: number | null;
@@ -13,6 +14,7 @@ interface IReceiptAttachmentsProps {
 }
 
 export const ReceiptAttachments = ({
+  projectId,
   receiptId,
   readOnly,
   paymentId = null,
@@ -21,6 +23,7 @@ export const ReceiptAttachments = ({
 }: IReceiptAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { files, loading, uploading, error, upload, remove, readOnly: isReadOnly } = useReceiptAttachments({
+    projectId,
     receiptId,
     readOnly,
     paymentId,

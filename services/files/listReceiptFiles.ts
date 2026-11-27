@@ -2,6 +2,7 @@ import 'server-only';
 
 import { fileRepository } from '@/data/files';
 import { receiptRepository } from '@/data/receipts';
+import { clientRepository } from '@/data/clients';
 import type { IFile } from '@/domain/files';
 import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 

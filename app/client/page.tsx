@@ -19,7 +19,7 @@ const ClientPage = async () => {
   const data = await getClientCabinet(session.user.id);
 
   const [receiptsResult, estimateResult, tzResult, extraWorksResult, actsResult, financeResult] = await Promise.all([
-    data?.project ? getClientProjectReceipts(session.user.id) : Promise.resolve({ ok: false }),
+    data?.project ? getClientProjectReceipts(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectEstimate(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectTz(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectExtraWorks(session.user.id) : Promise.resolve(null),
@@ -27,7 +27,7 @@ const ClientPage = async () => {
     data?.project ? getClientProjectFinance(session.user.id) : Promise.resolve(null),
   ]);
 
-  const receipts = receiptsResult?.ok && receiptsResult.data ? receiptsResult.data : null;
+  const receipts = (receiptsResult?.ok && receiptsResult.data) ? receiptsResult.data : null;
   const estimate = estimateResult;
   const tz = (tzResult && tzResult.ok ? tzResult.data : null) ?? null;
   const extraWorks = (extraWorksResult && extraWorksResult.ok ? extraWorksResult.data : null) ?? null;
