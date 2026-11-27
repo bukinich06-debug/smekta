@@ -14,6 +14,7 @@ interface IUseCardEditParams {
 export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditParams) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<IUpdateClientCardInput>(initialData);
+  const [savedData, setSavedData] = useState<IUpdateClientCardInput>(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -34,7 +35,7 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
 
   const cancelEdit = () => {
     setIsEditing(false);
-    setFormData(initialData);
+    setFormData(savedData);
     setError(null);
   };
 
@@ -49,8 +50,10 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
         body: JSON.stringify({ projectId, ...formData }),
       });
 
+      setSavedData(formData);
       setSuccess(true);
       setIsEditing(false);
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Ошибка при сохранении');
     } finally {
@@ -61,6 +64,7 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
   return {
     isEditing,
     formData,
+    savedData,
     loading,
     error,
     success,

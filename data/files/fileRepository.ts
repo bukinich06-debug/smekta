@@ -101,6 +101,26 @@ export const fileRepository: IFileRepository = {
     return rows.map(mapFile);
   },
 
+  async listByProjectIdReceipts(projectId: number): Promise<IFile[]> {
+    const rows = await dbClient.file.findMany({
+      where: { projectId, tab: 'RECEIPTS' },
+      include: { uploadedBy: { select: { name: true } } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return rows.map(mapFile);
+  },
+
+  async listByProjectIdActs(projectId: number): Promise<IFile[]> {
+    const rows = await dbClient.file.findMany({
+      where: { projectId, tab: 'ACTS' },
+      include: { uploadedBy: { select: { name: true } } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+
+    return rows.map(mapFile);
+  },
+
   async create(input: ICreateReceiptFileInput): Promise<IFile> {
     const row = await dbClient.file.create({
       data: {

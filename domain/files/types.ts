@@ -77,6 +77,8 @@ export interface IFileRepository {
   listByActId(actId: number): Promise<IFile[]>;
   listByProjectIdTz(projectId: number): Promise<IFile[]>;
   listByProjectIdPhotos(projectId: number): Promise<IFile[]>;
+  listByProjectIdReceipts(projectId: number): Promise<IFile[]>;
+  listByProjectIdActs(projectId: number): Promise<IFile[]>;
   create(input: ICreateReceiptFileInput): Promise<IFile>;
   createActFile(input: ICreateActFileInput): Promise<IFile>;
   createTzFile(input: ICreateTzFileInput): Promise<IFile>;

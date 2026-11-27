@@ -84,7 +84,7 @@ const buildProjectFinance = async (
   clientLedgerView: boolean
 ): Promise<IProjectFinance> => {
   const project = await loadProject(projectId);
-  const view = buildFinanceViewFromProject(project, { clientLedgerView });
+  const view = buildFinanceViewFromProject(project, { clientLedgerView }, clientLedgerView);
 
   const inflows = project.inflows.map((row) => mapInflow({ ...row, projectId }));
 
