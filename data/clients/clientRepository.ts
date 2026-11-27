@@ -402,8 +402,14 @@ export const clientRepository: IClientRepository = {
   async getClientProjectId(userId: number): Promise<number | null> {
     const client = await dbClient.client.findFirst({
       where: { userId },
-      select: { project: { select: { id: true } } },
+      select: {
+        projects: {
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
+          select: { id: true },
+        },
+      },
     });
-    return client?.project?.id ?? null;
+    return client?.projects[0]?.id ?? null;
   },
 };
