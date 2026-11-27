@@ -88,7 +88,11 @@ No DI container. Swap storage by rewriting `data/` under the same interfaces.
 | `data/` | Repository **implementations**, DB connection, SQL/ORM, row mapping | `settingRepository.ts`, `dbClient.ts` |
 | `services/` | One `'use server'` action per file — uses `domain` rules + repo from `data`. **No** `index.ts` barrels | `getSettings.ts`, `updateSettings.ts` |
 | `components/` | React UI, display hooks, forms, layout | `AppLayout`, `SettingsForm` |
-| `app/` | Thin route pages; Route Handlers only in `app/api/` | `app/settings/page.tsx`, `app/api/settings/route.ts` |
+| `app/` | Thin route pages; Route Handlers in `app/api/` for client→backend requests | `app/settings/page.tsx`, `app/api/clients/route.ts` |
+
+**Client→backend requests:** every request from client-side UI to the backend must go through Route Handlers in `app/api/...` via `fetch`. Client components must **not** import or call `'use server'` functions from `services/` directly. Server Components (page.tsx/layout.tsx rendering on server) may still call services directly for initial data — that is not a UI→backend request.
+
+Route Handlers are thin (parse/validate input, check auth/role via services, call a service, map result/errors to JSON + HTTP status). Business logic stays in `services/domain/data`. Services that are no longer called from client components should stop being `'use server'` actions (remove the directive, keep them as plain server-only modules with `import 'server-only'`).
 
 ### `services/` imports and helpers
 

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/services/clients/createClient';
-import type { ICreateClientInput } from '@/domain/clients';
+import { apiFetch } from '@/components/shared/api';
+import type { ICreateClientInput, IClientWithProject } from '@/domain/clients';
 import type { ProjectStatus } from '@prisma/client';
 
 export const useCreateClient = () => {
@@ -32,16 +32,18 @@ export const useCreateClient = () => {
     setLoading(true);
     setError(null);
 
-    const result = await createClient(formData);
+    try {
+      await apiFetch<{ client: IClientWithProject }>('/api/clients', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
 
-    if (!result.ok) {
-      setError(result.error || 'Неизвестная ошибка');
+      router.push('/admin/clients');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Неизвестная ошибка');
       setLoading(false);
-      return;
     }
-
-    router.push('/admin/clients');
-    router.refresh();
   };
 
   return { formData, updateField, submit, loading, error };

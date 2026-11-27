@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { acceptInvite } from '@/services/clients/acceptInvite';
+import { apiFetch } from '@/components/shared/api';
 
 interface IUseInviteAcceptParams {
   token: string;
@@ -18,15 +18,13 @@ export const useInviteAccept = ({ token }: IUseInviteAcceptParams) => {
     setError(null);
 
     try {
-      const result = await acceptInvite(token);
+      await apiFetch<{ success: boolean }>(`/api/invite/${token}/accept`, {
+        method: 'POST',
+      });
 
-      if (result.success) {
-        router.push('/client');
-      } else {
-        setError(result.error || 'Не удалось подключиться к проекту');
-      }
-    } catch {
-      setError('Не удалось подключиться к проекту');
+      router.push('/client');
+    } catch (err: any) {
+      setError(err.message || 'Не удалось подключиться к проекту');
     } finally {
       setLoading(false);
     }

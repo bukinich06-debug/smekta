@@ -1,0 +1,126 @@
+---
+description: API endpoints — client→backend requests via Route Handlers
+alwaysApply: true
+---
+
+# API endpoints
+
+Client-side UI must **not** import or call `'use server'` Server Actions from `services/` directly. All client→backend requests go through Route Handlers in `app/api/...` via `fetch`.
+
+Server Components (page.tsx/layout.tsx) may still call services directly for initial data — that is not a client→backend request.
+
+## URL conventions (REST-ish)
+
+| Pattern | Example | Methods |
+|---------|---------|---------|
+| Collection | `GET /api/clients` | List items (with query filters) |
+| Collection | `POST /api/clients` | Create a new item |
+| Item | `GET /api/clients/[id]` | Get one item |
+| Item | `PATCH /api/clients/[id]` | Update one item |
+| Item | `DELETE /api/clients/[id]` | Delete one item |
+| Nested collection | `GET /api/projects/[projectId]/estimate/items` | List nested items |
+| Action | `POST /api/clients/[id]/invite` | Trigger an action (generate invite) |
+| Action | `POST /api/clients/[id]/disconnect` | Trigger an action (disconnect user) |
+
+Prefer standard HTTP methods and status codes.
+
+## HTTP status codes
+
+| Code | When |
+|------|------|
+| `200` | Success (read/update/action) |
+| `201` | Created (POST that creates a resource) |
+| `204` | No Content (successful delete, empty success) |
+| `400` | Validation error (bad input, missing required fields) |
+| `401` | No session (not authenticated) |
+| `403` | Wrong role or not owned (authenticated but not authorized) |
+| `404` | Not found or not owned (item doesn't exist or user doesn't own it) |
+| `500` | Unexpected server error |
+
+**Validation errors (400):** return `{ error: string }` with a user-facing message in Russian.
+
+**Auth errors (401/403):** return `{ error: string }` or empty body — the client should redirect to login or show a permissions message.
+
+**Not found (404):** return `{ error: string }` or empty body.
+
+**Success (200/201):** return the data as JSON (typed interface from `domain/`), or `{ ok: true }` / `{ ok: true, ...data }` for simple results.
+
+## JSON error shape
+
+Errors are returned as `{ error: string }` with a user-facing Russian message:
+
+```json
+{ "error": "Заказчик не найден" }
+{ "error": "Недостаточно прав" }
+{ "error": "ФИО обязателен; Телефон обязателен" }
+```
+
+The client-side fetch helper checks `response.ok` and throws or returns the parsed `error` field.
+
+## Client-side fetch helper
+
+UI uses a typed fetch helper from `components/shared/api/` that:
+
+- Sets headers (`Content-Type: application/json`)
+- Handles errors (checks `response.ok`, parses `{ error }`, throws if needed)
+- Returns parsed JSON
+- Optionally accepts generic types for requests and responses
+
+Example usage in a hook:
+
+```ts
+import { apiFetch } from '@/components/shared/api';
+import type { ICreateClientInput, IClientWithProject } from '@/domain/clients';
+
+const result = await apiFetch<{ client: IClientWithProject }>('/api/clients', {
+  method: 'POST',
+  body: JSON.stringify(input),
+});
+```
+
+## Server-side Route Handler helpers
+
+Route Handlers use small helpers from `app/api/shared/` (or similar):
+
+- **Session guard:** `const session = await requireSession()`; throws 401 if no session
+- **Role guard:** `requireRole(session, 'ADMIN')`; throws 403 if wrong role
+- **Error responses:** `errorResponse(message, status)` → `NextResponse` with `{ error: message }` and status code
+- **Success responses:** `NextResponse.json(data, { status: 200 })` or `successResponse(data, status)`
+
+**Route Handler structure** (thin):
+
+```ts
+import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
+import { getClientCard } from '@/services/clients/getClientCard';
+
+export async const GET = async (
+  request: Request,
+  { params }: { params: { id: string } }
+) => {
+  const session = await requireSession();
+  requireRole(session, 'ADMIN');
+
+  const id = parseInt(params.id, 10);
+  if (isNaN(id)) return errorResponse('Неверный ID', 400);
+
+  const data = await getClientCard(id);
+  if (!data) return errorResponse('Заказчик не найден', 404);
+
+  return NextResponse.json(data);
+};
+```
+
+## Migration from Server Actions
+
+When migrating a `'use server'` action to a Route Handler:
+
+1. Create the Route Handler (thin: parse input, check auth/role via helpers, call the service, return JSON)
+2. Remove `'use server'` from the service file if no client component calls it; add `import 'server-only'` instead
+3. Update the hook to call the new endpoint via the fetch helper
+4. Keep the same behavior (access checks, redirects moved to client-side, etc.)
+
+## URL paths for auth/redirects
+
+After a Route Handler returns 401/403, the client-side hook or fetch helper should redirect to `/login` or show an error. Route Handlers do **not** call `redirect()` from Next.js — they return error JSON + status code.
+
+If the UI needs to redirect on success (e.g. after creating a client), the hook calls `router.push('/...')` after the fetch succeeds.

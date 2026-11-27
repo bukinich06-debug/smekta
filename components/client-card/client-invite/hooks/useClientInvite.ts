@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { generateInviteToken } from '@/services/clients/generateInviteToken';
+import { apiFetch } from '@/components/shared/api';
 
 interface IUseClientInviteParams {
   clientId: number;
@@ -19,18 +19,16 @@ export const useClientInvite = ({ clientId }: IUseClientInviteParams) => {
     setCopied(false);
 
     try {
-      const result = await generateInviteToken(clientId);
+      const result = await apiFetch<{ token: string }>(`/api/clients/${clientId}/invite`, {
+        method: 'POST',
+      });
 
-      if ('error' in result) {
-        setError(result.error);
-        setInviteUrl(null);
-      } else {
-        const origin = window.location.origin;
-        const url = `${origin}/invite/${result.token}`;
-        setInviteUrl(url);
-      }
-    } catch {
-      setError('Не удалось сгенерировать ссылку');
+      const origin = window.location.origin;
+      const url = `${origin}/invite/${result.token}`;
+      setInviteUrl(url);
+    } catch (err: any) {
+      setError(err.message || 'Не удалось сгенерировать ссылку');
+      setInviteUrl(null);
     } finally {
       setLoading(false);
     }

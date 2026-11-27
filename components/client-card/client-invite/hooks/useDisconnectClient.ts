@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { disconnectClient } from '@/services/clients/disconnectClient';
+import { apiFetch } from '@/components/shared/api';
 
 interface IUseDisconnectClientParams {
   clientId: number;
@@ -29,18 +29,19 @@ export const useDisconnectClient = ({ clientId, onDisconnected }: IUseDisconnect
     setLoading(true);
     setError(null);
 
-    const result = await disconnectClient(clientId);
+    try {
+      await apiFetch<{ ok: boolean }>(`/api/clients/${clientId}/disconnect`, {
+        method: 'POST',
+      });
 
-    setLoading(false);
-
-    if ('error' in result) {
-      setError(result.error);
-      return;
+      setConfirmOpen(false);
+      onDisconnected();
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при отключении');
+    } finally {
+      setLoading(false);
     }
-
-    setConfirmOpen(false);
-    onDisconnected();
-    router.refresh();
   };
 
   return {

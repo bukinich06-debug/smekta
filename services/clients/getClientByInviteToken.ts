@@ -1,4 +1,4 @@
-'use server';
+import 'server-only';
 
 import { clientRepository } from '@/data/clients';
 import type { IClientInviteInfo } from '@/domain/clients';
