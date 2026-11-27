@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { receiptRepository } from '@/data/receipts';
 import { validateAddPayment } from '@/domain/receipts';
 import type { IAddPaymentInput, IReceiptPayment } from '@/domain/receipts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateReceiptPaths } from './helpers/revalidateReceiptPaths';
 
 interface IResult {
@@ -14,14 +12,9 @@ interface IResult {
   error?: string;
 }
 
-export const addPayment = async (input: IAddPaymentInput): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const addPayment = async (input: IAddPaymentInput, userId: number): Promise<IResult> => {
   const projectId = await receiptRepository.getProjectIdByReceiptId(input.receiptId);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Чек не найден' };
 
   const receipt = await receiptRepository.getById(input.receiptId);
@@ -35,7 +28,7 @@ export const addPayment = async (input: IAddPaymentInput): Promise<IResult> => {
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    const data = await receiptRepository.addPayment(input, session.user.id);
+    const data = await receiptRepository.addPayment(input, userId);
     revalidateReceiptPaths();
     return { ok: true, data };
   } catch (error) {

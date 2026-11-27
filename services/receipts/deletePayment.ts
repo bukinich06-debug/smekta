@@ -1,9 +1,7 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { receiptRepository } from '@/data/receipts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateReceiptPaths } from './helpers/revalidateReceiptPaths';
 
 interface IResult {
@@ -11,18 +9,13 @@ interface IResult {
   error?: string;
 }
 
-export const deletePayment = async (paymentId: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deletePayment = async (paymentId: number, userId: number): Promise<IResult> => {
   const projectId = await receiptRepository.getProjectIdByPaymentId(paymentId);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Оплата не найдена' };
 
   try {
-    await receiptRepository.deletePayment(paymentId, session.user.id);
+    await receiptRepository.deletePayment(paymentId, userId);
     revalidateReceiptPaths();
     return { ok: true };
   } catch (error) {

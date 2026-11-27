@@ -17,10 +17,13 @@ const ClientPage = async () => {
   if (session.user.role === 'ADMIN') redirect('/admin/clients');
 
   const data = await getClientCabinet(session.user.id);
-  const [estimate, tz, receipts, extraWorks, acts, finance] = await Promise.all([
+
+  const receiptsResult = data?.project ? await getClientProjectReceipts(session.user.id) : null;
+  const receipts = receiptsResult?.ok && receiptsResult.data ? receiptsResult.data : null;
+
+  const [estimate, tz, extraWorks, acts, finance] = await Promise.all([
     data?.project ? getClientProjectEstimate(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectTz() : Promise.resolve(null),
-    data?.project ? getClientProjectReceipts() : Promise.resolve(null),
     data?.project ? getClientProjectExtraWorks() : Promise.resolve(null),
     data?.project ? getClientProjectActs() : Promise.resolve(null),
     data?.project ? getClientProjectFinance() : Promise.resolve(null),
