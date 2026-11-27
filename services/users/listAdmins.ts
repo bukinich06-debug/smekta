@@ -1,8 +1,6 @@
 import 'server-only';
 
 import { dbClient } from '@/data/shared/dbClient';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
 export interface IAdminUser {
   id: number;
@@ -10,11 +8,6 @@ export interface IAdminUser {
 }
 
 export const listAdmins = async (): Promise<IAdminUser[]> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
   const admins = await dbClient.user.findMany({
     where: {
       role: 'ADMIN',

@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
+import { getClientByInviteToken } from '@/services/clients/getClientByInviteToken';
 
-export const GET = async (
-  request: Request,
-  { params }: { params: { token: string } }
-) => {
-  const { token } = params;
+interface IRouteContext {
+  params: Promise<{ token: string }>;
+}
 
-  const client = await clientRepository.getByInviteToken(token);
+export const GET = async (request: Request, context: IRouteContext) => {
+  const { token } = await context.params;
+
+  const client = await getClientByInviteToken(token);
   if (!client) return errorResponse('Ссылка недействительна или уже использована', 404);
 
   return NextResponse.json(client);

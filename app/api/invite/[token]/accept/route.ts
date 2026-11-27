@@ -1,27 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
+import { acceptInvite } from '@/services/clients/acceptInvite';
 
-export const POST = async (
-  request: Request,
-  { params }: { params: { token: string } }
-) => {
+interface IRouteContext {
+  params: Promise<{ token: string }>;
+}
+
+export const POST = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
-  requireRole(session, 'CLIENT');
+  if (session instanceof NextResponse) return session;
 
-  const { token } = params;
+  const roleError = requireRole(session, 'CLIENT');
+  if (roleError) return roleError;
 
-  const client = await clientRepository.getByInviteToken(token);
-  if (!client) return errorResponse('Ссылка недействительна или уже использована', 404);
+  const { token } = await context.params;
 
-  const userAlreadyLinked = await clientRepository.getById(client.id);
+  const result = await acceptInvite(token, session.user.id);
 
-  if (userAlreadyLinked?.userId && userAlreadyLinked.userId !== session.user.id) {
-    return errorResponse('Этот проект уже подключён к другому аккаунту', 400);
+  if (!result.success) {
+    return errorResponse(result.error || 'Ошибка принятия инвайта', 400);
   }
-
-  const accepted = await clientRepository.acceptInvite(token, session.user.id);
-  if (!accepted) return errorResponse('Ссылка недействительна или уже использована', 404);
 
   return NextResponse.json({ success: true });
 };

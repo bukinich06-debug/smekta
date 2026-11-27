@@ -1,32 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
-import { ownsClient } from '@/services/clients/helpers/assertProjectManager';
-import { randomBytes } from 'crypto';
+import { generateInviteToken } from '@/services/clients/generateInviteToken';
 
-export const POST = async (
-  request: Request,
-  { params }: { params: { id: string } }
-) => {
+interface IRouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const POST = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
-  requireRole(session, 'ADMIN');
+  if (session instanceof NextResponse) return session;
 
-  const clientId = parseInt(params.id, 10);
+  const roleError = requireRole(session, 'ADMIN');
+  if (roleError) return roleError;
+
+  const { id } = await context.params;
+  const clientId = parseInt(id, 10);
   if (isNaN(clientId)) return errorResponse('Неверный ID', 400);
 
-  const own = await ownsClient(session.user.id, clientId);
-  if (!own) return errorResponse('Заказчик не найден', 404);
+  const result = await generateInviteToken(clientId, session.user.id);
 
-  const client = await clientRepository.getById(clientId);
-  if (!client) return errorResponse('Заказчик не найден', 404);
-  if (client.userId) return errorResponse('Заказчик уже подключён к аккаунту', 400);
+  if ('error' in result) return errorResponse(result.error, 400);
 
-  const token = randomBytes(32).toString('base64url');
-
-  try {
-    await clientRepository.generateInviteToken(clientId, token);
-    return NextResponse.json({ token });
-  } catch {
-    return errorResponse('Не удалось сгенерировать ссылку', 500);
-  }
+  return NextResponse.json({ token: result.token });
 };

@@ -22,22 +22,25 @@ const AdminClientsPage = async ({ searchParams }: IPageProps) => {
 
   const params = await searchParams;
 
-  const items = await listClients({
-    search: params.search,
-    status: params.status,
-    sortBy: params.sortBy as
-      | 'fullName'
-      | 'address'
-      | 'estimateTotal'
-      | 'receivedTotal'
-      | 'masteredTotal'
-      | 'balanceOnHand'
-      | 'dueNow'
-      | 'startDate'
-      | 'updatedAt'
-      | undefined,
-    sortOrder: params.sortOrder,
-  });
+  const items = await listClients(
+    {
+      search: params.search,
+      status: params.status,
+      sortBy: params.sortBy as
+        | 'fullName'
+        | 'address'
+        | 'estimateTotal'
+        | 'receivedTotal'
+        | 'masteredTotal'
+        | 'balanceOnHand'
+        | 'dueNow'
+        | 'startDate'
+        | 'updatedAt'
+        | undefined,
+      sortOrder: params.sortOrder,
+    },
+    session.user.id
+  );
 
   return (
     <AdminPageWrapper userName={session.user.name}>

@@ -4,24 +4,15 @@ import { getSession } from '@/services/auth/getSession';
 import { NextResponse } from 'next/server';
 import type { IAuthSession } from '@/domain/auth';
 
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public status: number
-  ) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
-
-export const requireSession = async (): Promise<IAuthSession> => {
+export const requireSession = async (): Promise<IAuthSession | NextResponse> => {
   const session = await getSession();
-  if (!session) throw new AuthError('Требуется авторизация', 401);
+  if (!session) return errorResponse('Требуется авторизация', 401);
   return session;
 };
 
-export const requireRole = (session: IAuthSession, role: 'ADMIN' | 'CLIENT') => {
-  if (session.user.role !== role) throw new AuthError('Недостаточно прав', 403);
+export const requireRole = (session: IAuthSession, role: 'ADMIN' | 'CLIENT'): NextResponse | null => {
+  if (session.user.role !== role) return errorResponse('Недостаточно прав', 403);
+  return null;
 };
 
 export const errorResponse = (message: string, status: number) => {

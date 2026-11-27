@@ -20,7 +20,10 @@ const AdminClientDetailPage = async ({ params }: IPageProps) => {
 
   if (isNaN(clientId)) notFound();
 
-  const [data, admins] = await Promise.all([getClientCard(clientId), listAdmins()]);
+  const [data, admins] = await Promise.all([
+    getClientCard(clientId, session.user.id),
+    listAdmins(),
+  ]);
 
   if (!data) notFound();
 

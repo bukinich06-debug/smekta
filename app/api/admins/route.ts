@@ -1,24 +1,15 @@
 import { NextResponse } from 'next/server';
 import { requireSession, requireRole } from '@/app/api/shared/guards';
-import { dbClient } from '@/data/shared/dbClient';
+import { listAdmins } from '@/services/users/listAdmins';
 
 export const GET = async () => {
   const session = await requireSession();
-  requireRole(session, 'ADMIN');
+  if (session instanceof NextResponse) return session;
 
-  const admins = await dbClient.user.findMany({
-    where: {
-      role: 'ADMIN',
-      isActive: true,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-    orderBy: {
-      name: 'asc',
-    },
-  });
+  const roleError = requireRole(session, 'ADMIN');
+  if (roleError) return roleError;
+
+  const admins = await listAdmins();
 
   return NextResponse.json(admins);
 };

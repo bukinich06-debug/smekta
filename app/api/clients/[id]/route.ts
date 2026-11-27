@@ -1,37 +1,39 @@
 import { NextResponse } from 'next/server';
 import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
-import { ownsClient, ownsProject } from '@/services/clients/helpers/assertProjectManager';
-import { validateUpdateClientCard } from '@/domain/clients';
+import { getClientCard } from '@/services/clients/getClientCard';
+import { updateClientCard } from '@/services/clients/updateClientCard';
 import type { IUpdateClientCardInput } from '@/domain/clients';
 
-export const GET = async (
-  request: Request,
-  { params }: { params: { id: string } }
-) => {
+interface IRouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const GET = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
-  requireRole(session, 'ADMIN');
+  if (session instanceof NextResponse) return session;
 
-  const id = parseInt(params.id, 10);
-  if (isNaN(id)) return errorResponse('Неверный ID', 400);
+  const roleError = requireRole(session, 'ADMIN');
+  if (roleError) return roleError;
 
-  const own = await ownsClient(session.user.id, id);
-  if (!own) return errorResponse('Заказчик не найден', 404);
+  const { id } = await context.params;
+  const clientId = parseInt(id, 10);
+  if (isNaN(clientId)) return errorResponse('Неверный ID', 400);
 
-  const data = await clientRepository.getCardDetails(id);
+  const data = await getClientCard(clientId, session.user.id);
   if (!data) return errorResponse('Заказчик не найден', 404);
 
   return NextResponse.json(data);
 };
 
-export const PATCH = async (
-  request: Request,
-  { params }: { params: { id: string } }
-) => {
+export const PATCH = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
-  requireRole(session, 'ADMIN');
+  if (session instanceof NextResponse) return session;
 
-  const clientId = parseInt(params.id, 10);
+  const roleError = requireRole(session, 'ADMIN');
+  if (roleError) return roleError;
+
+  const { id } = await context.params;
+  const clientId = parseInt(id, 10);
   if (isNaN(clientId)) return errorResponse('Неверный ID', 400);
 
   const body = await request.json();
@@ -39,18 +41,9 @@ export const PATCH = async (
 
   if (!projectId) return errorResponse('projectId обязателен', 400);
 
-  const ownClient = await ownsClient(session.user.id, clientId);
-  const ownProject = await ownsProject(session.user.id, projectId);
-  if (!ownClient || !ownProject) return errorResponse('Заказчик не найден', 404);
+  const result = await updateClientCard(clientId, projectId, input, session.user.id);
 
-  const errors = validateUpdateClientCard(input);
-  if (errors.length > 0) return errorResponse(errors.join('; '), 400);
+  if (!result.ok) return errorResponse(result.error || 'Ошибка обновления', 400);
 
-  try {
-    await clientRepository.updateCard(clientId, projectId, input);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error('Ошибка при обновлении карточки:', err);
-    return errorResponse('Не удалось обновить карточку. Попробуйте ещё раз.', 500);
-  }
+  return NextResponse.json({ ok: true });
 };

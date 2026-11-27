@@ -1,27 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
-import { ownsClient } from '@/services/clients/helpers/assertProjectManager';
+import { disconnectClient } from '@/services/clients/disconnectClient';
 
-export const POST = async (
-  request: Request,
-  { params }: { params: { id: string } }
-) => {
+interface IRouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const POST = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
-  requireRole(session, 'ADMIN');
+  if (session instanceof NextResponse) return session;
 
-  const clientId = parseInt(params.id, 10);
+  const roleError = requireRole(session, 'ADMIN');
+  if (roleError) return roleError;
+
+  const { id } = await context.params;
+  const clientId = parseInt(id, 10);
   if (isNaN(clientId)) return errorResponse('Неверный ID', 400);
 
-  const own = await ownsClient(session.user.id, clientId);
-  if (!own) return errorResponse('Заказчик не найден', 404);
+  const result = await disconnectClient(clientId, session.user.id);
 
-  const client = await clientRepository.getById(clientId);
-  if (!client) return errorResponse('Заказчик не найден', 404);
-  if (!client.userId) return errorResponse('Заказчик не подключён к аккаунту', 400);
-
-  const disconnected = await clientRepository.disconnectLinkedUser(clientId);
-  if (!disconnected) return errorResponse('Не удалось отключить заказчика', 500);
+  if ('error' in result) return errorResponse(result.error, 400);
 
   return NextResponse.json({ ok: true });
 };

@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server';
-import { requireSession, errorResponse } from '@/app/api/shared/guards';
-import { clientRepository } from '@/data/clients';
+import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
+import { getClientCabinet } from '@/services/clients/getClientCabinet';
 
 export const GET = async () => {
   const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
-  if (session.user.role === 'ADMIN') {
-    return errorResponse('Эта страница для заказчиков', 403);
-  }
+  const roleError = requireRole(session, 'CLIENT');
+  if (roleError) return roleError;
 
-  if (session.user.role !== 'CLIENT') {
-    return errorResponse('Недостаточно прав', 403);
-  }
-
-  const data = await clientRepository.getCabinetByUserId(session.user.id);
+  const data = await getClientCabinet(session.user.id);
   if (!data) return errorResponse('Кабинет не найден', 404);
 
   return NextResponse.json(data);
