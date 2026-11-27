@@ -22,8 +22,8 @@ export const useAdminTzTab = (projectId: number) => {
     setError(null);
     try {
       const [tzData, historyData] = await Promise.all([
-        getProjectTz(projectId),
-        listProjectTzHistory(projectId),
+        apiFetch<IProjectTz | null>(`/api/projects/${projectId}/project-tz`),
+        apiFetch<IProjectTzHistoryItem[]>(`/api/projects/${projectId}/project-tz/history`),
       ]);
       setTz(tzData);
       setHistory(historyData);
@@ -44,8 +44,8 @@ export const useAdminTzTab = (projectId: number) => {
       setError(null);
       try {
         const [tzData, historyData] = await Promise.all([
-          getProjectTz(projectId),
-          listProjectTzHistory(projectId),
+          apiFetch<IProjectTz | null>(`/api/projects/${projectId}/project-tz`),
+          apiFetch<IProjectTzHistoryItem[]>(`/api/projects/${projectId}/project-tz/history`),
         ]);
         if (cancelled) return;
         setTz(tzData);

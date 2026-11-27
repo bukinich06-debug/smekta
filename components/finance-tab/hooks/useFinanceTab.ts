@@ -17,12 +17,16 @@ export const useFinanceTab = (projectId: number) => {
   const [editingTransfer, setEditingTransfer] = useState<IWalletTransfer | null>(null);
 
   const reload = useCallback(async () => {
-    const [finance, historyRows] = await Promise.all([
-      apiFetch<IProjectFinance>(`/api/projects/${projectId}/finance`),
-      apiFetch<IFinanceHistoryItem[]>(`/api/projects/${projectId}/finance/history`),
-    ]);
-    setData(finance);
-    setHistory(historyRows);
+    try {
+      const [finance, historyRows] = await Promise.all([
+        apiFetch<IProjectFinance>(`/api/projects/${projectId}/finance`),
+        apiFetch<IFinanceHistoryItem[]>(`/api/projects/${projectId}/finance/history`),
+      ]);
+      setData(finance);
+      setHistory(historyRows);
+    } catch (err) {
+      console.error('Error loading finance:', err);
+    }
   }, [projectId]);
 
   useEffect(() => {

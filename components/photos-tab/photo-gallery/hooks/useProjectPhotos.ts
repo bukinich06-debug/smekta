@@ -75,16 +75,19 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
       formData.set('album', album);
       formData.set('file', file);
 
-      await fetch(`/api/projects/${projectId}/files/photos`, {
-        method: 'POST',
-        body: formData,
-      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
-    } catch (err) {
-      setUploading(false);
-      setError('Не удалось загрузить фото');
-      return;
+      try {
+        const res = await fetch(`/api/projects/${projectId}/files/photos`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (!res.ok) throw new Error('Upload failed');
+      } catch (err) {
+        setUploading(false);
+        setError('Не удалось загрузить фото');
+        return;
+      }
     }
-
+    
     setUploading(false);
     await load();
   };

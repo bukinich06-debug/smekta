@@ -5,7 +5,6 @@ import type { IActLineItem, IActStatusHistoryItem } from '@/domain/acts';
 import { getActStatusLabel } from '@/domain/acts';
 import type { ActStatus } from '@prisma/client';
 import { apiFetch } from '@/components/shared/api';
-import type { IActStatusHistoryItem } from '@/domain/acts';
 import { formatDate } from '../helpers/formatDate';
 import { formatMoney } from '../helpers/formatMoney';
 import { ActStatusBadge } from './actStatusBadge';
@@ -14,6 +13,7 @@ import { ActAttachments } from '../act-attachments';
 
 interface IActRowData {
   id: number;
+  projectId: number;
   number: string;
   date: Date;
   stage: string | null;
