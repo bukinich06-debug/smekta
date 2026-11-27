@@ -1,9 +1,7 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { financeRepository } from '@/data/finance';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
 import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
@@ -12,18 +10,13 @@ interface IResult {
   error?: string;
 }
 
-export const deleteWalletTransfer = async (id: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteWalletTransfer = async (id: number, userId: number): Promise<IResult> => {
   const projectId = await financeRepository.getProjectIdByTransferId(id);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Перевод не найден' };
 
   try {
-    await financeRepository.deleteTransfer(id, session.user.id);
+    await financeRepository.deleteTransfer(id, userId);
     revalidateFinancePaths();
     return { ok: true };
   } catch (error) {

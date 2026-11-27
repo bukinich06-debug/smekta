@@ -1,16 +1,16 @@
-'use server';
+import 'server-only';
 
 import { projectTzRepository } from '@/data/project-tz';
 import type { IProjectTz } from '@/domain/project-tz';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getClientProjectTz = async (): Promise<IProjectTz | null> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectTz | null;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role === 'ADMIN') redirect('/admin/clients');
-  if (session.user.role !== 'CLIENT') redirect('/login');
-
-  return await projectTzRepository.getByClientUserId(session.user.id);
+export const getClientProjectTz = async (userId: number): Promise<IResult> => {
+  const data = await projectTzRepository.getByClientUserId(userId);
+  if (!data) return { ok: false, error: 'ТЗ не найдено' };
+  return { ok: true, data };
 };

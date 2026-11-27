@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { actRepository } from '@/data/acts';
 import { validateCreateAct } from '@/domain/acts';
 import type { ICreateActInput, IAct } from '@/domain/acts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateActPaths } from './helpers/revalidateActPaths';
 
 interface IResult {
@@ -23,13 +21,8 @@ const mapCreateError = (error: unknown): string => {
   return 'Не удалось создать акт';
 };
 
-export const createAct = async (input: ICreateActInput): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
-  if (!(await ownsProject(session.user.id, input.projectId)))
+export const createAct = async (input: ICreateActInput, userId: number): Promise<IResult> => {
+  if (!(await ownsProject(userId, input.projectId)))
     return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateAct(input);

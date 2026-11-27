@@ -1,18 +1,22 @@
-'use server';
-import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 import { projectTzRepository } from '@/data/project-tz';
 import type { IProjectTz } from '@/domain/project-tz';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getProjectTz = async (projectId: number): Promise<IProjectTz | null> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectTz | null;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
+export const getProjectTz = async (projectId: number, userId: number): Promise<IResult> => {
+  try {
+    await requireOwnProject(userId, projectId);
+  } catch {
+    return { ok: false, error: 'Проект не найден' };
+  }
 
-  await requireOwnProject(session.user.id, projectId);
-
-  return await projectTzRepository.getByProjectId(projectId);
+  const data = await projectTzRepository.getByProjectId(projectId);
+  return { ok: true, data };
 };

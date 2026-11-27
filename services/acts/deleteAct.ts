@@ -1,10 +1,8 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { actRepository } from '@/data/acts';
 import { purgeBlobFilesForAct } from '@/data/files/helpers/purgeBlobFiles';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateActPaths } from './helpers/revalidateActPaths';
 
 interface IResult {
@@ -12,14 +10,9 @@ interface IResult {
   error?: string;
 }
 
-export const deleteAct = async (id: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteAct = async (id: number, userId: number): Promise<IResult> => {
   const projectId = await actRepository.getProjectIdByActId(id);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Акт не найден' };
 
   const existing = await actRepository.getById(id);

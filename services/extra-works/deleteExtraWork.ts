@@ -1,9 +1,7 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { extraWorkRepository } from '@/data/extra-works';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateExtraWorkPaths } from '@/services/extra-works/helpers/revalidateExtraWorkPaths';
 
 interface IResult {
@@ -11,14 +9,9 @@ interface IResult {
   error?: string;
 }
 
-export const deleteExtraWork = async (id: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteExtraWork = async (id: number, userId: number): Promise<IResult> => {
   const projectId = await extraWorkRepository.getProjectIdById(id);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Допработа не найдена' };
 
   try {
