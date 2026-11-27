@@ -1,18 +1,18 @@
-'use server';
-import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 import { receiptRepository } from '@/data/receipts';
 import type { IProjectReceipts } from '@/domain/receipts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getProjectReceipts = async (projectId: number): Promise<IProjectReceipts> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectReceipts;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
+export const getProjectReceipts = async (projectId: number, userId: number): Promise<IResult> => {
+  await requireOwnProject(userId, projectId);
 
-  await requireOwnProject(session.user.id, projectId);
-
-  return await receiptRepository.getByProjectId(projectId);
+  const data = await receiptRepository.getByProjectId(projectId);
+  return { ok: true, data };
 };

@@ -2,14 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/components/shared/api';
 import type { IProjectReceipts, IReceipt, ReceiptStatusFilter } from '@/domain/receipts';
-import { getProjectReceipts } from '@/services/receipts/getProjectReceipts';
-import { createReceipt } from '@/services/receipts/createReceipt';
-import { updateReceipt } from '@/services/receipts/updateReceipt';
-import { deleteReceipt } from '@/services/receipts/deleteReceipt';
-import { addPayment } from '@/services/receipts/addPayment';
-import { payReceiptFull } from '@/services/receipts/payReceiptFull';
-import { deletePayment } from '@/services/receipts/deletePayment';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IReceiptFormValues } from '../ui/receiptForm';
 import { filterReceiptsByStatus, sortReceiptsByDate } from '../helpers/filterReceipts';
@@ -30,7 +24,7 @@ export const useReceipts = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const receipts = await getProjectReceipts(projectId);
+      const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
       setData(receipts);
     } catch (err) {
       console.error('Ошибка при загрузке чеков:', err);
@@ -47,7 +41,7 @@ export const useReceipts = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const receipts = await getProjectReceipts(projectId);
+        const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
         if (!cancelled) setData(receipts);
       } catch (err) {
         if (!cancelled) {
@@ -66,18 +60,19 @@ export const useReceipts = (projectId: number) => {
     };
   }, [projectId]);
 
-  const runAction = async (fn: () => Promise<{ ok: boolean; error?: string }>, successMsg: string) => {
+  const runAction = async (fn: () => Promise<void>, successMsg: string) => {
     setActionLoading(true);
     setError(null);
     setSuccess(null);
-    const result = await fn();
-    setActionLoading(false);
-    if (result.ok) {
+    try {
+      await fn();
       setSuccess(successMsg);
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка операции');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка операции');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -109,10 +104,12 @@ export const useReceipts = (projectId: number) => {
       return;
     }
 
-    await runAction(
-      () => createReceipt({ projectId, ...parsed }),
-      'Чек создан',
-    );
+    await runAction(async () => {
+      await apiFetch<{ receipt: IReceipt }>(`/api/projects/${projectId}/receipts`, {
+        method: 'POST',
+        body: JSON.stringify(parsed),
+      });
+    }, 'Чек создан');
     setShowCreateForm(false);
   };
 
@@ -125,30 +122,47 @@ export const useReceipts = (projectId: number) => {
       return;
     }
 
-    await runAction(
-      () => updateReceipt(editingReceipt.id, parsed),
-      'Чек обновлён',
-    );
+    await runAction(async () => {
+      await apiFetch<{ receipt: IReceipt }>(`/api/projects/${projectId}/receipts/${editingReceipt.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(parsed),
+      });
+    }, 'Чек обновлён');
     setEditingReceipt(null);
   };
 
   const removeReceipt = async (id: number) => {
-    await runAction(() => deleteReceipt(id), 'Чек удалён');
+    await runAction(async () => {
+      await apiFetch<{ ok: boolean }>(`/api/projects/${projectId}/receipts/${id}`, {
+        method: 'DELETE',
+      });
+    }, 'Чек удалён');
   };
 
   const handlePayFull = async (receiptId: number, date: Date) => {
-    await runAction(() => payReceiptFull(receiptId, date), 'Оплата добавлена');
+    await runAction(async () => {
+      await apiFetch<{ ok: boolean }>(`/api/projects/${projectId}/receipts/${receiptId}/pay-full`, {
+        method: 'POST',
+        body: JSON.stringify({ date: date.toISOString() }),
+      });
+    }, 'Оплата добавлена');
   };
 
   const handlePayPartial = async (receiptId: number, date: Date, amount: string) => {
-    await runAction(
-      () => addPayment({ receiptId, date, amount }),
-      'Частичная оплата добавлена',
-    );
+    await runAction(async () => {
+      await apiFetch(`/api/projects/${projectId}/receipts/${receiptId}/payments`, {
+        method: 'POST',
+        body: JSON.stringify({ date: date.toISOString(), amount }),
+      });
+    }, 'Частичная оплата добавлена');
   };
 
-  const handleDeletePayment = async (paymentId: number) => {
-    await runAction(() => deletePayment(paymentId), 'Оплата удалена');
+  const handleDeletePayment = async (receiptId: number, paymentId: number) => {
+    await runAction(async () => {
+      await apiFetch<{ ok: boolean }>(`/api/projects/${projectId}/receipts/${receiptId}/payments/${paymentId}`, {
+        method: 'DELETE',
+      });
+    }, 'Оплата удалена');
   };
 
   const displayedReceipts = useMemo(() => {

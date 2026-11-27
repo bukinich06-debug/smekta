@@ -15,7 +15,7 @@ interface IReceiptRowProps {
   onDelete: (id: number) => void;
   onPayFull: (receiptId: number, date: Date) => void;
   onPayPartial: (receiptId: number, date: Date, amount: string) => void;
-  onDeletePayment: (paymentId: number) => void;
+  onDeletePayment: (receiptId: number, paymentId: number) => void;
   readOnly?: boolean;
 }
 

@@ -12,7 +12,7 @@ interface IReceiptPaymentsProps {
   loading: boolean;
   onPayFull: (receiptId: number, date: Date) => void;
   onPayPartial: (receiptId: number, date: Date, amount: string) => void;
-  onDeletePayment: (paymentId: number) => void;
+  onDeletePayment: (receiptId: number, paymentId: number) => void;
 }
 
 export const ReceiptPayments = ({
@@ -67,7 +67,7 @@ export const ReceiptPayments = ({
                   type="button"
                   disabled={loading}
                   onClick={() => {
-                    if (window.confirm('Удалить эту оплату?')) onDeletePayment(payment.id);
+                    if (window.confirm('Удалить эту оплату?')) onDeletePayment(receipt.id, payment.id);
                   }}
                   className="text-red-600 hover:text-red-800 text-xs"
                 >

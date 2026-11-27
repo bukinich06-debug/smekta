@@ -1,24 +1,17 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { addPayment } from './addPayment';
 import { receiptRepository } from '@/data/receipts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
 interface IResult {
   ok: boolean;
   error?: string;
 }
 
-export const payReceiptFull = async (receiptId: number, date: Date): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const payReceiptFull = async (receiptId: number, date: Date, userId: number): Promise<IResult> => {
   const projectId = await receiptRepository.getProjectIdByReceiptId(receiptId);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Чек не найден' };
 
   const receipt = await receiptRepository.getById(receiptId);
@@ -26,11 +19,14 @@ export const payReceiptFull = async (receiptId: number, date: Date): Promise<IRe
 
   if (receipt.remainder <= 0) return { ok: false, error: 'Чек уже оплачен полностью' };
 
-  const result = await addPayment({
-    receiptId,
-    date,
-    amount: receipt.remainder.toFixed(2),
-  });
+  const result = await addPayment(
+    {
+      receiptId,
+      date,
+      amount: receipt.remainder.toFixed(2),
+    },
+    userId
+  );
 
   if (!result.ok) return { ok: false, error: result.error };
 

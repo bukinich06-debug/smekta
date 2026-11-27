@@ -1,21 +1,20 @@
-'use server';
+import 'server-only';
 
 import { clientRepository } from '@/data/clients';
 import { receiptRepository } from '@/data/receipts';
 import type { IProjectReceipts } from '@/domain/receipts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getClientProjectReceipts = async (): Promise<IProjectReceipts | null> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectReceipts;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role === 'ADMIN') redirect('/admin/clients');
-  if (session.user.role !== 'CLIENT') redirect('/login');
+export const getClientProjectReceipts = async (userId: number): Promise<IResult> => {
+  const cabinet = await clientRepository.getCabinetByUserId(userId);
 
-  const cabinet = await clientRepository.getCabinetByUserId(session.user.id);
+  if (!cabinet?.project) return { ok: false, error: 'Проект не найден' };
 
-  if (!cabinet?.project) return null;
-
-  return await receiptRepository.getByProjectId(cabinet.project.id);
+  const data = await receiptRepository.getByProjectId(cabinet.project.id);
+  return { ok: true, data };
 };
