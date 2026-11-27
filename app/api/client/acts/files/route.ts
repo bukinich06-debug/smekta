@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireSession, errorResponse } from '@/app/api/shared/guards';
 import { clientRepository } from '@/data/clients';
-import { listProjectActFiles } from '@/services/files/listProjectActFiles';
+import { listClientProjectActFiles } from '@/services/files/listClientProjectActFiles';
 
 export const GET = async () => {
   const session = await requireSession();
@@ -11,13 +11,13 @@ export const GET = async () => {
     return errorResponse('Доступ запрещён', 403);
   }
 
-  const cabinet = await clientRepository.getCabinetByUserId(session.user.id);
+  const projectId = await clientRepository.getClientProjectId(session.user.id);
 
-  if (!cabinet?.project) {
+  if (!projectId) {
     return errorResponse('Проект не найден', 404);
   }
 
-  const files = await listProjectActFiles(cabinet.project.id);
+  const files = await listClientProjectActFiles(projectId);
 
   return NextResponse.json(files);
 };

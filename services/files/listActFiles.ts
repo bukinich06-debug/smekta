@@ -5,14 +5,13 @@ import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { clientRepository } from '@/data/clients';
 import { fileRepository } from '@/data/files';
 import type { IFile } from '@/domain/files';
+import { CLIENT_VISIBLE_ACT_STATUSES } from './helpers/constants';
 
 interface IResult {
   ok: boolean;
   data?: IFile[];
   error?: string;
 }
-
-const CLIENT_VISIBLE_STATUSES = new Set(['SENT', 'SIGNED']);
 
 export const listActFiles = async (actId: number, userId: number, role: 'ADMIN' | 'CLIENT'): Promise<IResult> => {
   const projectId = await actRepository.getProjectIdByActId(actId);
@@ -25,11 +24,11 @@ export const listActFiles = async (actId: number, userId: number, role: 'ADMIN' 
     return { ok: true, data };
   }
 
-  const cabinet = await clientRepository.getCabinetByUserId(userId);
-  if (!cabinet?.project || cabinet.project.id !== projectId) return { ok: false, error: 'Доступ запрещён' };
+  const clientProjectId = await clientRepository.getClientProjectId(userId);
+  if (!clientProjectId || clientProjectId !== projectId) return { ok: false, error: 'Доступ запрещён' };
 
   const act = await actRepository.getById(actId);
-  if (!act || !CLIENT_VISIBLE_STATUSES.has(act.status)) return { ok: false, error: 'Акт недоступен' };
+  if (!act || !CLIENT_VISIBLE_ACT_STATUSES.has(act.status)) return { ok: false, error: 'Акт недоступен' };
 
   const files = await fileRepository.listByActId(actId);
   const data = files.filter((file) => file.isVisibleToClient);

@@ -35,4 +35,5 @@ export interface IClientRepository {
   getByInviteToken(token: string): Promise<IClientInviteInfo | null>;
   acceptInvite(token: string, userId: number): Promise<boolean>;
   disconnectLinkedUser(clientId: number): Promise<boolean>;
+  getClientProjectId(userId: number): Promise<number | null>;
 }

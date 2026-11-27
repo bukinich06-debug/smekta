@@ -398,4 +398,12 @@ export const clientRepository: IClientRepository = {
 
     return result.count > 0;
   },
+
+  async getClientProjectId(userId: number): Promise<number | null> {
+    const client = await dbClient.client.findFirst({
+      where: { userId },
+      select: { project: { select: { id: true } } },
+    });
+    return client?.project?.id ?? null;
+  },
 };
