@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { IProjectReceipts, ReceiptStatusFilter } from '@/domain/receipts';
+import type { IFile } from '@/domain/files';
 import {
   ReceiptsTotals,
   ReceiptsFilters,
@@ -9,6 +10,7 @@ import {
   filterReceiptsByStatus,
   sortReceiptsByDate,
 } from '@/components/receipts-tab';
+import { apiFetch } from '@/components/shared/api';
 
 interface IClientReceiptsTabProps {
   data: IProjectReceipts;
@@ -17,6 +19,32 @@ interface IClientReceiptsTabProps {
 export const ClientReceiptsTab = ({ data }: IClientReceiptsTabProps) => {
   const [statusFilter, setStatusFilter] = useState<ReceiptStatusFilter>('all');
   const [dateOrder, setDateOrder] = useState<'asc' | 'desc'>('desc');
+  const [attachments, setAttachments] = useState<IFile[]>([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAttachments = async () => {
+      try {
+        const files = await apiFetch<IFile[]>('/api/client/receipts/files');
+        setAttachments(files);
+      } catch (err) {
+        console.error('Ошибка загрузки вложений:', err);
+      } finally {
+        setAttachmentsLoading(false);
+      }
+    };
+
+    loadAttachments();
+  }, []);
+
+  const reloadAttachments = async () => {
+    try {
+      const files = await apiFetch<IFile[]>('/api/client/receipts/files');
+      setAttachments(files);
+    } catch (err) {
+      console.error('Ошибка обновления вложений:', err);
+    }
+  };
 
   const displayedReceipts = useMemo(() => {
     const filtered = filterReceiptsByStatus(data.receipts, statusFilter);
@@ -57,6 +85,8 @@ export const ClientReceiptsTab = ({ data }: IClientReceiptsTabProps) => {
           onPayFull={() => {}}
           onPayPartial={() => {}}
           onDeletePayment={() => {}}
+          allFiles={attachmentsLoading ? [] : attachments}
+          onReloadFiles={reloadAttachments}
         />
       ))}
     </div>

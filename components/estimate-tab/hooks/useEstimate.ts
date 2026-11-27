@@ -56,6 +56,17 @@ export const useEstimate = (projectId: number) => {
     };
   }, [projectId]);
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const estimate = await apiFetch<IProjectEstimate>(
+        `/api/projects/${projectId}/estimate`
+      );
+      setData(estimate);
+    } catch (err) {
+      console.error('Ошибка при обновлении сметы:', err);
+    }
+  }, [projectId]);
+
   const addSection = async (name: string) => {
     setError(null);
     setSuccess(null);
@@ -68,8 +79,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Раздел добавлен');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при создании раздела');
     }
@@ -87,8 +97,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Раздел обновлён');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при обновлении раздела');
     }
@@ -105,8 +114,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Раздел удалён');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при удалении раздела');
     }
@@ -133,8 +141,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Позиция добавлена');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при создании позиции');
     }
@@ -163,8 +170,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Позиция обновлена');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при обновлении позиции');
     }
@@ -181,8 +187,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       setSuccess('Позиция удалена');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при удалении позиции');
     }
@@ -198,8 +203,7 @@ export const useEstimate = (projectId: number) => {
           method: 'PATCH',
         }
       );
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при изменении видимости');
     }
@@ -215,8 +219,7 @@ export const useEstimate = (projectId: number) => {
           method: 'PATCH',
         }
       );
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка при изменении статуса');
     }

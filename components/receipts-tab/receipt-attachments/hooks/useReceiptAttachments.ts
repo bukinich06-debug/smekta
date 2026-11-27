@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { IFile } from '@/domain/files';
-
 import { apiFetch } from '@/components/shared/api';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -12,6 +11,8 @@ interface IUseReceiptAttachmentsParams {
   receiptId: number;
   readOnly?: boolean;
   paymentId?: number | null;
+  allFiles: IFile[];
+  onReload: () => Promise<void>;
 }
 
 export const useReceiptAttachments = ({
@@ -19,54 +20,20 @@ export const useReceiptAttachments = ({
   receiptId,
   readOnly,
   paymentId = null,
+  allFiles,
+  onReload,
 }: IUseReceiptAttachmentsParams) => {
-  const [files, setFiles] = useState<IFile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/${receiptId}/files`);
-      setFiles(list);
-    } catch (err) {
-      console.error('Ошибка загрузки вложений чека:', err);
-      setError('Не удалось загрузить вложения');
-    } finally {
-      setLoading(false);
-    }
-  }, [receiptId]);
+  const files = useMemo(
+    () => allFiles.filter((file) => file.receiptId === receiptId),
+    [allFiles, receiptId]
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/${receiptId}/files`);
-        if (!cancelled) setFiles(list);
-      } catch (err) {
-        if (!cancelled) {
-          console.error('Ошибка загрузки вложений чека:', err);
-          setError('Не удалось загрузить вложения');
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    loadData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [receiptId]);
-
-  const scopedFiles = files.filter((file) =>
-    paymentId === null ? file.paymentId === null : file.paymentId === paymentId
+  const scopedFiles = useMemo(
+    () => files.filter((file) => (paymentId === null ? file.paymentId === null : file.paymentId === paymentId)),
+    [files, paymentId]
   );
 
   const upload = async (fileList: FileList | null) => {
@@ -87,19 +54,30 @@ export const useReceiptAttachments = ({
     if (paymentId !== null) formData.set('paymentId', String(paymentId));
 
     try {
-      await fetch(`/api/projects/${projectId}/receipts/${receiptId}/files`, {
+      const res = await fetch(`/api/projects/${projectId}/receipts/${receiptId}/files`, {
         method: 'POST',
         body: formData,
-      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+      });
+
+      if (!res.ok) {
+        let errorMessage = 'Не удалось загрузить файл';
+        try {
+          const errorData = await res.json();
+          if (errorData.error) errorMessage = errorData.error;
+        } catch {
+          // empty
+        }
+        throw new Error(errorMessage);
+      }
     } catch (err) {
       setUploading(false);
-      setError('Не удалось загрузить файл');
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить файл');
       return;
     }
     
     setUploading(false);
 
-    await load();
+    await onReload();
   };
 
   const remove = async (fileId: number) => {
@@ -108,17 +86,14 @@ export const useReceiptAttachments = ({
       await apiFetch(`/api/projects/${projectId}/receipts/${receiptId}/files/${fileId}`, {
         method: 'DELETE',
       });
+      await onReload();
     } catch (err) {
       setError('Не удалось удалить файл');
-      return;
     }
-
-    await load();
   };
 
   return {
     files: scopedFiles,
-    loading,
     uploading,
     error,
     upload,

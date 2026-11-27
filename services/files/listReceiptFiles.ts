@@ -23,8 +23,8 @@ export const listReceiptFiles = async (receiptId: number, userId: number, role: 
     return { ok: true, data };
   }
 
-  const cabinet = await clientRepository.getCabinetByUserId(userId);
-  if (!cabinet?.project || cabinet.project.id !== projectId) return { ok: false, error: 'Доступ запрещён' };
+  const clientProjectId = await clientRepository.getClientProjectId(userId);
+  if (!clientProjectId || clientProjectId !== projectId) return { ok: false, error: 'Доступ запрещён' };
 
   const files = await fileRepository.listByReceiptId(receiptId);
   const data = files.filter((file) => file.isVisibleToClient);

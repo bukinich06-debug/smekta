@@ -31,6 +31,15 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
     }
   }, [projectId]);
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/files/photos`);
+      setPhotos(list);
+    } catch (err) {
+      console.error('Ошибка при обновлении фото:', err);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -80,16 +89,26 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
           method: 'POST',
           body: formData,
         });
-        if (!res.ok) throw new Error('Upload failed');
+
+        if (!res.ok) {
+          let errorMessage = 'Не удалось загрузить фото';
+          try {
+            const errorData = await res.json();
+            if (errorData.error) errorMessage = errorData.error;
+          } catch {
+            // empty
+          }
+          throw new Error(errorMessage);
+        }
       } catch (err) {
         setUploading(false);
-        setError('Не удалось загрузить фото');
+        setError(err instanceof Error ? err.message : 'Не удалось загрузить фото');
         return;
       }
     }
     
     setUploading(false);
-    await load();
+    await reloadSilently();
   };
 
   const remove = async (fileId: number) => {
@@ -103,7 +122,7 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
       return;
     }
 
-    await load();
+    await reloadSilently();
   };
 
   const saveMeta = async (fileId: number, caption: string | null, album: PhotoAlbum) => {
@@ -122,7 +141,7 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
     }
     setSavingId(null);
 
-    await load();
+    await reloadSilently();
   };
 
   return {

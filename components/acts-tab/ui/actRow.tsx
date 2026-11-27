@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { IActLineItem, IActStatusHistoryItem } from '@/domain/acts';
+import type { IFile } from '@/domain/files';
 import { getActStatusLabel } from '@/domain/acts';
 import type { ActStatus } from '@prisma/client';
 import { apiFetch } from '@/components/shared/api';
@@ -30,6 +31,8 @@ interface IActRowProps {
   onEdit: (act: IActRowData) => void;
   onDelete: (id: number) => void;
   onStatusChange: (id: number, status: ActStatus) => void;
+  allFiles: IFile[];
+  onReloadFiles: () => Promise<void>;
 }
 
 export const ActRow = ({
@@ -39,6 +42,8 @@ export const ActRow = ({
   onEdit,
   onDelete,
   onStatusChange,
+  allFiles,
+  onReloadFiles,
 }: IActRowProps) => {
   const [expanded, setExpanded] = useState(false);
   const [history, setHistory] = useState<IActStatusHistoryItem[]>([]);
@@ -158,7 +163,7 @@ export const ActRow = ({
 
           <div>
             <p className="text-sm font-medium text-gray-800 mb-2">Файлы акта</p>
-            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} />
+            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} />
           </div>
         </div>
       )}

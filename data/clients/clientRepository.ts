@@ -144,7 +144,7 @@ export const clientRepository: IClientRepository = {
     if (!client) return null;
 
     const project = client.projects[0] || null;
-    const finance = project ? computeSummaryFromProject(project) : null;
+    const finance = project ? computeSummaryFromProject(project, true) : null;
 
     return {
       id: client.id,
@@ -397,5 +397,19 @@ export const clientRepository: IClientRepository = {
     });
 
     return result.count > 0;
+  },
+
+  async getClientProjectId(userId: number): Promise<number | null> {
+    const client = await dbClient.client.findFirst({
+      where: { userId },
+      select: {
+        projects: {
+          take: 1,
+          orderBy: { updatedAt: 'desc' },
+          select: { id: true },
+        },
+      },
+    });
+    return client?.projects[0]?.id ?? null;
   },
 };

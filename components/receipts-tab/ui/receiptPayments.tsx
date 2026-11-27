@@ -13,6 +13,8 @@ interface IReceiptPaymentsProps {
   onPayFull: (receiptId: number, date: Date) => void;
   onPayPartial: (receiptId: number, date: Date, amount: string) => void;
   onDeletePayment: (receiptId: number, paymentId: number) => void;
+  allFiles: import('@/domain/files').IFile[];
+  onReloadFiles: () => Promise<void>;
 }
 
 export const ReceiptPayments = ({
@@ -21,6 +23,8 @@ export const ReceiptPayments = ({
   onPayFull,
   onPayPartial,
   onDeletePayment,
+  allFiles,
+  onReloadFiles,
 }: IReceiptPaymentsProps) => {
   const [showPartial, setShowPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
@@ -80,6 +84,8 @@ export const ReceiptPayments = ({
                 paymentId={payment.id}
                 title="Документы по оплате"
                 compact
+                allFiles={allFiles}
+                onReload={onReloadFiles}
               />
             </li>
           ))}

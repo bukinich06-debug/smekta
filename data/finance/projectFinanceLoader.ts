@@ -151,17 +151,18 @@ export const mapProjectToFinanceInput = (project: IProjectFinanceRow): IProjectF
   };
 };
 
-export const computeSummaryFromProject = (project: IProjectFinanceRow): IProjectFinanceSummary => {
+export const computeSummaryFromProject = (project: IProjectFinanceRow, clientVisible = false): IProjectFinanceSummary => {
   const input = mapProjectToFinanceInput(project);
-  return computeProjectFinance(input);
+  return computeProjectFinance(input, clientVisible);
 };
 
 export const buildFinanceViewFromProject = (
   project: IProjectFinanceRow,
-  ledgerOptions: IBuildFinanceLedgerOptions = {}
+  ledgerOptions: IBuildFinanceLedgerOptions = {},
+  clientVisible = false
 ) => {
   const input = mapProjectToFinanceInput(project);
-  const summary = computeProjectFinance(input);
+  const summary = computeProjectFinance(input, clientVisible);
   const { ledger, dueExtraWorks, pendingExtraWorks } = buildFinanceLedger(input, ledgerOptions);
 
   return { input, summary, ledger, dueExtraWorks, pendingExtraWorks, project };

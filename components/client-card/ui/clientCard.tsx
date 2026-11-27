@@ -18,6 +18,7 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
   const {
     isEditing,
     formData,
+    savedData,
     loading,
     error,
     success,
@@ -48,7 +49,24 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
     );
   }
 
-  const managerName = admins.find((a) => a.id === data.project!.managerId)?.name || 'Не указан';
+  const displayData = {
+    ...data,
+    fullName: savedData.fullName,
+    phone: savedData.phone || null,
+    email: savedData.email || null,
+    project: data.project
+      ? {
+          ...data.project,
+          name: savedData.projectName,
+          address: savedData.address,
+          status: savedData.projectStatus,
+          startDate: savedData.startDate,
+          managerId: savedData.managerId,
+        }
+      : null,
+  };
+
+  const managerName = admins.find((a) => a.id === displayData.project!.managerId)?.name || 'Не указан';
 
   return (
     <div>
@@ -58,7 +76,7 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
             Заказчики
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-gray-900">{data.fullName}</span>
+          <span className="text-gray-900">{displayData.fullName}</span>
         </nav>
         {!isEditing && (
           <button
@@ -87,7 +105,7 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
           admins={admins}
         />
       ) : (
-        <CardHeader data={data} role="admin" managerName={managerName} />
+        <CardHeader data={displayData} role="admin" managerName={managerName} />
       )}
 
       <ClientInvite

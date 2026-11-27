@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ActStatus } from '@prisma/client';
 import type { IProjectActs, IAct } from '@/domain/acts';
+import type { IFile } from '@/domain/files';
 import { apiFetch } from '@/components/shared/api';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IActFormValues } from '../ui/actForm';
@@ -11,6 +12,7 @@ import type { IActFormValues } from '../ui/actForm';
 export const useActs = (projectId: number) => {
   const router = useRouter();
   const [data, setData] = useState<IProjectActs | null>(null);
+  const [attachments, setAttachments] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +24,12 @@ export const useActs = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const acts = await apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`);
+      const [acts, files] = await Promise.all([
+        apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`),
+        apiFetch<IFile[]>(`/api/projects/${projectId}/acts/files`),
+      ]);
       setData(acts);
+      setAttachments(files);
     } catch (err) {
       console.error('Ошибка при загрузке актов:', err);
       setError('Не удалось загрузить акты');
@@ -39,8 +45,14 @@ export const useActs = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const acts = await apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`);
-        if (!cancelled) setData(acts);
+        const [acts, files] = await Promise.all([
+          apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`),
+          apiFetch<IFile[]>(`/api/projects/${projectId}/acts/files`),
+        ]);
+        if (!cancelled) {
+          setData(acts);
+          setAttachments(files);
+        }
       } catch (err) {
         if (!cancelled) {
           console.error('Ошибка при загрузке актов:', err);
@@ -58,6 +70,19 @@ export const useActs = (projectId: number) => {
     };
   }, [projectId]);
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const [acts, files] = await Promise.all([
+        apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`),
+        apiFetch<IFile[]>(`/api/projects/${projectId}/acts/files`),
+      ]);
+      setData(acts);
+      setAttachments(files);
+    } catch (err) {
+      console.error('Ошибка при обновлении актов:', err);
+    }
+  }, [projectId]);
+
   const runAction = async (fn: () => Promise<{ ok: boolean; error?: string }>, successMsg: string) => {
     setActionLoading(true);
     setError(null);
@@ -71,8 +96,7 @@ export const useActs = (projectId: number) => {
     }
 
     setSuccess(successMsg);
-    await load();
-    router.refresh();
+    await reloadSilently();
   };
 
   const formToInput = (values: IActFormValues) => {
@@ -164,6 +188,7 @@ export const useActs = (projectId: number) => {
 
   return {
     data,
+    attachments,
     loading,
     actionLoading,
     error,
@@ -177,5 +202,6 @@ export const useActs = (projectId: number) => {
     removeAct,
     changeStatus,
     clearMessages,
+    reloadSilently,
   };
 };
