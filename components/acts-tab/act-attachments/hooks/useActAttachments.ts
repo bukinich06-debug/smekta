@@ -7,11 +7,12 @@ import { apiFetch } from '@/components/shared/api';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 interface IUseActAttachmentsParams {
+  projectId: number;
   actId: number;
   readOnly?: boolean;
 }
 
-export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams) => {
+export const useActAttachments = ({ projectId, actId, readOnly }: IUseActAttachmentsParams) => {
   const [files, setFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -38,7 +39,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
       setLoading(true);
       setError(null);
       try {
-        const list = await apiFetch<IFile[]>(`/api/projects/0/acts/${actId}/files`);
+        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/acts/${actId}/files`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -73,7 +74,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     formData.set('file', file);
 
     try {
-      await fetch(`/api/projects/0/acts/${actId}/files`, {
+      await fetch(`/api/projects/${projectId}/acts/${actId}/files`, {
         method: 'POST',
         body: formData,
       }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
@@ -91,7 +92,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
   const remove = async (fileId: number) => {
     setError(null);
     try {
-      await apiFetch(`/api/projects/0/acts/${actId}/files/${fileId}`, {
+      await apiFetch(`/api/projects/${projectId}/acts/${actId}/files/${fileId}`, {
         method: 'DELETE',
       });
     } catch (err) {

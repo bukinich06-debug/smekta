@@ -11,13 +11,21 @@ interface IResult {
   error?: string;
 }
 
-export const listReceiptFiles = async (receiptId: number, userId: number): Promise<IResult> => {
+export const listReceiptFiles = async (receiptId: number, userId: number, role: 'ADMIN' | 'CLIENT'): Promise<IResult> => {
   const projectId = await receiptRepository.getProjectIdByReceiptId(receiptId);
   if (!projectId) return { ok: false, error: 'Чек не найден' };
 
-  const own = await ownsProject(userId, projectId);
-  if (!own) return { ok: false, error: 'Чек не найден' };
+  if (role === 'ADMIN') {
+    const own = await ownsProject(userId, projectId);
+    if (!own) return { ok: false, error: 'Чек не найден' };
+    const data = await fileRepository.listByReceiptId(receiptId);
+    return { ok: true, data };
+  }
 
-  const data = await fileRepository.listByReceiptId(receiptId);
+  const cabinet = await clientRepository.getCabinetByUserId(userId);
+  if (!cabinet?.project || cabinet.project.id !== projectId) return { ok: false, error: 'Доступ запрещён' };
+
+  const files = await fileRepository.listByReceiptId(receiptId);
+  const data = files.filter((file) => file.isVisibleToClient);
   return { ok: true, data };
 };

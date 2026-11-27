@@ -69,7 +69,7 @@ export const ReceiptRow = ({
         <p className="text-sm text-gray-600 mt-2">{receipt.comment}</p>
       )}
 
-      <ReceiptAttachments receiptId={receipt.id} readOnly={readOnly} />
+      <ReceiptAttachments projectId={receipt.projectId} receiptId={receipt.id} readOnly={readOnly} />
 
       {!readOnly && (
         <div className="flex flex-wrap gap-2 mt-3">
@@ -126,6 +126,7 @@ export const ReceiptRow = ({
               {formatDate(payment.date)} — {formatMoney(parseFloat(payment.amount))}
               <span className="text-gray-500"> ({payment.source === 'DEPOSIT' ? 'из депозита' : 'напрямую'})</span>
               <ReceiptAttachments
+                projectId={receipt.projectId}
                 receiptId={receipt.id}
                 paymentId={payment.id}
                 readOnly

@@ -158,7 +158,7 @@ export const ActRow = ({
 
           <div>
             <p className="text-sm font-medium text-gray-800 mb-2">Файлы акта</p>
-            <ActAttachments actId={act.id} readOnly={readOnly} />
+            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} />
           </div>
         </div>
       )}

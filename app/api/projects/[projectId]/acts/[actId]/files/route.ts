@@ -11,14 +11,11 @@ export const GET = async (request: Request, context: IRouteContext) => {
   const session = await requireSession();
   if (session instanceof NextResponse) return session;
 
-  const roleError = requireRole(session, 'ADMIN');
-  if (roleError) return roleError;
-
   const { actId } = await context.params;
   const id = parseInt(actId, 10);
   if (isNaN(id)) return errorResponse('Неверный ID акта', 400);
 
-  const result = await listActFiles(id, session.user.id);
+  const result = await listActFiles(id, session.user.id, session.user.role);
   if (!result.ok) return errorResponse(result.error || 'Не удалось загрузить файлы', 404);
 
   return NextResponse.json(result.data);

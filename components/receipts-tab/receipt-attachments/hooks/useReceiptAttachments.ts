@@ -8,12 +8,14 @@ import { apiFetch } from '@/components/shared/api';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 interface IUseReceiptAttachmentsParams {
+  projectId: number;
   receiptId: number;
   readOnly?: boolean;
   paymentId?: number | null;
 }
 
 export const useReceiptAttachments = ({
+  projectId,
   receiptId,
   readOnly,
   paymentId = null,
@@ -27,7 +29,7 @@ export const useReceiptAttachments = ({
     setLoading(true);
     setError(null);
     try {
-      const list = await apiFetch<IFile[]>(`/api/projects/0/receipts/${receiptId}/files`);
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/${receiptId}/files`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений чека:', err);
@@ -44,7 +46,7 @@ export const useReceiptAttachments = ({
       setLoading(true);
       setError(null);
       try {
-        const list = await apiFetch<IFile[]>(`/api/projects/0/receipts/${receiptId}/files`);
+        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/receipts/${receiptId}/files`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -85,7 +87,7 @@ export const useReceiptAttachments = ({
     if (paymentId !== null) formData.set('paymentId', String(paymentId));
 
     try {
-      await fetch(`/api/projects/0/receipts/${receiptId}/files`, {
+      await fetch(`/api/projects/${projectId}/receipts/${receiptId}/files`, {
         method: 'POST',
         body: formData,
       }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
@@ -103,7 +105,7 @@ export const useReceiptAttachments = ({
   const remove = async (fileId: number) => {
     setError(null);
     try {
-      await apiFetch(`/api/projects/0/receipts/${receiptId}/files/${fileId}`, {
+      await apiFetch(`/api/projects/${projectId}/receipts/${receiptId}/files/${fileId}`, {
         method: 'DELETE',
       });
     } catch (err) {
