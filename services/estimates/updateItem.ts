@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { estimateRepository } from '@/data/estimates';
 import { validateUpdateItem } from '@/domain/estimates';
 import type { IUpdateItemInput, IEstimateItem } from '@/domain/estimates';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
 interface IResult {
@@ -14,14 +12,13 @@ interface IResult {
   error?: string;
 }
 
-export const updateItem = async (id: number, input: IUpdateItemInput): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const updateItem = async (
+  id: number,
+  input: IUpdateItemInput,
+  userId: number
+): Promise<IResult> => {
   const projectId = await estimateRepository.getProjectIdByItemId(id);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Позиция не найдена' };
 
   const validationError = validateUpdateItem(input);

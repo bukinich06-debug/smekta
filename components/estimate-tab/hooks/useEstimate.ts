@@ -2,16 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getProjectEstimate } from '@/services/estimates/getProjectEstimate';
-import { createSection } from '@/services/estimates/createSection';
-import { updateSection } from '@/services/estimates/updateSection';
-import { deleteSection } from '@/services/estimates/deleteSection';
-import { createItem } from '@/services/estimates/createItem';
-import { updateItem } from '@/services/estimates/updateItem';
-import { deleteItem } from '@/services/estimates/deleteItem';
-import { toggleItemVisibility } from '@/services/estimates/toggleItemVisibility';
-import { toggleItemStatus } from '@/services/estimates/toggleItemStatus';
-import type { IProjectEstimate } from '@/domain/estimates';
+import { apiFetch } from '@/components/shared/api';
+import type { IProjectEstimate, IEstimateSection, IEstimateItem } from '@/domain/estimates';
 
 export const useEstimate = (projectId: number) => {
   const router = useRouter();
@@ -24,7 +16,9 @@ export const useEstimate = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const estimate = await getProjectEstimate(projectId);
+      const estimate = await apiFetch<IProjectEstimate>(
+        `/api/projects/${projectId}/estimate`
+      );
       setData(estimate);
     } catch (err) {
       console.error('Ошибка при загрузке сметы:', err);
@@ -41,7 +35,9 @@ export const useEstimate = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const estimate = await getProjectEstimate(projectId);
+        const estimate = await apiFetch<IProjectEstimate>(
+          `/api/projects/${projectId}/estimate`
+        );
         if (!cancelled) setData(estimate);
       } catch (err) {
         if (!cancelled) {
@@ -63,116 +59,166 @@ export const useEstimate = (projectId: number) => {
   const addSection = async (name: string) => {
     setError(null);
     setSuccess(null);
-    const result = await createSection({ projectId, name });
-    if (result.ok) {
+    try {
+      await apiFetch<{ section: IEstimateSection }>(
+        `/api/projects/${projectId}/estimate/sections`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ name }),
+        }
+      );
       setSuccess('Раздел добавлен');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при создании раздела');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при создании раздела');
     }
   };
 
   const editSection = async (id: number, name: string) => {
     setError(null);
     setSuccess(null);
-    const result = await updateSection(id, { name });
-    if (result.ok) {
+    try {
+      await apiFetch<{ section: IEstimateSection }>(
+        `/api/projects/${projectId}/estimate/sections/${id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ name }),
+        }
+      );
       setSuccess('Раздел обновлён');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при обновлении раздела');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при обновлении раздела');
     }
   };
 
   const removeSection = async (id: number) => {
     setError(null);
     setSuccess(null);
-    const result = await deleteSection(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ ok: boolean }>(
+        `/api/projects/${projectId}/estimate/sections/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
       setSuccess('Раздел удалён');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при удалении раздела');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при удалении раздела');
     }
   };
 
-  const addItem = async (sectionId: number, itemData: {
-    name: string;
-    unit: string;
-    quantity: string;
-    unitPrice: string;
-    comment?: string;
-  }) => {
+  const addItem = async (
+    sectionId: number,
+    itemData: {
+      name: string;
+      unit: string;
+      quantity: string;
+      unitPrice: string;
+      comment?: string;
+    }
+  ) => {
     setError(null);
     setSuccess(null);
-    const result = await createItem({ sectionId, ...itemData });
-    if (result.ok) {
+    try {
+      await apiFetch<{ item: IEstimateItem }>(
+        `/api/projects/${projectId}/estimate/items`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ sectionId, ...itemData }),
+        }
+      );
       setSuccess('Позиция добавлена');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при создании позиции');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при создании позиции');
     }
   };
 
-  const editItem = async (id: number, itemData: {
-    name?: string;
-    unit?: string;
-    quantity?: string;
-    unitPrice?: string;
-    comment?: string;
-    status?: 'DRAFT' | 'AGREED';
-    isVisibleToClient?: boolean;
-  }) => {
+  const editItem = async (
+    id: number,
+    itemData: {
+      name?: string;
+      unit?: string;
+      quantity?: string;
+      unitPrice?: string;
+      comment?: string;
+      status?: 'DRAFT' | 'AGREED';
+      isVisibleToClient?: boolean;
+    }
+  ) => {
     setError(null);
     setSuccess(null);
-    const result = await updateItem(id, itemData);
-    if (result.ok) {
+    try {
+      await apiFetch<{ item: IEstimateItem }>(
+        `/api/projects/${projectId}/estimate/items/${id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(itemData),
+        }
+      );
       setSuccess('Позиция обновлена');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при обновлении позиции');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при обновлении позиции');
     }
   };
 
   const removeItem = async (id: number) => {
     setError(null);
     setSuccess(null);
-    const result = await deleteItem(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ ok: boolean }>(
+        `/api/projects/${projectId}/estimate/items/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
       setSuccess('Позиция удалена');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при удалении позиции');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при удалении позиции');
     }
   };
 
   const toggleVisibility = async (id: number) => {
     setError(null);
     setSuccess(null);
-    const result = await toggleItemVisibility(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ item: IEstimateItem }>(
+        `/api/projects/${projectId}/estimate/items/${id}/visibility`,
+        {
+          method: 'PATCH',
+        }
+      );
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при изменении видимости');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при изменении видимости');
     }
   };
 
   const toggleStatus = async (id: number) => {
     setError(null);
     setSuccess(null);
-    const result = await toggleItemStatus(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ item: IEstimateItem }>(
+        `/api/projects/${projectId}/estimate/items/${id}/status`,
+        {
+          method: 'PATCH',
+        }
+      );
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Ошибка при изменении статуса');
+    } catch (err: any) {
+      setError(err.message || 'Ошибка при изменении статуса');
     }
   };
 

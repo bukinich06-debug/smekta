@@ -1,18 +1,19 @@
-'use server';
-import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { estimateRepository } from '@/data/estimates';
 import type { IProjectEstimate } from '@/domain/estimates';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getProjectEstimate = async (projectId: number): Promise<IProjectEstimate> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectEstimate;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
+export const getProjectEstimate = async (projectId: number, userId: number): Promise<IResult> => {
+  if (!(await ownsProject(userId, projectId)))
+    return { ok: false, error: 'Проект не найден' };
 
-  await requireOwnProject(session.user.id, projectId);
-
-  return await estimateRepository.getByProjectId(projectId);
+  const data = await estimateRepository.getByProjectId(projectId);
+  return { ok: true, data };
 };

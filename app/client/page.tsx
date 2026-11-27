@@ -18,7 +18,7 @@ const ClientPage = async () => {
 
   const data = await getClientCabinet(session.user.id);
   const [estimate, tz, receipts, extraWorks, acts, finance] = await Promise.all([
-    data?.project ? getClientProjectEstimate() : Promise.resolve(null),
+    data?.project ? getClientProjectEstimate(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectTz() : Promise.resolve(null),
     data?.project ? getClientProjectReceipts() : Promise.resolve(null),
     data?.project ? getClientProjectExtraWorks() : Promise.resolve(null),
