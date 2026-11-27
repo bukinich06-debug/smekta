@@ -5,6 +5,7 @@ import { formatDate } from '../helpers/formatDate';
 import { ProjectStatusBadge } from '@/components/project-status-badge';
 import { CardHeaderSection, CardHeaderField } from './cardHeaderSection';
 import { CardHeaderBudget } from './cardHeaderBudget';
+import { useBudgetData } from '../hooks/useBudgetData';
 
 type ICardHeaderRole = 'admin' | 'client';
 
@@ -56,7 +57,23 @@ const ObjectBlock = ({ data }: { data: IClientCardDetails }) => {
 };
 
 export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
+  const hasFinanceData = data.estimateTotal !== null;
+  const { data: budgetData, loading, error } = useBudgetData(
+    hasFinanceData ? null : (data.project?.id || null)
+  );
+
   if (!data.project) return null;
+
+  const financeData = hasFinanceData
+    ? {
+        estimateTotal: data.estimateTotal ?? 0,
+        receivedTotal: data.receivedTotal ?? 0,
+        masteredTotal: data.masteredTotal ?? 0,
+        balanceOnHand: data.balanceOnHand ?? 0,
+        dueNow: data.dueNow ?? 0,
+        stillNeededForWorks: data.stillNeededForWorks ?? 0,
+      }
+    : budgetData;
 
   return (
     <div className="mb-6 space-y-4">
@@ -65,12 +82,14 @@ export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
         {role === 'client' && <ForemanBlock manager={data.manager} />}
         {role === 'admin' && <CustomerBlock data={data} />}
         <CardHeaderBudget
-          estimateTotal={data.estimateTotal}
-          receivedTotal={data.receivedTotal}
-          masteredTotal={data.masteredTotal}
-          balanceOnHand={data.balanceOnHand}
-          dueNow={data.dueNow}
-          stillNeededForWorks={data.stillNeededForWorks}
+          estimateTotal={financeData?.estimateTotal ?? 0}
+          receivedTotal={financeData?.receivedTotal ?? 0}
+          masteredTotal={financeData?.masteredTotal ?? 0}
+          balanceOnHand={financeData?.balanceOnHand ?? 0}
+          dueNow={financeData?.dueNow ?? 0}
+          stillNeededForWorks={financeData?.stillNeededForWorks ?? 0}
+          loading={!hasFinanceData && loading}
+          error={!hasFinanceData ? error : null}
         />
       </div>
       {role === 'admin' && managerName && (
