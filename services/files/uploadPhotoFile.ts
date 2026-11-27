@@ -1,12 +1,10 @@
-'use server';
+import 'server-only';
 
 import { put } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import type { PhotoAlbum } from '@/domain/files';
 import { PHOTO_ALBUMS, validatePhotoFileMeta } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { assertPhotoAdminWriteAccess } from './helpers/assertPhotoFileAccess';
 import { buildPhotoBlobPathname } from './helpers/buildPhotoBlobPathname';
 import { revalidatePhotoPaths } from './helpers/revalidatePhotoPaths';
@@ -23,11 +21,7 @@ const parseAlbum = (value: FormDataEntryValue | null): PhotoAlbum | null => {
   return value as PhotoAlbum;
 };
 
-export const uploadPhotoFile = async (formData: FormData): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
+export const uploadPhotoFile = async (formData: FormData, userId: number): Promise<IResult> => {
 
   const projectIdRaw = formData.get('projectId');
   const album = parseAlbum(formData.get('album'));
@@ -40,7 +34,7 @@ export const uploadPhotoFile = async (formData: FormData): Promise<IResult> => {
   const projectId = typeof projectIdRaw === 'string' ? parseInt(projectIdRaw, 10) : NaN;
   if (isNaN(projectId)) return { ok: false, error: 'Некорректный проект' };
 
-  const access = await assertPhotoAdminWriteAccess(session, projectId);
+  const access = await assertPhotoAdminWriteAccess(userId, projectId);
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   const validationError = validatePhotoFileMeta({ mimeType: file.type, size: file.size });
@@ -68,7 +62,7 @@ export const uploadPhotoFile = async (formData: FormData): Promise<IResult> => {
       originalName: file.name,
       mimeType: file.type,
       size: file.size,
-      uploadedById: session.user.id,
+      uploadedById: userId,
       album,
       caption,
     });

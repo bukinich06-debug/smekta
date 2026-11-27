@@ -1,38 +1,23 @@
-'use server';
+import 'server-only';
 
 import { actRepository } from '@/data/acts';
 import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
-import { clientRepository } from '@/data/clients';
 import { fileRepository } from '@/data/files';
 import type { IFile } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-const CLIENT_VISIBLE_STATUSES = new Set(['SENT', 'SIGNED']);
+interface IResult {
+  ok: boolean;
+  data?: IFile[];
+  error?: string;
+}
 
-export const listActFiles = async (actId: number): Promise<IFile[]> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-
+export const listActFiles = async (actId: number, userId: number): Promise<IResult> => {
   const projectId = await actRepository.getProjectIdByActId(actId);
-  if (!projectId) return [];
+  if (!projectId) return { ok: false, error: 'Акт не найден' };
 
-  if (session.user.role === 'ADMIN') {
-    const own = await ownsProject(session.user.id, projectId);
-    if (!own) return [];
-    return await fileRepository.listByActId(actId);
-  }
+  const own = await ownsProject(userId, projectId);
+  if (!own) return { ok: false, error: 'Акт не найден' };
 
-  if (session.user.role !== 'CLIENT') redirect('/login');
-
-  const cabinet = await clientRepository.getCabinetByUserId(session.user.id);
-  if (!cabinet?.project || cabinet.project.id !== projectId) return [];
-
-  const act = await actRepository.getById(actId);
-  if (!act || !CLIENT_VISIBLE_STATUSES.has(act.status)) return [];
-
-  const files = await fileRepository.listByActId(actId);
-
-  return files.filter((file) => file.isVisibleToClient);
+  const data = await fileRepository.listByActId(actId);
+  return { ok: true, data };
 };

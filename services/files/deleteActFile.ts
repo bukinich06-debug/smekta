@@ -1,9 +1,7 @@
-'use server';
+import 'server-only';
 
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateActPaths } from '@/services/acts/helpers/revalidateActPaths';
 import { assertActAdminWriteAccess } from './helpers/assertActFileAccess';
 
@@ -12,16 +10,11 @@ interface IResult {
   error?: string;
 }
 
-export const deleteActFile = async (fileId: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteActFile = async (fileId: number, userId: number): Promise<IResult> => {
   const file = await fileRepository.getById(fileId);
   if (!file || file.tab !== 'ACTS' || file.actId === null) return { ok: false, error: 'Файл не найден' };
 
-  const access = await assertActAdminWriteAccess(session, file.actId);
+  const access = await assertActAdminWriteAccess(userId, file.actId);
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   try {
