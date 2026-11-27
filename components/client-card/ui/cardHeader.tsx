@@ -8,10 +8,22 @@ import { CardHeaderBudget } from './cardHeaderBudget';
 
 type ICardHeaderRole = 'admin' | 'client';
 
+interface IBudgetData {
+  estimateTotal: number;
+  receivedTotal: number;
+  masteredTotal: number;
+  balanceOnHand: number;
+  dueNow: number;
+  stillNeededForWorks: number;
+}
+
 interface ICardHeaderProps {
   data: IClientCardDetails;
   role: ICardHeaderRole;
   managerName?: string;
+  budgetData?: IBudgetData | null;
+  budgetLoading?: boolean;
+  budgetError?: string | null;
 }
 
 const ForemanBlock = ({ manager }: { manager: IProjectManager | null }) => (
@@ -55,8 +67,28 @@ const ObjectBlock = ({ data }: { data: IClientCardDetails }) => {
   );
 };
 
-export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
+export const CardHeader = ({
+  data,
+  role,
+  managerName,
+  budgetData: externalBudgetData,
+  budgetLoading = false,
+  budgetError = null,
+}: ICardHeaderProps) => {
   if (!data.project) return null;
+
+  const hasServerFinanceData = data.estimateTotal !== null;
+
+  const financeData = hasServerFinanceData
+    ? {
+        estimateTotal: data.estimateTotal ?? 0,
+        receivedTotal: data.receivedTotal ?? 0,
+        masteredTotal: data.masteredTotal ?? 0,
+        balanceOnHand: data.balanceOnHand ?? 0,
+        dueNow: data.dueNow ?? 0,
+        stillNeededForWorks: data.stillNeededForWorks ?? 0,
+      }
+    : externalBudgetData;
 
   return (
     <div className="mb-6 space-y-4">
@@ -65,12 +97,14 @@ export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
         {role === 'client' && <ForemanBlock manager={data.manager} />}
         {role === 'admin' && <CustomerBlock data={data} />}
         <CardHeaderBudget
-          estimateTotal={data.estimateTotal}
-          receivedTotal={data.receivedTotal}
-          masteredTotal={data.masteredTotal}
-          balanceOnHand={data.balanceOnHand}
-          dueNow={data.dueNow}
-          stillNeededForWorks={data.stillNeededForWorks}
+          estimateTotal={financeData?.estimateTotal ?? 0}
+          receivedTotal={financeData?.receivedTotal ?? 0}
+          masteredTotal={financeData?.masteredTotal ?? 0}
+          balanceOnHand={financeData?.balanceOnHand ?? 0}
+          dueNow={financeData?.dueNow ?? 0}
+          stillNeededForWorks={financeData?.stillNeededForWorks ?? 0}
+          loading={!hasServerFinanceData && budgetLoading}
+          error={!hasServerFinanceData ? budgetError : null}
         />
       </div>
       {role === 'admin' && managerName && (

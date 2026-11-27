@@ -24,6 +24,16 @@ const projectCardInclude = {
   },
 };
 
+const projectCardIncludeBasic = {
+  manager: {
+    select: {
+      name: true,
+      phone: true,
+      email: true,
+    },
+  },
+};
+
 const mapProjectManager = (
   manager: { name: string; phone: string | null; email: string } | null | undefined
 ): IProjectManager | null => {
@@ -271,7 +281,7 @@ export const clientRepository: IClientRepository = {
         projects: {
           take: 1,
           orderBy: { updatedAt: 'desc' },
-          include: projectCardInclude,
+          include: projectCardIncludeBasic,
         },
       },
     });
@@ -279,7 +289,6 @@ export const clientRepository: IClientRepository = {
     if (!client) return null;
 
     const project = client.projects[0] || null;
-    const finance = project ? computeSummaryFromProject(project) : null;
 
     return {
       id: client.id,
@@ -303,12 +312,12 @@ export const clientRepository: IClientRepository = {
             updatedAt: project.updatedAt,
           }
         : null,
-      estimateTotal: finance?.estimateTotal ?? 0,
-      receivedTotal: finance?.receivedTotal ?? 0,
-      masteredTotal: finance?.masteredTotal ?? 0,
-      balanceOnHand: finance?.balanceOnHand ?? 0,
-      dueNow: finance?.dueNow ?? 0,
-      stillNeededForWorks: finance?.stillNeededForWorks ?? 0,
+      estimateTotal: null,
+      receivedTotal: null,
+      masteredTotal: null,
+      balanceOnHand: null,
+      dueNow: null,
+      stillNeededForWorks: null,
     };
   },
 

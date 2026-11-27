@@ -7,6 +7,8 @@ import { CardHeader } from './cardHeader';
 import { CardEditForm } from './cardEditForm';
 import { CardTabs } from './cardTabs';
 import { ClientInvite } from '../client-invite';
+import { BudgetRefetchProvider } from '../context/budgetRefetchContext';
+import { useBudgetData } from '../hooks/useBudgetData';
 import Link from 'next/link';
 
 interface IClientCardProps {
@@ -15,6 +17,14 @@ interface IClientCardProps {
 }
 
 export const ClientCard = ({ data, admins }: IClientCardProps) => {
+  const hasServerFinanceData = data.estimateTotal !== null;
+  const {
+    data: budgetData,
+    loading: budgetLoading,
+    error: budgetError,
+    refetch: refetchBudget,
+  } = useBudgetData(hasServerFinanceData ? null : (data.project?.id || null));
+
   const {
     isEditing,
     formData,
@@ -39,6 +49,7 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
       startDate: data.project?.startDate || null,
       managerId: data.project?.managerId || 0,
     },
+    onSuccess: refetchBudget,
   });
 
   if (!data.project) {
@@ -69,53 +80,62 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
   const managerName = admins.find((a) => a.id === displayData.project!.managerId)?.name || 'Не указан';
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <nav className="text-sm text-gray-500">
-          <Link href="/admin/clients" className="hover:text-gray-700">
-            Заказчики
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900">{displayData.fullName}</span>
-        </nav>
-        {!isEditing && (
-          <button
-            onClick={startEdit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Редактировать
-          </button>
-        )}
-      </div>
-
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
-          Изменения успешно сохранены
+    <BudgetRefetchProvider refetch={refetchBudget}>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <nav className="text-sm text-gray-500">
+            <Link href="/admin/clients" className="hover:text-gray-700">
+              Заказчики
+            </Link>
+            <span className="mx-2">/</span>
+            <span className="text-gray-900">{displayData.fullName}</span>
+          </nav>
+          {!isEditing && (
+            <button
+              onClick={startEdit}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Редактировать
+            </button>
+          )}
         </div>
-      )}
 
-      {isEditing ? (
-        <CardEditForm
-          formData={formData}
-          updateField={updateField}
-          onSave={save}
-          onCancel={cancelEdit}
-          loading={loading}
-          error={error}
-          admins={admins}
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+            Изменения успешно сохранены
+          </div>
+        )}
+
+        {isEditing ? (
+          <CardEditForm
+            formData={formData}
+            updateField={updateField}
+            onSave={save}
+            onCancel={cancelEdit}
+            loading={loading}
+            error={error}
+            admins={admins}
+          />
+        ) : (
+          <CardHeader
+            data={displayData}
+            role="admin"
+            managerName={managerName}
+            budgetData={budgetData}
+            budgetLoading={budgetLoading}
+            budgetError={budgetError}
+          />
+        )}
+
+        <ClientInvite
+          clientId={data.id}
+          hasInviteToken={!!data.inviteToken}
+          userId={data.userId}
+          userEmail={data.userEmail}
         />
-      ) : (
-        <CardHeader data={displayData} role="admin" managerName={managerName} />
-      )}
 
-      <ClientInvite
-        clientId={data.id}
-        hasInviteToken={!!data.inviteToken}
-        userId={data.userId}
-        userEmail={data.userEmail}
-      />
-
-      <CardTabs projectId={data.project.id} />
-    </div>
+        <CardTabs projectId={data.project.id} />
+      </div>
+    </BudgetRefetchProvider>
   );
 };

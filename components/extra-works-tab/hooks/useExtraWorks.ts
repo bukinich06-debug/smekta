@@ -6,9 +6,11 @@ import type { IProjectExtraWorks, IExtraWork } from '@/domain/extra-works';
 import { apiFetch } from '@/components/shared/api';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IExtraWorkFormValues } from '../ui/extraWorkForm';
+import { useBudgetRefetch } from '@/components/client-card/context/budgetRefetchContext';
 
 export const useExtraWorks = (projectId: number) => {
   const router = useRouter();
+  const { refetch: refetchBudget } = useBudgetRefetch();
   const [data, setData] = useState<IProjectExtraWorks | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -109,6 +111,7 @@ export const useExtraWorks = (projectId: number) => {
       setSuccess('Допработа добавлена');
       setShowCreateForm(false);
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать допработу');
     } finally {
@@ -128,6 +131,7 @@ export const useExtraWorks = (projectId: number) => {
       setSuccess('Изменения сохранены');
       setEditingWork(null);
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось обновить допработу');
     } finally {
@@ -143,6 +147,7 @@ export const useExtraWorks = (projectId: number) => {
       await apiFetch(`/api/projects/${projectId}/extra-works/${id}`, { method: 'DELETE' });
       setSuccess('Допработа удалена');
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError('Не удалось удалить допработу');
     } finally {
@@ -156,6 +161,7 @@ export const useExtraWorks = (projectId: number) => {
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/status`, { method: 'PATCH' });
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError('Не удалось переключить статус');
     } finally {
@@ -182,6 +188,7 @@ export const useExtraWorks = (projectId: number) => {
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/budget`, { method: 'PATCH' });
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError('Не удалось изменить учёт в бюджете');
     } finally {
@@ -195,6 +202,7 @@ export const useExtraWorks = (projectId: number) => {
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'PATCH' });
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError('Не удалось отметить выполненной');
     } finally {
@@ -208,6 +216,7 @@ export const useExtraWorks = (projectId: number) => {
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'DELETE' });
       await reloadSilently();
+      refetchBudget();
     } catch (err) {
       setError('Не удалось снять отметку выполнения');
     } finally {

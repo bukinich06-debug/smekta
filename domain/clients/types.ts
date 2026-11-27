@@ -74,12 +74,12 @@ export interface IProjectManager {
 export interface IClientCardDetails extends IClient {
   project: IProject | null;
   manager: IProjectManager | null;
-  estimateTotal: number;
-  receivedTotal: number;
-  masteredTotal: number;
-  balanceOnHand: number;
-  dueNow: number;
-  stillNeededForWorks: number;
+  estimateTotal: number | null;
+  receivedTotal: number | null;
+  masteredTotal: number | null;
+  balanceOnHand: number | null;
+  dueNow: number | null;
+  stillNeededForWorks: number | null;
   userEmail: string | null;
 }
 

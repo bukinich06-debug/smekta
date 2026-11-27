@@ -9,9 +9,10 @@ interface IUseCardEditParams {
   clientId: number;
   projectId: number;
   initialData: IUpdateClientCardInput;
+  onSuccess?: () => void;
 }
 
-export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditParams) => {
+export const useCardEdit = ({ clientId, projectId, initialData, onSuccess }: IUseCardEditParams) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<IUpdateClientCardInput>(initialData);
   const [savedData, setSavedData] = useState<IUpdateClientCardInput>(initialData);
@@ -54,6 +55,7 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
       setSuccess(true);
       setIsEditing(false);
       router.refresh();
+      onSuccess?.();
     } catch (err: any) {
       setError(err.message || 'Ошибка при сохранении');
     } finally {

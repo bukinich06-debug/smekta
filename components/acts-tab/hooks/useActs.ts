@@ -8,9 +8,11 @@ import type { IFile } from '@/domain/files';
 import { apiFetch } from '@/components/shared/api';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IActFormValues } from '../ui/actForm';
+import { useBudgetRefetch } from '@/components/client-card/context/budgetRefetchContext';
 
 export const useActs = (projectId: number) => {
   const router = useRouter();
+  const { refetch: refetchBudget } = useBudgetRefetch();
   const [data, setData] = useState<IProjectActs | null>(null);
   const [attachments, setAttachments] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +99,7 @@ export const useActs = (projectId: number) => {
 
     setSuccess(successMsg);
     await reloadSilently();
+    refetchBudget();
   };
 
   const formToInput = (values: IActFormValues) => {
