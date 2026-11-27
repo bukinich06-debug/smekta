@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { IFile } from '@/domain/files';
-import { deleteTzFile } from '@/services/files/deleteTzFile';
-import { listTzFiles } from '@/services/files/listTzFiles';
-import { uploadTzFile } from '@/services/files/uploadTzFile';
+import { apiFetch } from '@/components/shared/api';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -23,7 +21,7 @@ export const useTzAttachments = ({ projectId, readOnly }: IUseTzAttachmentsParam
     setLoading(true);
     setError(null);
     try {
-      const list = await listTzFiles(projectId);
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/files/tz`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений ТЗ:', err);
@@ -40,7 +38,7 @@ export const useTzAttachments = ({ projectId, readOnly }: IUseTzAttachmentsParam
       setLoading(true);
       setError(null);
       try {
-        const list = await listTzFiles(projectId);
+        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/files/tz`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -72,25 +70,32 @@ export const useTzAttachments = ({ projectId, readOnly }: IUseTzAttachmentsParam
     setError(null);
 
     const formData = new FormData();
-    formData.set('projectId', String(projectId));
     formData.set('file', file);
 
-    const result = await uploadTzFile(formData);
-    setUploading(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось загрузить файл');
+    try {
+      await fetch(`/api/projects/${projectId}/files/tz`, {
+        method: 'POST',
+        body: formData,
+      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+    } catch (err) {
+      setUploading(false);
+      setError('Не удалось загрузить файл');
       return;
     }
+    
+    setUploading(false);
 
     await load();
   };
 
   const remove = async (fileId: number) => {
     setError(null);
-    const result = await deleteTzFile(fileId);
-    if (!result.ok) {
-      setError(result.error || 'Не удалось удалить файл');
+    try {
+      await apiFetch(`/api/projects/${projectId}/files/tz/${fileId}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      setError('Не удалось удалить файл');
       return;
     }
 
