@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { IFinanceHistoryItem, IProjectFinance, IProjectInflow, IWalletTransfer } from '@/domain/finance';
 import { apiFetch } from '@/components/shared/api';
+import { useBudgetRefetch } from '@/components/client-card/context/budgetRefetchContext';
 
 export const useFinanceTab = (projectId: number) => {
+  const { refetch: refetchBudget } = useBudgetRefetch();
   const [data, setData] = useState<IProjectFinance | null>(null);
   const [history, setHistory] = useState<IFinanceHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +81,7 @@ export const useFinanceTab = (projectId: number) => {
       setSuccess(okMessage);
       onCancelForms();
       await reload();
+      refetchBudget();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка операции');
     } finally {

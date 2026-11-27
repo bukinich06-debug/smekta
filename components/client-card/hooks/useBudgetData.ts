@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/components/shared/api';
 import type { IProjectFinance } from '@/domain/finance';
 
@@ -23,12 +23,16 @@ export const useBudgetData = (projectId: number | null): IUseBudgetDataResult =>
   const [loading, setLoading] = useState(!!projectId);
   const [error, setError] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
     if (!projectId) return;
 
     const fetchData = async () => {
-      setLoading(true);
+      if (isFirstLoadRef.current) {
+        setLoading(true);
+        isFirstLoadRef.current = false;
+      }
       setError(null);
 
       try {

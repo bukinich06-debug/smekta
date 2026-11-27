@@ -17,7 +17,13 @@ interface IClientCardProps {
 }
 
 export const ClientCard = ({ data, admins }: IClientCardProps) => {
-  const { refetch: refetchBudget } = useBudgetData(data.project?.id || null);
+  const hasServerFinanceData = data.estimateTotal !== null;
+  const {
+    data: budgetData,
+    loading: budgetLoading,
+    error: budgetError,
+    refetch: refetchBudget,
+  } = useBudgetData(hasServerFinanceData ? null : (data.project?.id || null));
 
   const {
     isEditing,
@@ -111,7 +117,14 @@ export const ClientCard = ({ data, admins }: IClientCardProps) => {
             admins={admins}
           />
         ) : (
-          <CardHeader data={displayData} role="admin" managerName={managerName} />
+          <CardHeader
+            data={displayData}
+            role="admin"
+            managerName={managerName}
+            budgetData={budgetData}
+            budgetLoading={budgetLoading}
+            budgetError={budgetError}
+          />
         )}
 
         <ClientInvite

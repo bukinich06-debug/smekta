@@ -5,14 +5,25 @@ import { formatDate } from '../helpers/formatDate';
 import { ProjectStatusBadge } from '@/components/project-status-badge';
 import { CardHeaderSection, CardHeaderField } from './cardHeaderSection';
 import { CardHeaderBudget } from './cardHeaderBudget';
-import { useBudgetData } from '../hooks/useBudgetData';
 
 type ICardHeaderRole = 'admin' | 'client';
+
+interface IBudgetData {
+  estimateTotal: number;
+  receivedTotal: number;
+  masteredTotal: number;
+  balanceOnHand: number;
+  dueNow: number;
+  stillNeededForWorks: number;
+}
 
 interface ICardHeaderProps {
   data: IClientCardDetails;
   role: ICardHeaderRole;
   managerName?: string;
+  budgetData?: IBudgetData | null;
+  budgetLoading?: boolean;
+  budgetError?: string | null;
 }
 
 const ForemanBlock = ({ manager }: { manager: IProjectManager | null }) => (
@@ -56,15 +67,19 @@ const ObjectBlock = ({ data }: { data: IClientCardDetails }) => {
   );
 };
 
-export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
-  const hasFinanceData = data.estimateTotal !== null;
-  const { data: budgetData, loading, error } = useBudgetData(
-    hasFinanceData ? null : (data.project?.id || null)
-  );
-
+export const CardHeader = ({
+  data,
+  role,
+  managerName,
+  budgetData: externalBudgetData,
+  budgetLoading = false,
+  budgetError = null,
+}: ICardHeaderProps) => {
   if (!data.project) return null;
 
-  const financeData = hasFinanceData
+  const hasServerFinanceData = data.estimateTotal !== null;
+
+  const financeData = hasServerFinanceData
     ? {
         estimateTotal: data.estimateTotal ?? 0,
         receivedTotal: data.receivedTotal ?? 0,
@@ -73,7 +88,7 @@ export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
         dueNow: data.dueNow ?? 0,
         stillNeededForWorks: data.stillNeededForWorks ?? 0,
       }
-    : budgetData;
+    : externalBudgetData;
 
   return (
     <div className="mb-6 space-y-4">
@@ -88,8 +103,8 @@ export const CardHeader = ({ data, role, managerName }: ICardHeaderProps) => {
           balanceOnHand={financeData?.balanceOnHand ?? 0}
           dueNow={financeData?.dueNow ?? 0}
           stillNeededForWorks={financeData?.stillNeededForWorks ?? 0}
-          loading={!hasFinanceData && loading}
-          error={!hasFinanceData ? error : null}
+          loading={!hasServerFinanceData && budgetLoading}
+          error={!hasServerFinanceData ? budgetError : null}
         />
       </div>
       {role === 'admin' && managerName && (

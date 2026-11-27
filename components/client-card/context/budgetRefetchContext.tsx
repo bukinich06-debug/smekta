@@ -10,7 +10,7 @@ const BudgetRefetchContext = createContext<IBudgetRefetchContext | null>(null);
 
 export const useBudgetRefetch = () => {
   const context = useContext(BudgetRefetchContext);
-  if (!context) throw new Error('useBudgetRefetch must be used within BudgetRefetchProvider');
+  if (!context) return { refetch: () => {} };
   return context;
 };
 

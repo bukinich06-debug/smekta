@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/components/shared/api';
 import type { IProjectEstimate, IEstimateSection, IEstimateItem } from '@/domain/estimates';
+import { useBudgetRefetch } from '@/components/client-card/context/budgetRefetchContext';
 
 export const useEstimate = (projectId: number) => {
   const router = useRouter();
+  const { refetch: refetchBudget } = useBudgetRefetch();
   const [data, setData] = useState<IProjectEstimate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,6 +144,7 @@ export const useEstimate = (projectId: number) => {
       );
       setSuccess('Позиция добавлена');
       await reloadSilently();
+      refetchBudget();
     } catch (err: any) {
       setError(err.message || 'Ошибка при создании позиции');
     }
@@ -171,6 +174,7 @@ export const useEstimate = (projectId: number) => {
       );
       setSuccess('Позиция обновлена');
       await reloadSilently();
+      refetchBudget();
     } catch (err: any) {
       setError(err.message || 'Ошибка при обновлении позиции');
     }
@@ -188,6 +192,7 @@ export const useEstimate = (projectId: number) => {
       );
       setSuccess('Позиция удалена');
       await reloadSilently();
+      refetchBudget();
     } catch (err: any) {
       setError(err.message || 'Ошибка при удалении позиции');
     }
@@ -220,6 +225,7 @@ export const useEstimate = (projectId: number) => {
         }
       );
       await reloadSilently();
+      refetchBudget();
     } catch (err: any) {
       setError(err.message || 'Ошибка при изменении статуса');
     }

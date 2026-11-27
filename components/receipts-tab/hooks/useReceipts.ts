@@ -8,9 +8,11 @@ import type { IFile } from '@/domain/files';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IReceiptFormValues } from '../ui/receiptForm';
 import { filterReceiptsByStatus, sortReceiptsByDate } from '../helpers/filterReceipts';
+import { useBudgetRefetch } from '@/components/client-card/context/budgetRefetchContext';
 
 export const useReceipts = (projectId: number) => {
   const router = useRouter();
+  const { refetch: refetchBudget } = useBudgetRefetch();
   const [data, setData] = useState<IProjectReceipts | null>(null);
   const [attachments, setAttachments] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +95,7 @@ export const useReceipts = (projectId: number) => {
       await fn();
       setSuccess(successMsg);
       await reloadSilently();
+      refetchBudget();
     } catch (err: any) {
       setError(err.message || 'Ошибка операции');
     } finally {
