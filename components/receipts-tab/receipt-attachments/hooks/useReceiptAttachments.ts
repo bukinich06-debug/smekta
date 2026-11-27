@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { IFile } from '@/domain/files';
 
+import { apiFetch } from '@/components/shared/api';
+
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-import { listReceiptFiles } from '@/services/files/listReceiptFiles';
-import { uploadReceiptFile } from '@/services/files/uploadReceiptFile';
-import { deleteReceiptFile } from '@/services/files/deleteReceiptFile';
 
 interface IUseReceiptAttachmentsParams {
   receiptId: number;
@@ -28,7 +27,7 @@ export const useReceiptAttachments = ({
     setLoading(true);
     setError(null);
     try {
-      const list = await listReceiptFiles(receiptId);
+      const list = await apiFetch<IFile[]>(`/api/projects/0/receipts/${receiptId}/files`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений чека:', err);
@@ -45,7 +44,7 @@ export const useReceiptAttachments = ({
       setLoading(true);
       setError(null);
       try {
-        const list = await listReceiptFiles(receiptId);
+        const list = await apiFetch<IFile[]>(`/api/projects/0/receipts/${receiptId}/files`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -85,22 +84,30 @@ export const useReceiptAttachments = ({
     formData.set('file', file);
     if (paymentId !== null) formData.set('paymentId', String(paymentId));
 
-    const result = await uploadReceiptFile(formData);
-    setUploading(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось загрузить файл');
+    try {
+      await fetch(`/api/projects/0/receipts/${receiptId}/files`, {
+        method: 'POST',
+        body: formData,
+      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+    } catch (err) {
+      setUploading(false);
+      setError('Не удалось загрузить файл');
       return;
     }
+    
+    setUploading(false);
 
     await load();
   };
 
   const remove = async (fileId: number) => {
     setError(null);
-    const result = await deleteReceiptFile(fileId);
-    if (!result.ok) {
-      setError(result.error || 'Не удалось удалить файл');
+    try {
+      await apiFetch(`/api/projects/0/receipts/${receiptId}/files/${fileId}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      setError('Не удалось удалить файл');
       return;
     }
 

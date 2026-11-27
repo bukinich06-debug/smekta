@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { IFile, PhotoAlbum } from '@/domain/files';
 import { MAX_PHOTO_FILE_SIZE_BYTES } from '@/domain/files';
-import { deletePhotoFile } from '@/services/files/deletePhotoFile';
-import { listProjectPhotos } from '@/services/files/listProjectPhotos';
-import { updatePhotoFile } from '@/services/files/updatePhotoFile';
-import { uploadPhotoFile } from '@/services/files/uploadPhotoFile';
+import { apiFetch } from '@/components/shared/api';
 
 interface IUseProjectPhotosParams {
   projectId: number;
@@ -24,7 +21,7 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
     setLoading(true);
     setError(null);
     try {
-      const list = await listProjectPhotos(projectId);
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/files/photos`);
       setPhotos(list);
     } catch (err) {
       console.error('Ошибка загрузки фото:', err);
@@ -41,7 +38,7 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
       setLoading(true);
       setError(null);
       try {
-        const list = await listProjectPhotos(projectId);
+        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/files/photos`);
         if (!cancelled) setPhotos(list);
       } catch (err) {
         if (!cancelled) {
@@ -78,12 +75,14 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
       formData.set('album', album);
       formData.set('file', file);
 
-      const result = await uploadPhotoFile(formData);
-      if (!result.ok) {
-        setUploading(false);
-        setError(result.error || 'Не удалось загрузить фото');
-        return;
-      }
+      await fetch(`/api/projects/${projectId}/files/photos`, {
+        method: 'POST',
+        body: formData,
+      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+    } catch (err) {
+      setUploading(false);
+      setError('Не удалось загрузить фото');
+      return;
     }
 
     setUploading(false);
@@ -92,9 +91,12 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
 
   const remove = async (fileId: number) => {
     setError(null);
-    const result = await deletePhotoFile(fileId);
-    if (!result.ok) {
-      setError(result.error || 'Не удалось удалить фото');
+    try {
+      await apiFetch(`/api/projects/${projectId}/files/photos/${fileId}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      setError('Не удалось удалить фото');
       return;
     }
 
@@ -105,13 +107,17 @@ export const useProjectPhotos = ({ projectId, readOnly }: IUseProjectPhotosParam
     setSavingId(fileId);
     setError(null);
 
-    const result = await updatePhotoFile({ fileId, caption, album });
-    setSavingId(null);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось сохранить изменения');
+    try {
+      await apiFetch(`/api/projects/${projectId}/files/photos/${fileId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ caption, album }),
+      });
+    } catch (err) {
+      setSavingId(null);
+      setError('Не удалось сохранить изменения');
       return;
     }
+    setSavingId(null);
 
     await load();
   };

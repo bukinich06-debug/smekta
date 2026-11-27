@@ -4,11 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ActStatus } from '@prisma/client';
 import type { IProjectActs, IAct } from '@/domain/acts';
-import { getProjectActs } from '@/services/acts/getProjectActs';
-import { createAct } from '@/services/acts/createAct';
-import { updateAct } from '@/services/acts/updateAct';
-import { deleteAct } from '@/services/acts/deleteAct';
-import { updateActStatus } from '@/services/acts/updateActStatus';
+import { apiFetch } from '@/components/shared/api';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IActFormValues } from '../ui/actForm';
 
@@ -26,7 +22,7 @@ export const useActs = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const acts = await getProjectActs(projectId);
+      const acts = await apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`);
       setData(acts);
     } catch (err) {
       console.error('Ошибка при загрузке актов:', err);
@@ -43,7 +39,7 @@ export const useActs = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const acts = await getProjectActs(projectId);
+        const acts = await apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`);
         if (!cancelled) setData(acts);
       } catch (err) {
         if (!cancelled) {
@@ -99,7 +95,17 @@ export const useActs = (projectId: number) => {
       return;
     }
 
-    await runAction(() => createAct({ projectId, ...parsed }), 'Акт создан');
+    await runAction(async () => {
+      try {
+        await apiFetch<{ act: IAct }>(`/api/projects/${projectId}/acts`, {
+          method: 'POST',
+          body: JSON.stringify(parsed),
+        });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Ошибка создания' };
+      }
+    }, 'Акт создан');
     setShowCreateForm(false);
   };
 
@@ -112,16 +118,43 @@ export const useActs = (projectId: number) => {
       return;
     }
 
-    await runAction(() => updateAct(editingAct.id, parsed), 'Акт обновлён');
+    await runAction(async () => {
+      try {
+        await apiFetch<{ act: IAct }>(`/api/projects/${projectId}/acts/${editingAct.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(parsed),
+        });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Ошибка обновления' };
+      }
+    }, 'Акт обновлён');
     setEditingAct(null);
   };
 
   const removeAct = async (id: number) => {
-    await runAction(() => deleteAct(id), 'Акт удалён');
+    await runAction(async () => {
+      try {
+        await apiFetch(`/api/projects/${projectId}/acts/${id}`, { method: 'DELETE' });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Ошибка удаления' };
+      }
+    }, 'Акт удалён');
   };
 
   const changeStatus = async (id: number, status: ActStatus) => {
-    await runAction(() => updateActStatus(id, status), 'Статус акта изменён');
+    await runAction(async () => {
+      try {
+        await apiFetch<{ act: IAct }>(`/api/projects/${projectId}/acts/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status }),
+        });
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Ошибка смены статуса' };
+      }
+    }, 'Статус акта изменён');
   };
 
   const clearMessages = () => {

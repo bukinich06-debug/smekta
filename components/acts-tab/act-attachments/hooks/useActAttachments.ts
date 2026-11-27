@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { IFile } from '@/domain/files';
-import { deleteActFile } from '@/services/files/deleteActFile';
-import { listActFiles } from '@/services/files/listActFiles';
-import { uploadActFile } from '@/services/files/uploadActFile';
+import { apiFetch } from '@/components/shared/api';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
@@ -23,7 +21,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     setLoading(true);
     setError(null);
     try {
-      const list = await listActFiles(actId);
+      const list = await apiFetch<IFile[]>(`/api/projects/0/acts/${actId}/files`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений акта:', err);
@@ -40,7 +38,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
       setLoading(true);
       setError(null);
       try {
-        const list = await listActFiles(actId);
+        const list = await apiFetch<IFile[]>(`/api/projects/0/acts/${actId}/files`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -72,25 +70,32 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     setError(null);
 
     const formData = new FormData();
-    formData.set('actId', String(actId));
     formData.set('file', file);
 
-    const result = await uploadActFile(formData);
-    setUploading(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось загрузить файл');
+    try {
+      await fetch(`/api/projects/0/acts/${actId}/files`, {
+        method: 'POST',
+        body: formData,
+      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+    } catch (err) {
+      setUploading(false);
+      setError('Не удалось загрузить файл');
       return;
     }
+    
+    setUploading(false);
 
     await load();
   };
 
   const remove = async (fileId: number) => {
     setError(null);
-    const result = await deleteActFile(fileId);
-    if (!result.ok) {
-      setError(result.error || 'Не удалось удалить файл');
+    try {
+      await apiFetch(`/api/projects/0/acts/${actId}/files/${fileId}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      setError('Не удалось удалить файл');
       return;
     }
 
