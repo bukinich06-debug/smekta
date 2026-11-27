@@ -10,14 +10,25 @@ export const CardHeaderSection = ({ title, children }: ICardHeaderSectionProps) 
   </section>
 );
 
+import { Tooltip } from '@/components/shared/tooltip';
+
 interface ICardHeaderFieldProps {
   label: string;
   children: React.ReactNode;
+  hint?: string;
 }
 
-export const CardHeaderField = ({ label, children }: ICardHeaderFieldProps) => (
+export const CardHeaderField = ({ label, children, hint }: ICardHeaderFieldProps) => (
   <div>
-    <p className="text-sm text-gray-500">{label}</p>
+    <p className="text-sm text-gray-500">
+      {hint ? (
+        <Tooltip content={hint}>
+          <span className="border-b border-dotted border-gray-400">{label}</span>
+        </Tooltip>
+      ) : (
+        label
+      )}
+    </p>
     <div className="text-base font-semibold text-gray-900">{children}</div>
   </div>
 );

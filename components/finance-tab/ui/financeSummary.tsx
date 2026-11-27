@@ -1,5 +1,6 @@
 import type { IProjectFinanceSummary } from '@/domain/finance';
 import { formatMoney } from '../helpers/formatMoney';
+import { Tooltip } from '@/components/shared/tooltip';
 
 interface IFinanceSummaryProps {
   summary: IProjectFinanceSummary;
@@ -11,7 +12,11 @@ export const FinanceSummary = ({ summary, showStillNeeded }: IFinanceSummaryProp
     <h3 className="text-lg font-semibold text-gray-900 mb-3">Бюджет проекта</h3>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="rounded-lg border border-gray-200 p-4">
-        <p className="text-sm text-gray-500">Смета работ</p>
+        <p className="text-sm text-gray-500">
+          <Tooltip content="Сумма позиций сметы плюс согласованные и выполненные допработы, включённые в общий бюджет. Во вкладке «Смета» показана сумма без допработ.">
+            <span className="border-b border-dotted border-gray-400">Смета работ</span>
+          </Tooltip>
+        </p>
         <p className="text-xl font-semibold text-gray-900">{formatMoney(summary.estimateTotal)}</p>
       </div>
       <div className="rounded-lg border border-gray-200 p-4">

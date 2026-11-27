@@ -85,8 +85,9 @@ export const ClientReceiptsTab = ({ data }: IClientReceiptsTabProps) => {
           onPayFull={() => {}}
           onPayPartial={() => {}}
           onDeletePayment={() => {}}
-          allFiles={attachmentsLoading ? [] : attachments}
+          allFiles={attachments}
           onReloadFiles={reloadAttachments}
+          filesLoading={attachmentsLoading}
         />
       ))}
     </div>

@@ -21,7 +21,12 @@ export const CardHeaderBudget = ({
   <CardHeaderSection title="Бюджет">
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <CardHeaderField label="Смета работ">{formatMoney(estimateTotal)}</CardHeaderField>
+        <CardHeaderField
+          label="Смета работ"
+          hint="Сумма позиций сметы плюс согласованные и выполненные допработы, включённые в общий бюджет. Во вкладке «Смета» показана сумма без допработ."
+        >
+          {formatMoney(estimateTotal)}
+        </CardHeaderField>
         <CardHeaderField label="Освоено">{formatMoney(masteredTotal)}</CardHeaderField>
       </div>
       <div className="grid grid-cols-2 gap-4">

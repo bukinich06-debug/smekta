@@ -33,6 +33,7 @@ interface IActRowProps {
   onStatusChange: (id: number, status: ActStatus) => void;
   allFiles: IFile[];
   onReloadFiles: () => Promise<void>;
+  filesLoading?: boolean;
 }
 
 export const ActRow = ({
@@ -44,6 +45,7 @@ export const ActRow = ({
   onStatusChange,
   allFiles,
   onReloadFiles,
+  filesLoading = false,
 }: IActRowProps) => {
   const [expanded, setExpanded] = useState(false);
   const [history, setHistory] = useState<IActStatusHistoryItem[]>([]);
@@ -163,7 +165,7 @@ export const ActRow = ({
 
           <div>
             <p className="text-sm font-medium text-gray-800 mb-2">Файлы акта</p>
-            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} />
+            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} filesLoading={filesLoading} />
           </div>
         </div>
       )}
