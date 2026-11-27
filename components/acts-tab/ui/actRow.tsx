@@ -30,6 +30,8 @@ interface IActRowProps {
   onEdit: (act: IActRowData) => void;
   onDelete: (id: number) => void;
   onStatusChange: (id: number, status: ActStatus) => void;
+  allFiles: IFile[];
+  onReloadFiles: () => Promise<void>;
 }
 
 export const ActRow = ({
@@ -39,6 +41,8 @@ export const ActRow = ({
   onEdit,
   onDelete,
   onStatusChange,
+  allFiles,
+  onReloadFiles,
 }: IActRowProps) => {
   const [expanded, setExpanded] = useState(false);
   const [history, setHistory] = useState<IActStatusHistoryItem[]>([]);

@@ -121,6 +121,8 @@ export const ReceiptRow = ({
           onPayFull={onPayFull}
           onPayPartial={onPayPartial}
           onDeletePayment={onDeletePayment}
+          allFiles={allFiles}
+          onReloadFiles={onReloadFiles}
         />
       )}
 
@@ -137,6 +139,8 @@ export const ReceiptRow = ({
                 readOnly
                 title="Документы по оплате"
                 compact
+                allFiles={allFiles}
+                onReload={onReloadFiles}
               />
             </li>
           ))}
