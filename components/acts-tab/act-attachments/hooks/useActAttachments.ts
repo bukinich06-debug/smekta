@@ -22,7 +22,7 @@ export const useActAttachments = ({ projectId, actId, readOnly }: IUseActAttachm
     setLoading(true);
     setError(null);
     try {
-      const list = await apiFetch<IFile[]>(`/api/projects/0/acts/${actId}/files`);
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/acts/${actId}/files`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений акта:', err);
@@ -30,7 +30,7 @@ export const useActAttachments = ({ projectId, actId, readOnly }: IUseActAttachm
     } finally {
       setLoading(false);
     }
-  }, [actId]);
+  }, [projectId, actId]);
 
   useEffect(() => {
     let cancelled = false;
