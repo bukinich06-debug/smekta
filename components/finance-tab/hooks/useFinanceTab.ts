@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { IFinanceHistoryItem, IProjectFinance, IProjectInflow, IWalletTransfer } from '@/domain/finance';
-import { getProjectFinance } from '@/services/finance/getProjectFinance';
-import { listProjectFinanceHistory } from '@/services/finance/listProjectFinanceHistory';
-import { createInflow } from '@/services/finance/createInflow';
-import { updateInflow } from '@/services/finance/updateInflow';
-import { deleteInflow } from '@/services/finance/deleteInflow';
-import { createWalletTransfer } from '@/services/finance/createWalletTransfer';
-import { updateWalletTransfer } from '@/services/finance/updateWalletTransfer';
-import { deleteWalletTransfer } from '@/services/finance/deleteWalletTransfer';
+import { apiFetch } from '@/components/shared/api';
 
 export const useFinanceTab = (projectId: number) => {
   const [data, setData] = useState<IProjectFinance | null>(null);
@@ -25,8 +18,8 @@ export const useFinanceTab = (projectId: number) => {
 
   const reload = useCallback(async () => {
     const [finance, historyRows] = await Promise.all([
-      getProjectFinance(projectId),
-      listProjectFinanceHistory(projectId),
+      apiFetch<IProjectFinance>(`/api/projects/${projectId}/finance`),
+      apiFetch<IFinanceHistoryItem[]>(`/api/projects/${projectId}/finance/history`),
     ]);
     setData(finance);
     setHistory(historyRows);
@@ -115,12 +108,14 @@ export const useFinanceTab = (projectId: number) => {
     }) =>
       runAction(
         () =>
-          createInflow({
-            projectId,
-            date: payload.date,
-            amount: payload.amount,
-            purpose: payload.purpose,
-            comment: payload.comment,
+          apiFetch<{ inflow: IProjectInflow }>(`/api/projects/${projectId}/finance/inflows`, {
+            method: 'POST',
+            body: JSON.stringify({
+              date: payload.date,
+              amount: payload.amount,
+              purpose: payload.purpose,
+              comment: payload.comment,
+            }),
           }),
         'Поступление добавлено'
       ),
@@ -135,16 +130,19 @@ export const useFinanceTab = (projectId: number) => {
     ) =>
       runAction(
         () =>
-          updateInflow(id, {
-            date: payload.date,
-            amount: payload.amount,
-            purpose: payload.purpose,
-            comment: payload.comment,
+          apiFetch<{ inflow: IProjectInflow }>(`/api/projects/${projectId}/finance/inflows/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              date: payload.date,
+              amount: payload.amount,
+              purpose: payload.purpose,
+              comment: payload.comment,
+            }),
           }),
         'Поступление сохранено'
       ),
     submitDeleteInflow: (id: number) =>
-      runAction(() => deleteInflow(id), 'Поступление удалено'),
+      runAction(() => apiFetch(`/api/projects/${projectId}/finance/inflows/${id}`, { method: 'DELETE' }), 'Поступление удалено'),
     submitCreateTransfer: (payload: {
       date: Date;
       amount: number;
@@ -154,13 +152,15 @@ export const useFinanceTab = (projectId: number) => {
     }) =>
       runAction(
         () =>
-          createWalletTransfer({
-            projectId,
-            date: payload.date,
-            amount: payload.amount,
-            fromWallet: payload.fromWallet,
-            toWallet: payload.toWallet,
-            comment: payload.comment,
+          apiFetch<{ transfer: IWalletTransfer }>(`/api/projects/${projectId}/finance/transfers`, {
+            method: 'POST',
+            body: JSON.stringify({
+              date: payload.date,
+              amount: payload.amount,
+              fromWallet: payload.fromWallet,
+              toWallet: payload.toWallet,
+              comment: payload.comment,
+            }),
           }),
         'Перевод добавлен'
       ),
@@ -176,16 +176,19 @@ export const useFinanceTab = (projectId: number) => {
     ) =>
       runAction(
         () =>
-          updateWalletTransfer(id, {
-            date: payload.date,
-            amount: payload.amount,
-            fromWallet: payload.fromWallet,
-            toWallet: payload.toWallet,
-            comment: payload.comment,
+          apiFetch<{ transfer: IWalletTransfer }>(`/api/projects/${projectId}/finance/transfers/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              date: payload.date,
+              amount: payload.amount,
+              fromWallet: payload.fromWallet,
+              toWallet: payload.toWallet,
+              comment: payload.comment,
+            }),
           }),
         'Перевод сохранён'
       ),
     submitDeleteTransfer: (id: number) =>
-      runAction(() => deleteWalletTransfer(id), 'Перевод удалён'),
+      runAction(() => apiFetch(`/api/projects/${projectId}/finance/transfers/${id}`, { method: 'DELETE' }), 'Перевод удалён'),
   };
 };

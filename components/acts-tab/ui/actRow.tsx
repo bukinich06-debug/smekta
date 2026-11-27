@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import type { IActLineItem, IActStatusHistoryItem } from '@/domain/acts';
 import { getActStatusLabel } from '@/domain/acts';
 import type { ActStatus } from '@prisma/client';
-import { listActStatusHistory } from '@/services/acts/listActStatusHistory';
+import { apiFetch } from '@/components/shared/api';
+import type { IActStatusHistoryItem } from '@/domain/acts';
 import { formatDate } from '../helpers/formatDate';
 import { formatMoney } from '../helpers/formatMoney';
 import { ActStatusBadge } from './actStatusBadge';
@@ -51,7 +52,7 @@ export const ActRow = ({
     const load = async () => {
       setHistoryLoading(true);
       try {
-        const rows = await listActStatusHistory(act.id);
+        const rows = await apiFetch<IActStatusHistoryItem[]>(`/api/projects/${act.projectId}/acts/${act.id}/history`);
         if (!cancelled) setHistory(rows);
       } catch (err) {
         console.error('Ошибка загрузки истории акта:', err);

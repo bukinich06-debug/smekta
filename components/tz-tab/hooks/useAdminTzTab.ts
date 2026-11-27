@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { IProjectTz, IProjectTzHistoryItem } from '@/domain/project-tz';
-import { getProjectTz } from '@/services/project-tz/getProjectTz';
-import { listProjectTzHistory } from '@/services/project-tz/listProjectTzHistory';
-import { updateProjectTz } from '@/services/project-tz/updateProjectTz';
+
+
+import { apiFetch } from '@/components/shared/api';
 
 export const useAdminTzTab = (projectId: number) => {
   const router = useRouter();
