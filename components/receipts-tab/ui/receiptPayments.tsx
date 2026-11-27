@@ -75,6 +75,7 @@ export const ReceiptPayments = ({
                 </button>
               )}
               <ReceiptAttachments
+                projectId={receipt.projectId}
                 receiptId={receipt.id}
                 paymentId={payment.id}
                 title="Документы по оплате"

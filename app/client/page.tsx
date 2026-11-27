@@ -18,16 +18,21 @@ const ClientPage = async () => {
 
   const data = await getClientCabinet(session.user.id);
 
-  const receiptsResult = data?.project ? await getClientProjectReceipts(session.user.id) : null;
-  const receipts = receiptsResult?.ok && receiptsResult.data ? receiptsResult.data : null;
-
-  const [estimate, tz, extraWorks, acts, finance] = await Promise.all([
+  const [receiptsResult, estimateResult, tzResult, extraWorksResult, actsResult, financeResult] = await Promise.all([
+    data?.project ? getClientProjectReceipts(session.user.id) : Promise.resolve(null),
     data?.project ? getClientProjectEstimate(session.user.id) : Promise.resolve(null),
-    data?.project ? getClientProjectTz() : Promise.resolve(null),
-    data?.project ? getClientProjectExtraWorks() : Promise.resolve(null),
-    data?.project ? getClientProjectActs() : Promise.resolve(null),
-    data?.project ? getClientProjectFinance() : Promise.resolve(null),
+    data?.project ? getClientProjectTz(session.user.id) : Promise.resolve(null),
+    data?.project ? getClientProjectExtraWorks(session.user.id) : Promise.resolve(null),
+    data?.project ? getClientProjectActs(session.user.id) : Promise.resolve(null),
+    data?.project ? getClientProjectFinance(session.user.id) : Promise.resolve(null),
   ]);
+
+  const receipts = (receiptsResult?.ok && receiptsResult.data) ? receiptsResult.data : null;
+  const estimate = estimateResult;
+  const tz = (tzResult && tzResult.ok ? tzResult.data : null) ?? null;
+  const extraWorks = (extraWorksResult && extraWorksResult.ok ? extraWorksResult.data : null) ?? null;
+  const acts = (actsResult && actsResult.ok ? actsResult.data : null) ?? null;
+  const finance = (financeResult && financeResult.ok ? financeResult.data : null) ?? null;
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>

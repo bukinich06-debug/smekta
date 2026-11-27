@@ -1,19 +1,18 @@
-'use server';
+import 'server-only';
 
 import { dbClient } from '@/data/shared/dbClient';
 import { financeRepository } from '@/data/finance';
 import type { IClientProjectFinance } from '@/domain/finance';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getClientProjectFinance = async (): Promise<IClientProjectFinance | null> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IClientProjectFinance | null;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'CLIENT') redirect('/admin/clients');
-
+export const getClientProjectFinance = async (userId: number): Promise<IResult> => {
   const client = await dbClient.client.findFirst({
-    where: { userId: session.user.id },
+    where: { userId },
     include: {
       projects: {
         take: 1,
@@ -24,7 +23,8 @@ export const getClientProjectFinance = async (): Promise<IClientProjectFinance |
   });
 
   const projectId = client?.projects[0]?.id;
-  if (!projectId) return null;
+  if (!projectId) return { ok: false, error: 'Проект не найден' };
 
-  return await financeRepository.getClientByProjectId(projectId);
+  const data = await financeRepository.getClientByProjectId(projectId);
+  return { ok: true, data };
 };

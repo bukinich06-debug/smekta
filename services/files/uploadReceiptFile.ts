@@ -1,12 +1,10 @@
-'use server';
+import 'server-only';
 
 import { put } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import { receiptRepository } from '@/data/receipts';
 import { validateReceiptFileMeta } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateReceiptPaths } from '@/services/receipts/helpers/revalidateReceiptPaths';
 import { assertReceiptAdminWriteAccess } from './helpers/assertReceiptFileAccess';
 import { buildReceiptBlobPathname } from './helpers/buildReceiptBlobPathname';
@@ -18,12 +16,7 @@ interface IResult {
 
 const isPhotoMime = (mimeType: string) => mimeType === 'image/jpeg' || mimeType === 'image/png';
 
-export const uploadReceiptFile = async (formData: FormData): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const uploadReceiptFile = async (formData: FormData, userId: number): Promise<IResult> => {
   const receiptIdRaw = formData.get('receiptId');
   const paymentIdRaw = formData.get('paymentId');
   const file = formData.get('file');
@@ -40,7 +33,7 @@ export const uploadReceiptFile = async (formData: FormData): Promise<IResult> =>
     paymentId = parsed;
   }
 
-  const access = await assertReceiptAdminWriteAccess(session, receiptId);
+  const access = await assertReceiptAdminWriteAccess(userId, receiptId);
   if (!access.ok || access.projectId === undefined) return { ok: false, error: access.error || 'Нет доступа' };
 
   if (paymentId !== null) {
@@ -76,7 +69,7 @@ export const uploadReceiptFile = async (formData: FormData): Promise<IResult> =>
       originalName: file.name,
       mimeType: file.type,
       size: file.size,
-      uploadedById: session.user.id,
+      uploadedById: userId,
       isPhoto: isPhotoMime(file.type),
     });
 

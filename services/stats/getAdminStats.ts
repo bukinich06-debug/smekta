@@ -1,15 +1,15 @@
-'use server';
+import 'server-only';
 
-import { redirect } from 'next/navigation';
 import { statsRepository } from '@/data/stats';
 import type { IAdminStats, IAdminStatsFilters } from '@/domain/stats';
-import { getSession } from '@/services/auth/getSession';
 
-export const getAdminStats = async (filters: IAdminStatsFilters): Promise<IAdminStats> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IAdminStats;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
-  return await statsRepository.getAdminStats(filters, session.user.id);
+export const getAdminStats = async (filters: IAdminStatsFilters, userId: number): Promise<IResult> => {
+  const data = await statsRepository.getAdminStats(filters, userId);
+  return { ok: true, data };
 };

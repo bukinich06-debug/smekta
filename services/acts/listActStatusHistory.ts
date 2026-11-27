@@ -1,19 +1,20 @@
-'use server';
+import 'server-only';
 
 import { actRepository } from '@/data/acts';
 import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import type { IActStatusHistoryItem } from '@/domain/acts';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const listActStatusHistory = async (actId: number): Promise<IActStatusHistoryItem[]> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IActStatusHistoryItem[];
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const listActStatusHistory = async (actId: number, userId: number): Promise<IResult> => {
   const projectId = await actRepository.getProjectIdByActId(actId);
-  if (!projectId || !(await ownsProject(session.user.id, projectId))) return [];
+  if (!projectId || !(await ownsProject(userId, projectId)))
+    return { ok: false, error: 'Акт не найден' };
 
-  return await actRepository.listStatusHistory(actId);
+  const data = await actRepository.listStatusHistory(actId);
+  return { ok: true, data };
 };

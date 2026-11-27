@@ -5,13 +5,15 @@ import { useActAttachments } from '../hooks/useActAttachments';
 import { ActAttachmentItem } from './actAttachmentItem';
 
 interface IActAttachmentsProps {
+  projectId: number;
   actId: number;
   readOnly?: boolean;
 }
 
-export const ActAttachments = ({ actId, readOnly }: IActAttachmentsProps) => {
+export const ActAttachments = ({ projectId, actId, readOnly }: IActAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { files, loading, uploading, error, upload, remove, readOnly: isReadOnly } = useActAttachments({
+    projectId,
     actId,
     readOnly,
   });

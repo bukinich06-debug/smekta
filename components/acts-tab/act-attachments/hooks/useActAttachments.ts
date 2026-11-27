@@ -2,18 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { IFile } from '@/domain/files';
-import { deleteActFile } from '@/services/files/deleteActFile';
-import { listActFiles } from '@/services/files/listActFiles';
-import { uploadActFile } from '@/services/files/uploadActFile';
+import { apiFetch } from '@/components/shared/api';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 interface IUseActAttachmentsParams {
+  projectId: number;
   actId: number;
   readOnly?: boolean;
 }
 
-export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams) => {
+export const useActAttachments = ({ projectId, actId, readOnly }: IUseActAttachmentsParams) => {
   const [files, setFiles] = useState<IFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -23,7 +22,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     setLoading(true);
     setError(null);
     try {
-      const list = await listActFiles(actId);
+      const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/acts/${actId}/files`);
       setFiles(list);
     } catch (err) {
       console.error('Ошибка загрузки вложений акта:', err);
@@ -31,7 +30,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     } finally {
       setLoading(false);
     }
-  }, [actId]);
+  }, [projectId, actId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +39,7 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
       setLoading(true);
       setError(null);
       try {
-        const list = await listActFiles(actId);
+        const list = await apiFetch<IFile[]>(`/api/projects/${projectId}/acts/${actId}/files`);
         if (!cancelled) setFiles(list);
       } catch (err) {
         if (!cancelled) {
@@ -72,25 +71,32 @@ export const useActAttachments = ({ actId, readOnly }: IUseActAttachmentsParams)
     setError(null);
 
     const formData = new FormData();
-    formData.set('actId', String(actId));
     formData.set('file', file);
 
-    const result = await uploadActFile(formData);
-    setUploading(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось загрузить файл');
+    try {
+      await fetch(`/api/projects/${projectId}/acts/${actId}/files`, {
+        method: 'POST',
+        body: formData,
+      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+    } catch (err) {
+      setUploading(false);
+      setError('Не удалось загрузить файл');
       return;
     }
+    
+    setUploading(false);
 
     await load();
   };
 
   const remove = async (fileId: number) => {
     setError(null);
-    const result = await deleteActFile(fileId);
-    if (!result.ok) {
-      setError(result.error || 'Не удалось удалить файл');
+    try {
+      await apiFetch(`/api/projects/${projectId}/acts/${actId}/files/${fileId}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      setError('Не удалось удалить файл');
       return;
     }
 

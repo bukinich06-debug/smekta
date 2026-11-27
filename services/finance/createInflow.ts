@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { financeRepository } from '@/data/finance';
 import { validateCreateInflow } from '@/domain/finance';
 import type { ICreateInflowInput, IProjectInflow } from '@/domain/finance';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
 import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
@@ -15,20 +13,15 @@ interface IResult {
   error?: string;
 }
 
-export const createInflow = async (input: ICreateInflowInput): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
-  if (!(await ownsProject(session.user.id, input.projectId)))
+export const createInflow = async (input: ICreateInflowInput, userId: number): Promise<IResult> => {
+  if (!(await ownsProject(userId, input.projectId)))
     return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateCreateInflow(input);
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    const data = await financeRepository.createInflow(input, session.user.id);
+    const data = await financeRepository.createInflow(input, userId);
     revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {

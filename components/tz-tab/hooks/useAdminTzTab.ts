@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { IProjectTz, IProjectTzHistoryItem } from '@/domain/project-tz';
-import { getProjectTz } from '@/services/project-tz/getProjectTz';
-import { listProjectTzHistory } from '@/services/project-tz/listProjectTzHistory';
-import { updateProjectTz } from '@/services/project-tz/updateProjectTz';
+
+
+import { apiFetch } from '@/components/shared/api';
 
 export const useAdminTzTab = (projectId: number) => {
   const router = useRouter();
@@ -22,8 +22,8 @@ export const useAdminTzTab = (projectId: number) => {
     setError(null);
     try {
       const [tzData, historyData] = await Promise.all([
-        getProjectTz(projectId),
-        listProjectTzHistory(projectId),
+        apiFetch<IProjectTz | null>(`/api/projects/${projectId}/project-tz`),
+        apiFetch<IProjectTzHistoryItem[]>(`/api/projects/${projectId}/project-tz/history`),
       ]);
       setTz(tzData);
       setHistory(historyData);
@@ -44,8 +44,8 @@ export const useAdminTzTab = (projectId: number) => {
       setError(null);
       try {
         const [tzData, historyData] = await Promise.all([
-          getProjectTz(projectId),
-          listProjectTzHistory(projectId),
+          apiFetch<IProjectTz | null>(`/api/projects/${projectId}/project-tz`),
+          apiFetch<IProjectTzHistoryItem[]>(`/api/projects/${projectId}/project-tz/history`),
         ]);
         if (cancelled) return;
         setTz(tzData);
@@ -83,18 +83,21 @@ export const useAdminTzTab = (projectId: number) => {
   const save = async () => {
     setSaving(true);
     setError(null);
-    const result = await updateProjectTz(projectId, draft);
-    setSaving(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось сохранить.');
-      return;
+    
+    try {
+      const result = await apiFetch<{ tz: IProjectTz }>(`/api/projects/${projectId}/project-tz`, {
+        method: 'PATCH',
+        body: JSON.stringify({ text: draft }),
+      });
+      if (result.tz) setTz(result.tz);
+      setIsEditing(false);
+      await load();
+      router.refresh();
+    } catch (err) {
+      setError('Не удалось сохранить.');
+    } finally {
+      setSaving(false);
     }
-
-    if (result.data) setTz(result.data);
-    setIsEditing(false);
-    await load();
-    router.refresh();
   };
 
   return {

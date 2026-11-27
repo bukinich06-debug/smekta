@@ -1,11 +1,9 @@
-'use server';
+import 'server-only';
 
 import { put } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import { validateTzFileMeta } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { assertTzAdminWriteAccess } from './helpers/assertTzFileAccess';
 import { buildTzBlobPathname } from './helpers/buildTzBlobPathname';
 import { revalidateTzPaths } from './helpers/revalidateTzPaths';
@@ -17,12 +15,7 @@ interface IResult {
 
 const isPhotoMime = (mimeType: string) => mimeType === 'image/jpeg' || mimeType === 'image/png';
 
-export const uploadTzFile = async (formData: FormData): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const uploadTzFile = async (formData: FormData, userId: number): Promise<IResult> => {
   const projectIdRaw = formData.get('projectId');
   const file = formData.get('file');
 
@@ -31,7 +24,7 @@ export const uploadTzFile = async (formData: FormData): Promise<IResult> => {
   const projectId = typeof projectIdRaw === 'string' ? parseInt(projectIdRaw, 10) : NaN;
   if (isNaN(projectId)) return { ok: false, error: 'Некорректный проект' };
 
-  const access = await assertTzAdminWriteAccess(session, projectId);
+  const access = await assertTzAdminWriteAccess(userId, projectId);
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   const validationError = validateTzFileMeta({ mimeType: file.type, size: file.size });
@@ -56,7 +49,7 @@ export const uploadTzFile = async (formData: FormData): Promise<IResult> => {
       originalName: file.name,
       mimeType: file.type,
       size: file.size,
-      uploadedById: session.user.id,
+      uploadedById: userId,
       isPhoto: isPhotoMime(file.type),
     });
 

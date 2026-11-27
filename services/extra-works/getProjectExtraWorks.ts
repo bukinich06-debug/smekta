@@ -1,18 +1,22 @@
-'use server';
-import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { requireOwnProject } from '@/services/clients/helpers/assertProjectManager';
 import { extraWorkRepository } from '@/data/extra-works';
 import type { IProjectExtraWorks } from '@/domain/extra-works';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const getProjectExtraWorks = async (projectId: number): Promise<IProjectExtraWorks> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IProjectExtraWorks;
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
+export const getProjectExtraWorks = async (projectId: number, userId: number): Promise<IResult> => {
+  try {
+    await requireOwnProject(userId, projectId);
+  } catch {
+    return { ok: false, error: 'Проект не найден' };
+  }
 
-  await requireOwnProject(session.user.id, projectId);
-
-  return await extraWorkRepository.getByProjectId(projectId);
+  const data = await extraWorkRepository.getByProjectId(projectId);
+  return { ok: true, data };
 };

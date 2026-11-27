@@ -1,9 +1,7 @@
-'use server';
+import 'server-only';
 
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { assertTzAdminWriteAccess } from './helpers/assertTzFileAccess';
 import { revalidateTzPaths } from './helpers/revalidateTzPaths';
 
@@ -12,16 +10,11 @@ interface IResult {
   error?: string;
 }
 
-export const deleteTzFile = async (fileId: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteTzFile = async (fileId: number, userId: number): Promise<IResult> => {
   const file = await fileRepository.getById(fileId);
   if (!file || file.tab !== 'TZ') return { ok: false, error: 'Файл не найден' };
 
-  const access = await assertTzAdminWriteAccess(session, file.projectId);
+  const access = await assertTzAdminWriteAccess(userId, file.projectId);
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   try {

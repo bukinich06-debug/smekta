@@ -26,11 +26,13 @@ const AdminStatsPage = async ({ searchParams }: IPageProps) => {
 
   const params = await searchParams;
 
-  const data = await getAdminStats({
+  const result = await getAdminStats({
     status: params.status,
     dateFrom: parseDateParam(params.dateFrom),
     dateTo: parseDateParam(params.dateTo),
-  });
+  }, session.user.id);
+
+  const data = result.ok && result.data ? result.data : null;
 
   return (
     <AdminPageWrapper userName={session.user.name}>

@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { financeRepository } from '@/data/finance';
 import { validateUpdateTransfer } from '@/domain/finance';
 import type { IUpdateTransferInput, IWalletTransfer } from '@/domain/finance';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateFinancePaths } from './helpers/revalidateFinancePaths';
 import { mapFinanceRepositoryError } from './helpers/mapFinanceRepositoryError';
 
@@ -17,15 +15,11 @@ interface IResult {
 
 export const updateWalletTransfer = async (
   id: number,
-  input: IUpdateTransferInput
+  input: IUpdateTransferInput,
+  userId: number
 ): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
   const projectId = await financeRepository.getProjectIdByTransferId(id);
-  if (!projectId || !(await ownsProject(session.user.id, projectId)))
+  if (!projectId || !(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Перевод не найден' };
 
   const current = await financeRepository.getTransferById(id);
@@ -38,7 +32,7 @@ export const updateWalletTransfer = async (
   if (validationError) return { ok: false, error: validationError };
 
   try {
-    const data = await financeRepository.updateTransfer(id, input, session.user.id);
+    const data = await financeRepository.updateTransfer(id, input, userId);
     revalidateFinancePaths();
     return { ok: true, data };
   } catch (error) {

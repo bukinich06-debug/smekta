@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { logout } from '@/services/auth/logout';
+import { authClient } from '@/lib/authClient';
 
 export const useClientLogout = () => {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await logout();
+    await authClient.signOut();
     router.push('/login');
     router.refresh();
   };

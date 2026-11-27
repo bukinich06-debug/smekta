@@ -1,11 +1,9 @@
-'use server';
+import 'server-only';
 
 import { put } from '@vercel/blob';
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
 import { validateActFileMeta } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateActPaths } from '@/services/acts/helpers/revalidateActPaths';
 import { assertActAdminWriteAccess } from './helpers/assertActFileAccess';
 import { buildActBlobPathname } from './helpers/buildActBlobPathname';
@@ -17,12 +15,7 @@ interface IResult {
 
 const isPhotoMime = (mimeType: string) => mimeType === 'image/jpeg' || mimeType === 'image/png';
 
-export const uploadActFile = async (formData: FormData): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const uploadActFile = async (formData: FormData, userId: number): Promise<IResult> => {
   const actIdRaw = formData.get('actId');
   const file = formData.get('file');
 
@@ -31,7 +24,7 @@ export const uploadActFile = async (formData: FormData): Promise<IResult> => {
   const actId = typeof actIdRaw === 'string' ? parseInt(actIdRaw, 10) : NaN;
   if (isNaN(actId)) return { ok: false, error: 'Некорректный акт' };
 
-  const access = await assertActAdminWriteAccess(session, actId);
+  const access = await assertActAdminWriteAccess(userId, actId);
   if (!access.ok || access.projectId === undefined) return { ok: false, error: access.error || 'Нет доступа' };
 
   const validationError = validateActFileMeta({ mimeType: file.type, size: file.size });
@@ -57,7 +50,7 @@ export const uploadActFile = async (formData: FormData): Promise<IResult> => {
       originalName: file.name,
       mimeType: file.type,
       size: file.size,
-      uploadedById: session.user.id,
+      uploadedById: userId,
       isPhoto: isPhotoMime(file.type),
     });
 

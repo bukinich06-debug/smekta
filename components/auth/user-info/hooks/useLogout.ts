@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logout } from '@/services/auth/logout';
+import { authClient } from '@/lib/authClient';
 
 export const useLogout = () => {
   const router = useRouter();
@@ -10,7 +10,7 @@ export const useLogout = () => {
 
   const handleLogout = async () => {
     setIsLoading(true);
-    await logout();
+    await authClient.signOut();
     router.push('/login');
   };
 

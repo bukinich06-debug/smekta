@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { IActLineItem, IActStatusHistoryItem } from '@/domain/acts';
 import { getActStatusLabel } from '@/domain/acts';
 import type { ActStatus } from '@prisma/client';
-import { listActStatusHistory } from '@/services/acts/listActStatusHistory';
+import { apiFetch } from '@/components/shared/api';
 import { formatDate } from '../helpers/formatDate';
 import { formatMoney } from '../helpers/formatMoney';
 import { ActStatusBadge } from './actStatusBadge';
@@ -13,6 +13,7 @@ import { ActAttachments } from '../act-attachments';
 
 interface IActRowData {
   id: number;
+  projectId: number;
   number: string;
   date: Date;
   stage: string | null;
@@ -51,7 +52,7 @@ export const ActRow = ({
     const load = async () => {
       setHistoryLoading(true);
       try {
-        const rows = await listActStatusHistory(act.id);
+        const rows = await apiFetch<IActStatusHistoryItem[]>(`/api/projects/${act.projectId}/acts/${act.id}/history`);
         if (!cancelled) setHistory(rows);
       } catch (err) {
         console.error('Ошибка загрузки истории акта:', err);
@@ -157,7 +158,7 @@ export const ActRow = ({
 
           <div>
             <p className="text-sm font-medium text-gray-800 mb-2">Файлы акта</p>
-            <ActAttachments actId={act.id} readOnly={readOnly} />
+            <ActAttachments projectId={act.projectId} actId={act.id} readOnly={readOnly} />
           </div>
         </div>
       )}

@@ -1,9 +1,7 @@
-'use server';
+import 'server-only';
 
 import { fileRepository } from '@/data/files';
 import { deleteBlobObjects } from '@/data/files/helpers/deleteBlobObjects';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidateReceiptPaths } from '@/services/receipts/helpers/revalidateReceiptPaths';
 import { assertReceiptAdminWriteAccess } from './helpers/assertReceiptFileAccess';
 
@@ -12,17 +10,12 @@ interface IResult {
   error?: string;
 }
 
-export const deleteReceiptFile = async (fileId: number): Promise<IResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
+export const deleteReceiptFile = async (fileId: number, userId: number): Promise<IResult> => {
   const file = await fileRepository.getById(fileId);
   if (!file || file.tab !== 'RECEIPTS' || file.receiptId === null)
     return { ok: false, error: 'Файл не найден' };
 
-  const access = await assertReceiptAdminWriteAccess(session, file.receiptId);
+  const access = await assertReceiptAdminWriteAccess(userId, file.receiptId);
   if (!access.ok) return { ok: false, error: access.error || 'Нет доступа' };
 
   try {

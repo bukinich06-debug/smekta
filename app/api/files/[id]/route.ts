@@ -18,7 +18,7 @@ export const GET = async (request: Request, context: IRouteContext) => {
   const file = await fileRepository.getById(fileId);
   if (!file) return new Response('Не найдено', { status: 404 });
 
-  const access = await assertFileReadAccess(session, file);
+  const access = await assertFileReadAccess(session.user.id, session.user.role, file);
   if (!access.ok) return new Response(access.error || 'Нет доступа', { status: 403 });
 
   const blobResult = await get(file.storageKey, { access: 'private' });

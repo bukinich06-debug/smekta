@@ -1,11 +1,9 @@
-'use server';
-import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
+import 'server-only';
 
+import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { projectTzRepository } from '@/data/project-tz';
 import { validateProjectTzText } from '@/domain/project-tz';
 import type { IProjectTz } from '@/domain/project-tz';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
 interface IUpdateProjectTzResult {
@@ -16,14 +14,10 @@ interface IUpdateProjectTzResult {
 
 export const updateProjectTz = async (
   projectId: number,
-  text: string
+  text: string,
+  userId: number
 ): Promise<IUpdateProjectTzResult> => {
-  const session = await getSession();
-
-  if (!session) redirect('/login');
-  if (session.user.role !== 'ADMIN') redirect('/client');
-
-  if (!(await ownsProject(session.user.id, projectId)))
+  if (!(await ownsProject(userId, projectId)))
     return { ok: false, error: 'Проект не найден' };
 
   const validationError = validateProjectTzText(text);
@@ -33,7 +27,7 @@ export const updateProjectTz = async (
   if (!existing) return { ok: false, error: 'Проект не найден.' };
 
   try {
-    const data = await projectTzRepository.updateText(projectId, text, session.user.id);
+    const data = await projectTzRepository.updateText(projectId, text, userId);
     revalidatePath('/admin/clients/[id]', 'page');
     revalidatePath('/client', 'page');
     return { ok: true, data };

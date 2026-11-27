@@ -3,15 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { IProjectExtraWorks, IExtraWork } from '@/domain/extra-works';
-import { getProjectExtraWorks } from '@/services/extra-works/getProjectExtraWorks';
-import { createExtraWork } from '@/services/extra-works/createExtraWork';
-import { updateExtraWork } from '@/services/extra-works/updateExtraWork';
-import { deleteExtraWork } from '@/services/extra-works/deleteExtraWork';
-import { toggleExtraWorkStatus } from '@/services/extra-works/toggleExtraWorkStatus';
-import { toggleExtraWorkVisibility } from '@/services/extra-works/toggleExtraWorkVisibility';
-import { toggleExtraWorkBudget } from '@/services/extra-works/toggleExtraWorkBudget';
-import { markExtraWorkDone } from '@/services/extra-works/markExtraWorkDone';
-import { unmarkExtraWorkDone } from '@/services/extra-works/unmarkExtraWorkDone';
+import { apiFetch } from '@/components/shared/api';
 import { parseInputDate } from '../helpers/formatDate';
 import type { IExtraWorkFormValues } from '../ui/extraWorkForm';
 
@@ -29,7 +21,7 @@ export const useExtraWorks = (projectId: number) => {
     setLoading(true);
     setError(null);
     try {
-      const works = await getProjectExtraWorks(projectId);
+      const works = await apiFetch<IProjectExtraWorks>(`/api/projects/${projectId}/extra-works`);
       setData(works);
     } catch (err) {
       console.error('Ошибка при загрузке допработ:', err);
@@ -46,7 +38,7 @@ export const useExtraWorks = (projectId: number) => {
       setLoading(true);
       setError(null);
       try {
-        const works = await getProjectExtraWorks(projectId);
+        const works = await apiFetch<IProjectExtraWorks>(`/api/projects/${projectId}/extra-works`);
         if (!cancelled) setData(works);
       } catch (err) {
         if (!cancelled) {
@@ -101,15 +93,14 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     setSuccess(null);
     try {
-      const result = await createExtraWork(toCreateInput(values));
-      if (result.ok) {
-        setSuccess('Допработа добавлена');
-        setShowCreateForm(false);
-        await load();
-        router.refresh();
-      } else {
-        setError(result.error || 'Не удалось создать допработу');
-      }
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works`, {
+        method: 'POST',
+        body: JSON.stringify(toCreateInput(values)),
+      });
+      setSuccess('Допработа добавлена');
+      setShowCreateForm(false);
+      await load();
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать допработу');
     } finally {
@@ -122,15 +113,14 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     setSuccess(null);
     try {
-      const result = await updateExtraWork(id, toUpdateInput(values));
-      if (result.ok) {
-        setSuccess('Изменения сохранены');
-        setEditingWork(null);
-        await load();
-        router.refresh();
-      } else {
-        setError(result.error || 'Не удалось обновить допработу');
-      }
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(toUpdateInput(values)),
+      });
+      setSuccess('Изменения сохранены');
+      setEditingWork(null);
+      await load();
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось обновить допработу');
     } finally {
@@ -142,70 +132,86 @@ export const useExtraWorks = (projectId: number) => {
     setActionLoading(true);
     setError(null);
     setSuccess(null);
-    const result = await deleteExtraWork(id);
-    if (result.ok) {
+    try {
+      await apiFetch(`/api/projects/${projectId}/extra-works/${id}`, { method: 'DELETE' });
       setSuccess('Допработа удалена');
       await load();
       router.refresh();
-    } else {
-      setError(result.error || 'Не удалось удалить допработу');
+    } catch (err) {
+      setError('Не удалось удалить допработу');
+    } finally {
+      setActionLoading(false);
     }
-    setActionLoading(false);
   };
 
   const handleToggleStatus = async (id: number) => {
     setActionLoading(true);
     setError(null);
-    const result = await toggleExtraWorkStatus(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/status`, { method: 'PATCH' });
       await load();
       router.refresh();
-    } else setError(result.error || 'Не удалось переключить статус');
-    setActionLoading(false);
+    } catch (err) {
+      setError('Не удалось переключить статус');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleToggleVisibility = async (id: number) => {
     setActionLoading(true);
     setError(null);
-    const result = await toggleExtraWorkVisibility(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/visibility`, { method: 'PATCH' });
       await load();
       router.refresh();
-    } else setError(result.error || 'Не удалось переключить видимость');
-    setActionLoading(false);
+    } catch (err) {
+      setError('Не удалось переключить видимость');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleToggleBudget = async (id: number) => {
     setActionLoading(true);
     setError(null);
-    const result = await toggleExtraWorkBudget(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/budget`, { method: 'PATCH' });
       await load();
       router.refresh();
-    } else setError(result.error || 'Не удалось изменить учёт в бюджете');
-    setActionLoading(false);
+    } catch (err) {
+      setError('Не удалось изменить учёт в бюджете');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleMarkDone = async (id: number) => {
     setActionLoading(true);
     setError(null);
-    const result = await markExtraWorkDone(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'PATCH' });
       await load();
       router.refresh();
-    } else setError(result.error || 'Не удалось отметить выполненной');
-    setActionLoading(false);
+    } catch (err) {
+      setError('Не удалось отметить выполненной');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleUnmarkDone = async (id: number) => {
     setActionLoading(true);
     setError(null);
-    const result = await unmarkExtraWorkDone(id);
-    if (result.ok) {
+    try {
+      await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'DELETE' });
       await load();
       router.refresh();
-    } else setError(result.error || 'Не удалось снять отметку выполнения');
-    setActionLoading(false);
+    } catch (err) {
+      setError('Не удалось снять отметку выполнения');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const clearMessages = () => {

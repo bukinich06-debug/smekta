@@ -1,33 +1,35 @@
-'use server';
+import 'server-only';
 
 import { clientRepository } from '@/data/clients';
 import { ownsProject } from '@/services/clients/helpers/assertProjectManager';
 import { fileRepository } from '@/data/files';
 import { projectTzRepository } from '@/data/project-tz';
 import type { IFile } from '@/domain/files';
-import { getSession } from '@/services/auth/getSession';
-import { redirect } from 'next/navigation';
 
-export const listTzFiles = async (projectId: number): Promise<IFile[]> => {
-  const session = await getSession();
+interface IResult {
+  ok: boolean;
+  data?: IFile[];
+  error?: string;
+}
 
-  if (!session) redirect('/login');
-
+export const listTzFiles = async (projectId: number, userId: number, role: 'ADMIN' | 'CLIENT'): Promise<IResult> => {
   const tz = await projectTzRepository.getByProjectId(projectId);
-  if (!tz) return [];
+  if (!tz) return { ok: true, data: [] };
 
-  if (session.user.role === 'ADMIN') {
-    const own = await ownsProject(session.user.id, projectId);
-    if (!own) return [];
-    return await fileRepository.listByProjectIdTz(projectId);
+  if (role === 'ADMIN') {
+    const own = await ownsProject(userId, projectId);
+    if (!own) return { ok: false, error: 'Проект не найден' };
+    const data = await fileRepository.listByProjectIdTz(projectId);
+    return { ok: true, data };
   }
 
-  if (session.user.role !== 'CLIENT') redirect('/login');
+  if (role !== 'CLIENT') return { ok: false, error: 'Нет доступа' };
 
-  const cabinet = await clientRepository.getCabinetByUserId(session.user.id);
-  if (!cabinet?.project || cabinet.project.id !== projectId) return [];
+  const cabinet = await clientRepository.getCabinetByUserId(userId);
+  if (!cabinet?.project || cabinet.project.id !== projectId) 
+    return { ok: false, error: 'Проект не найден' };
 
   const files = await fileRepository.listByProjectIdTz(projectId);
-
-  return files.filter((file) => file.isVisibleToClient);
+  const data = files.filter((file) => file.isVisibleToClient);
+  return { ok: true, data };
 };

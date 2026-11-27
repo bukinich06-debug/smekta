@@ -20,7 +20,10 @@ export const ClientActsTab = ({ data }: IClientActsTabProps) => (
     {data.acts.map((act) => (
       <ActRow
         key={act.id}
-        act={act}
+        act={{
+          ...act,
+          projectId: data.projectId,
+        }}
         loading={false}
         readOnly
         onEdit={() => {}}

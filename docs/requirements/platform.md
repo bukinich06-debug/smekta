@@ -4,7 +4,7 @@
 
 Слои приложения и работа с Prisma — в [README](../../README.md) и [AGENTS.md](../../AGENTS.md).
 
-**API endpoints:** клиентская часть обращается к серверу через Route Handlers в `app/api/...` (REST-подобные URL, JSON, стандартные HTTP-коды). См. `.cursor/rules/api-endpoints.mdc`.
+**API endpoints:** клиентская часть обращается к серверу через Route Handlers в `app/api/...` (REST-подобные URL, JSON, стандартные HTTP-коды). См. `.cursor/rules/api-endpoints.mdc`. Миграция с Server Actions на Route Handlers завершена — все запросы от клиента проходят через Route Handlers, `services/` больше не содержит `'use server'`.
 
 ## Производительность
 
