@@ -113,6 +113,7 @@ export const ActsTab = ({ projectId }: IActsTabProps) => {
           onStatusChange={changeStatus}
           allFiles={attachments}
           onReloadFiles={reloadSilently}
+          filesLoading={loading}
         />
       ))}
     </div>

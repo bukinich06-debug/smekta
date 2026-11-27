@@ -15,6 +15,7 @@ interface IReceiptPaymentsProps {
   onDeletePayment: (receiptId: number, paymentId: number) => void;
   allFiles: import('@/domain/files').IFile[];
   onReloadFiles: () => Promise<void>;
+  filesLoading?: boolean;
 }
 
 export const ReceiptPayments = ({
@@ -25,6 +26,7 @@ export const ReceiptPayments = ({
   onDeletePayment,
   allFiles,
   onReloadFiles,
+  filesLoading = false,
 }: IReceiptPaymentsProps) => {
   const [showPartial, setShowPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
@@ -86,6 +88,7 @@ export const ReceiptPayments = ({
                 compact
                 allFiles={allFiles}
                 onReload={onReloadFiles}
+                filesLoading={filesLoading}
               />
             </li>
           ))}

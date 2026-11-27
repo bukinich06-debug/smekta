@@ -5,8 +5,6 @@ import { ReceiptsTotals } from './receiptsTotals';
 import { ReceiptsFilters } from './receiptsFilters';
 import { ReceiptForm } from './receiptForm';
 import { ReceiptRow } from './receiptRow';
-import { apiFetch } from '@/components/shared/api';
-import type { IFile } from '@/domain/files';
 
 interface IReceiptsTabProps {
   projectId: number;
@@ -128,6 +126,7 @@ export const ReceiptsTab = ({ projectId }: IReceiptsTabProps) => {
           allFiles={attachments}
           onReloadFiles={reloadSilently}
           onDeletePayment={handleDeletePayment}
+          filesLoading={loading}
         />
       ))}
     </div>

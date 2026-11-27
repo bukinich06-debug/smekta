@@ -14,6 +14,7 @@ interface IReceiptAttachmentsProps {
   compact?: boolean;
   allFiles: IFile[];
   onReload: () => Promise<void>;
+  filesLoading?: boolean;
 }
 
 export const ReceiptAttachments = ({
@@ -25,6 +26,7 @@ export const ReceiptAttachments = ({
   compact,
   allFiles,
   onReload,
+  filesLoading = false,
 }: IReceiptAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { files, uploading, error, upload, remove, readOnly: isReadOnly } = useReceiptAttachments({
@@ -68,7 +70,9 @@ export const ReceiptAttachments = ({
 
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
-      {files.length === 0 && <p className="text-sm text-gray-500">Вложений пока нет</p>}
+      {filesLoading && <p className="text-sm text-gray-500">Загрузка вложений…</p>}
+
+      {!filesLoading && files.length === 0 && <p className="text-sm text-gray-500">Вложений пока нет</p>}
 
       {files.length > 0 && (
         <ul className="space-y-2">

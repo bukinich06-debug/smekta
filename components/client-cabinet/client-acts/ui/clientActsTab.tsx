@@ -60,8 +60,9 @@ export const ClientActsTab = ({ data }: IClientActsTabProps) => {
           onEdit={() => {}}
           onDelete={() => {}}
           onStatusChange={() => {}}
-          allFiles={attachmentsLoading ? [] : attachments}
+          allFiles={attachments}
           onReloadFiles={reloadAttachments}
+          filesLoading={attachmentsLoading}
         />
       ))}
     </div>

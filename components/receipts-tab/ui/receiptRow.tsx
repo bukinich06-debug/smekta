@@ -20,6 +20,7 @@ interface IReceiptRowProps {
   readOnly?: boolean;
   allFiles: IFile[];
   onReloadFiles: () => Promise<void>;
+  filesLoading?: boolean;
 }
 
 export const ReceiptRow = ({
@@ -33,6 +34,7 @@ export const ReceiptRow = ({
   readOnly,
   allFiles,
   onReloadFiles,
+  filesLoading = false,
 }: IReceiptRowProps) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -74,7 +76,7 @@ export const ReceiptRow = ({
         <p className="text-sm text-gray-600 mt-2">{receipt.comment}</p>
       )}
 
-      <ReceiptAttachments projectId={receipt.projectId} receiptId={receipt.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} />
+      <ReceiptAttachments projectId={receipt.projectId} receiptId={receipt.id} readOnly={readOnly} allFiles={allFiles} onReload={onReloadFiles} filesLoading={filesLoading} />
 
       {!readOnly && (
         <div className="flex flex-wrap gap-2 mt-3">
@@ -123,6 +125,7 @@ export const ReceiptRow = ({
           onDeletePayment={onDeletePayment}
           allFiles={allFiles}
           onReloadFiles={onReloadFiles}
+          filesLoading={filesLoading}
         />
       )}
 
@@ -141,6 +144,7 @@ export const ReceiptRow = ({
                 compact
                 allFiles={allFiles}
                 onReload={onReloadFiles}
+                filesLoading={filesLoading}
               />
             </li>
           ))}

@@ -11,9 +11,10 @@ interface IActAttachmentsProps {
   readOnly?: boolean;
   allFiles: IFile[];
   onReload: () => Promise<void>;
+  filesLoading?: boolean;
 }
 
-export const ActAttachments = ({ projectId, actId, readOnly, allFiles, onReload }: IActAttachmentsProps) => {
+export const ActAttachments = ({ projectId, actId, readOnly, allFiles, onReload, filesLoading = false }: IActAttachmentsProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { files, uploading, error, upload, remove, readOnly: isReadOnly } = useActAttachments({
     projectId,
@@ -53,7 +54,9 @@ export const ActAttachments = ({ projectId, actId, readOnly, allFiles, onReload 
 
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
 
-      {files.length === 0 && <p className="text-sm text-gray-500">Вложений пока нет</p>}
+      {filesLoading && <p className="text-sm text-gray-500">Загрузка вложений…</p>}
+
+      {!filesLoading && files.length === 0 && <p className="text-sm text-gray-500">Вложений пока нет</p>}
 
       {files.length > 0 && (
         <ul className="space-y-2">
