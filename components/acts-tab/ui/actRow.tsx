@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { IActLineItem, IActStatusHistoryItem } from '@/domain/acts';
+import type { IFile } from '@/domain/files';
 import { getActStatusLabel } from '@/domain/acts';
 import type { ActStatus } from '@prisma/client';
 import { apiFetch } from '@/components/shared/api';

@@ -84,6 +84,8 @@ export const ReceiptPayments = ({
                 paymentId={payment.id}
                 title="Документы по оплате"
                 compact
+                allFiles={allFiles}
+                onReload={onReloadFiles}
               />
             </li>
           ))}
