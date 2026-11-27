@@ -83,18 +83,21 @@ export const useAdminTzTab = (projectId: number) => {
   const save = async () => {
     setSaving(true);
     setError(null);
-    const result = await updateProjectTz(projectId, draft);
-    setSaving(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Не удалось сохранить.');
-      return;
+    
+    try {
+      const result = await apiFetch<{ tz: IProjectTz }>(`/api/projects/${projectId}/project-tz`, {
+        method: 'PATCH',
+        body: JSON.stringify({ text: draft }),
+      });
+      if (result.tz) setTz(result.tz);
+      setIsEditing(false);
+      await load();
+      router.refresh();
+    } catch (err) {
+      setError('Не удалось сохранить.');
+    } finally {
+      setSaving(false);
     }
-
-    if (result.data) setTz(result.data);
-    setIsEditing(false);
-    await load();
-    router.refresh();
   };
 
   return {

@@ -13,9 +13,7 @@ export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const clientId = url.searchParams.get('clientId');
 
-  const filters: IAdminStatsFilters = {
-    clientId: clientId ? parseInt(clientId, 10) : null,
-  };
+  const filters: IAdminStatsFilters = {};
 
   const result = await getAdminStats(filters, session.user.id);
   if (!result.ok) return errorResponse(result.error || 'Не удалось загрузить статистику', 400);

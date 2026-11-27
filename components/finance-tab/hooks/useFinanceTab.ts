@@ -36,8 +36,8 @@ export const useFinanceTab = (projectId: number) => {
       setLoading(true);
       try {
         const [finance, historyRows] = await Promise.all([
-          getProjectFinance(projectId),
-          listProjectFinanceHistory(projectId),
+          apiFetch<IProjectFinance>(`/api/projects/${projectId}/finance`),
+          apiFetch<IFinanceHistoryItem[]>(`/api/projects/${projectId}/finance/history`),
         ]);
         if (!cancelled) {
           setData(finance);
@@ -69,22 +69,21 @@ export const useFinanceTab = (projectId: number) => {
     setEditingTransfer(null);
   };
 
-  const runAction = async (action: () => Promise<{ ok: boolean; error?: string }>, okMessage: string) => {
+  const runAction = async (action: () => Promise<unknown>, okMessage: string) => {
     setActionLoading(true);
     setError(null);
     setSuccess(null);
 
-    const result = await action();
-    setActionLoading(false);
-
-    if (!result.ok) {
-      setError(result.error || 'Ошибка операции');
-      return;
+    try {
+      await action();
+      setSuccess(okMessage);
+      onCancelForms();
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка операции');
+    } finally {
+      setActionLoading(false);
     }
-
-    setSuccess(okMessage);
-    onCancelForms();
-    await reload();
   };
 
   return {
