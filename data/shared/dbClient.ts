@@ -17,4 +17,6 @@ const createPrismaClient = () => {
 
 export const dbClient = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = dbClient;
+if (process.env.NODE_ENV !== 'production' || process.env.NODE_ENV === 'production') {
+  globalForPrisma.prisma = dbClient;
+}

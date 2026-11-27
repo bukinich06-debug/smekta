@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireSession, requireRole, errorResponse } from '@/app/api/shared/guards';
 import { getClientCard } from '@/services/clients/getClientCard';
 import { updateClientCard } from '@/services/clients/updateClientCard';
@@ -44,6 +45,9 @@ export const PATCH = async (request: Request, context: IRouteContext) => {
   const result = await updateClientCard(clientId, projectId, input, session.user.id);
 
   if (!result.ok) return errorResponse(result.error || 'Ошибка обновления', 400);
+
+  revalidatePath(`/admin/clients/${clientId}`);
+  revalidatePath('/admin/clients');
 
   return NextResponse.json({ ok: true });
 };

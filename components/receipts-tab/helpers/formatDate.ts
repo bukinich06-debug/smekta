@@ -1,12 +1,14 @@
-export const formatDate = (date: Date): string =>
-  new Intl.DateTimeFormat('ru-RU', {
+export const formatDate = (date: Date | string): string => {
+  const d = date instanceof Date ? date : new Date(date);
+  return new Intl.DateTimeFormat('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(date));
+  }).format(d);
+};
 
-export const toInputDate = (date: Date): string => {
-  const d = new Date(date);
+export const toInputDate = (date: Date | string): string => {
+  const d = date instanceof Date ? date : new Date(date);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

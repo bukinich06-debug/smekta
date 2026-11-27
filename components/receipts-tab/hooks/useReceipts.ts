@@ -60,6 +60,15 @@ export const useReceipts = (projectId: number) => {
     };
   }, [projectId]);
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const receipts = await apiFetch<IProjectReceipts>(`/api/projects/${projectId}/receipts`);
+      setData(receipts);
+    } catch (err) {
+      console.error('Ошибка при обновлении чеков:', err);
+    }
+  }, [projectId]);
+
   const runAction = async (fn: () => Promise<void>, successMsg: string) => {
     setActionLoading(true);
     setError(null);
@@ -67,8 +76,7 @@ export const useReceipts = (projectId: number) => {
     try {
       await fn();
       setSuccess(successMsg);
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err: any) {
       setError(err.message || 'Ошибка операции');
     } finally {

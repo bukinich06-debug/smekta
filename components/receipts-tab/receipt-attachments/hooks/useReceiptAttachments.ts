@@ -87,13 +87,24 @@ export const useReceiptAttachments = ({
     if (paymentId !== null) formData.set('paymentId', String(paymentId));
 
     try {
-      await fetch(`/api/projects/${projectId}/receipts/${receiptId}/files`, {
+      const res = await fetch(`/api/projects/${projectId}/receipts/${receiptId}/files`, {
         method: 'POST',
         body: formData,
-      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+      });
+
+      if (!res.ok) {
+        let errorMessage = 'Не удалось загрузить файл';
+        try {
+          const errorData = await res.json();
+          if (errorData.error) errorMessage = errorData.error;
+        } catch {
+          // empty
+        }
+        throw new Error(errorMessage);
+      }
     } catch (err) {
       setUploading(false);
-      setError('Не удалось загрузить файл');
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить файл');
       return;
     }
     

@@ -51,7 +51,6 @@ export const useCardEdit = ({ clientId, projectId, initialData }: IUseCardEditPa
 
       setSuccess(true);
       setIsEditing(false);
-      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Ошибка при сохранении');
     } finally {

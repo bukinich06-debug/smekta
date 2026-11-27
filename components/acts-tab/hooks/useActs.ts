@@ -58,6 +58,15 @@ export const useActs = (projectId: number) => {
     };
   }, [projectId]);
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const acts = await apiFetch<IProjectActs>(`/api/projects/${projectId}/acts`);
+      setData(acts);
+    } catch (err) {
+      console.error('Ошибка при обновлении актов:', err);
+    }
+  }, [projectId]);
+
   const runAction = async (fn: () => Promise<{ ok: boolean; error?: string }>, successMsg: string) => {
     setActionLoading(true);
     setError(null);
@@ -71,8 +80,7 @@ export const useActs = (projectId: number) => {
     }
 
     setSuccess(successMsg);
-    await load();
-    router.refresh();
+    await reloadSilently();
   };
 
   const formToInput = (values: IActFormValues) => {

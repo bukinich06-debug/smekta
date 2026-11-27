@@ -74,13 +74,24 @@ export const useActAttachments = ({ projectId, actId, readOnly }: IUseActAttachm
     formData.set('file', file);
 
     try {
-      await fetch(`/api/projects/${projectId}/acts/${actId}/files`, {
+      const res = await fetch(`/api/projects/${projectId}/acts/${actId}/files`, {
         method: 'POST',
         body: formData,
-      }).then((res) => { if (!res.ok) throw new Error('Upload failed'); });
+      });
+
+      if (!res.ok) {
+        let errorMessage = 'Не удалось загрузить файл';
+        try {
+          const errorData = await res.json();
+          if (errorData.error) errorMessage = errorData.error;
+        } catch {
+          // empty
+        }
+        throw new Error(errorMessage);
+      }
     } catch (err) {
       setUploading(false);
-      setError('Не удалось загрузить файл');
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить файл');
       return;
     }
     

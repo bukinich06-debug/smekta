@@ -88,6 +88,15 @@ export const useExtraWorks = (projectId: number) => {
     };
   };
 
+  const reloadSilently = useCallback(async () => {
+    try {
+      const works = await apiFetch<IProjectExtraWorks>(`/api/projects/${projectId}/extra-works`);
+      setData(works);
+    } catch (err) {
+      console.error('Ошибка при обновлении допработ:', err);
+    }
+  }, [projectId]);
+
   const submitCreate = async (values: IExtraWorkFormValues) => {
     setActionLoading(true);
     setError(null);
@@ -99,8 +108,7 @@ export const useExtraWorks = (projectId: number) => {
       });
       setSuccess('Допработа добавлена');
       setShowCreateForm(false);
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать допработу');
     } finally {
@@ -119,8 +127,7 @@ export const useExtraWorks = (projectId: number) => {
       });
       setSuccess('Изменения сохранены');
       setEditingWork(null);
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось обновить допработу');
     } finally {
@@ -135,8 +142,7 @@ export const useExtraWorks = (projectId: number) => {
     try {
       await apiFetch(`/api/projects/${projectId}/extra-works/${id}`, { method: 'DELETE' });
       setSuccess('Допработа удалена');
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось удалить допработу');
     } finally {
@@ -149,8 +155,7 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/status`, { method: 'PATCH' });
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось переключить статус');
     } finally {
@@ -163,8 +168,7 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/visibility`, { method: 'PATCH' });
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось переключить видимость');
     } finally {
@@ -177,8 +181,7 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/budget`, { method: 'PATCH' });
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось изменить учёт в бюджете');
     } finally {
@@ -191,8 +194,7 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'PATCH' });
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось отметить выполненной');
     } finally {
@@ -205,8 +207,7 @@ export const useExtraWorks = (projectId: number) => {
     setError(null);
     try {
       await apiFetch<{ extraWork: IExtraWork }>(`/api/projects/${projectId}/extra-works/${id}/done`, { method: 'DELETE' });
-      await load();
-      router.refresh();
+      await reloadSilently();
     } catch (err) {
       setError('Не удалось снять отметку выполнения');
     } finally {
