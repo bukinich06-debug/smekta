@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useEstimate } from '../hooks/useEstimate';
+import { useCollapsedSections } from '@/components/shared/hooks/useCollapsedSections';
 import { EstimateSection } from './estimateSection';
 import { AddSectionForm } from './addSectionForm';
 import { formatMoney } from '../helpers/formatMoney';
@@ -27,6 +28,15 @@ export const EstimateTab = ({ projectId }: IEstimateTabProps) => {
     clearMessages 
   } = useEstimate(projectId);
   const [showAddSection, setShowAddSection] = useState(false);
+  const {
+    isCollapsed,
+    toggleSection,
+    expandSection,
+    collapseAll,
+    expandAll,
+    allCollapsed,
+    hydrated,
+  } = useCollapsedSections(projectId);
 
   if (loading) {
     return (
@@ -54,12 +64,29 @@ export const EstimateTab = ({ projectId }: IEstimateTabProps) => {
 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Смета проекта</h2>
-        <button
-          onClick={() => setShowAddSection(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Добавить раздел
-        </button>
+        <div className="flex gap-2">
+          {data && data.sections.length > 0 && (
+            <button
+              onClick={() => {
+                const sectionIds = data.sections.map(s => s.id);
+                if (allCollapsed(sectionIds)) {
+                  expandAll();
+                } else {
+                  collapseAll(sectionIds);
+                }
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              {allCollapsed(data.sections.map(s => s.id)) ? 'Развернуть все' : 'Свернуть все'}
+            </button>
+          )}
+          <button
+            onClick={() => setShowAddSection(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Добавить раздел
+          </button>
+        </div>
       </div>
 
       {showAddSection && (
@@ -82,9 +109,14 @@ export const EstimateTab = ({ projectId }: IEstimateTabProps) => {
         <EstimateSection
           key={section.id}
           section={section}
+          isCollapsed={isCollapsed(section.id)}
+          onToggleCollapse={() => toggleSection(section.id)}
           onEditSection={editSection}
           onDeleteSection={removeSection}
-          onAddItem={addItem}
+          onAddItem={async (sectionId, itemData) => {
+            expandSection(sectionId);
+            await addItem(sectionId, itemData);
+          }}
           onEditItem={editItem}
           onDeleteItem={removeItem}
           onToggleVisibility={toggleVisibility}
