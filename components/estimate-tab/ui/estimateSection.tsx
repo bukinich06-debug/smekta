@@ -8,6 +8,8 @@ import { formatMoney } from '../helpers/formatMoney';
 
 interface IEstimateSectionProps {
   section: IEstimateSectionWithItems;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
   onEditSection: (id: number, name: string) => Promise<void>;
   onDeleteSection: (id: number) => Promise<void>;
   onAddItem: (sectionId: number, itemData: {
@@ -33,6 +35,8 @@ interface IEstimateSectionProps {
 
 export const EstimateSection = ({
   section,
+  isCollapsed,
+  onToggleCollapse,
   onEditSection,
   onDeleteSection,
   onAddItem,
@@ -63,6 +67,14 @@ export const EstimateSection = ({
       <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
         {isEditing ? (
           <div className="flex items-center gap-2 flex-1">
+            <button
+              onClick={onToggleCollapse}
+              className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              aria-label={isCollapsed ? 'Развернуть раздел' : 'Свернуть раздел'}
+              aria-expanded={!isCollapsed}
+            >
+              <span className={`inline-block transition-transform ${isCollapsed ? '' : 'rotate-90'}`}>▸</span>
+            </button>
             <input
               type="text"
               value={editName}
@@ -89,7 +101,20 @@ export const EstimateSection = ({
         ) : (
           <>
             <div className="flex items-center gap-4">
-              <h3 className="text-lg font-semibold text-gray-900">{section.name}</h3>
+              <button
+                onClick={onToggleCollapse}
+                className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                aria-label={isCollapsed ? 'Развернуть раздел' : 'Свернуть раздел'}
+                aria-expanded={!isCollapsed}
+              >
+                <span className={`inline-block transition-transform ${isCollapsed ? '' : 'rotate-90'}`}>▸</span>
+              </button>
+              <h3 
+                className="text-lg font-semibold text-gray-900 cursor-pointer select-none"
+                onClick={onToggleCollapse}
+              >
+                {section.name}
+              </h3>
               <div className="flex gap-3 text-sm">
                 <span className="text-gray-900 font-medium">Итого: {formatMoney(section.total)}</span>
                 {section.hiddenTotal > 0 && (
@@ -124,55 +149,59 @@ export const EstimateSection = ({
         )}
       </div>
 
-      {showAddItem && (
-        <div className="p-4 bg-gray-50 border-b border-gray-200">
-          <AddItemForm
-            sectionId={section.id}
-            onAdd={async (itemData) => {
-              await onAddItem(section.id, itemData);
-              setShowAddItem(false);
-            }}
-            onCancel={() => setShowAddItem(false)}
-          />
-        </div>
-      )}
+      {!isCollapsed && (
+        <>
+          {showAddItem && (
+            <div className="p-4 bg-gray-50 border-b border-gray-200">
+              <AddItemForm
+                sectionId={section.id}
+                onAdd={async (itemData) => {
+                  await onAddItem(section.id, itemData);
+                  setShowAddItem(false);
+                }}
+                onCancel={() => setShowAddItem(false)}
+              />
+            </div>
+          )}
 
-      {section.items.length === 0 ? (
-        <div className="p-6 text-center text-gray-500">
-          Раздел пока пуст. Добавьте позиции.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-12">№</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Наименование</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-24">Ед. изм.</th>
-                <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-24">Кол-во</th>
-                <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Цена</th>
-                <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Сумма</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Комментарий</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-32">Статус</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-32">Видимость</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {section.items.map((item, index) => (
-                <EstimateItem
-                  key={item.id}
-                  item={item}
-                  index={index + 1}
-                  onEdit={onEditItem}
-                  onDelete={onDeleteItem}
-                  onToggleVisibility={onToggleVisibility}
-                  onToggleStatus={onToggleStatus}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+          {section.items.length === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              Раздел пока пуст. Добавьте позиции.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-12">№</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Наименование</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-24">Ед. изм.</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-24">Кол-во</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Цена</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-700 w-32">Сумма</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Комментарий</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 w-32">Статус</th>
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-32">Видимость</th>
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 w-20">Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {section.items.map((item, index) => (
+                    <EstimateItem
+                      key={item.id}
+                      item={item}
+                      index={index + 1}
+                      onEdit={onEditItem}
+                      onDelete={onDeleteItem}
+                      onToggleVisibility={onToggleVisibility}
+                      onToggleStatus={onToggleStatus}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
