@@ -127,7 +127,10 @@ export const EstimateSection = ({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setShowAddItem(true)}
+                onClick={() => {
+                  if (isCollapsed) onToggleCollapse();
+                  setShowAddItem(true);
+                }}
                 className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
               >
                 Добавить позицию
